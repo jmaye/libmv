@@ -1,0 +1,1 @@
+remake_add_files(*.* RECURSE INSTALL ${LIBMV_RUNTIME_DESTINATION}/xml)

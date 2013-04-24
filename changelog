@@ -1,0 +1,5 @@
+PACKAGE (VERSION) UNRELEASED; urgency=low
+
+  * Initial release. (Closes: #XXXXXX)
+
+ -- Jerome Maye <jmaye@jmaye-laptop>  Wed, 24 Apr 2013 16:57:12 +0200
