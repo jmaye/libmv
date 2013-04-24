@@ -10,6 +10,7 @@ endif()
 remake_find_package(wxWidgets COMPONENTS base core xrc)
 remake_find_package(FLTK)
 
+remake_debug(wxWidgets_INCLUDE_DIRS)
 remake_include(${wxWidgets_INCLUDE_DIRS} ${FLTK_INCLUDE_DIR})
 
 foreach(wxWidgets_DEFINITION ${wxWidgets_DEFINITIONS})

@@ -1,3 +1,9 @@
+libmv (2.5.4-7) lucid; urgency=low
+
+  * test 
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Thu, 25 Apr 2013 00:58:06 +0200
+
 libmv (2.5.4-6) lucid; urgency=low
 
   * dep 
