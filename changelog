@@ -1,3 +1,9 @@
+libmv (2.5.4-5) lucid; urgency=low
+
+  * correcting dependency
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Thu, 25 Apr 2013 00:30:56 +0200
+
 libmv (2.5.4-4) lucid; urgency=low
 
   * correcting bugs
