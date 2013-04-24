@@ -1,7 +1,16 @@
-remake_find_library(mvDeviceManager mvDeviceManager/Include/mvDeviceManager.h
-  PATHS ${CMAKE_SOURCE_DIR}/lib/${CMAKE_SYSTEM_PROCESSOR}
-  ${CMAKE_SOURCE_DIR}/src/lib)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  remake_find_library(mvDeviceManager mvDeviceManager/Include/mvDeviceManager.h
+    PATHS ${CMAKE_SOURCE_DIR}/lib/x86_64
+    ${CMAKE_SOURCE_DIR}/src/lib)
+else()
+  remake_find_library(mvDeviceManager mvDeviceManager/Include/mvDeviceManager.h
+    PATHS ${CMAKE_SOURCE_DIR}/lib/i386
+    ${CMAKE_SOURCE_DIR}/src/lib)
+endif()
 remake_find_package(wxWidgets COMPONENTS base core xrc)
+remake_set(FLTK_SKIP_OPENGL TRUE)
+remake_set(FLTK_SKIP_IMAGES TRUE)
+remake_set(FLTK_SKIP_FORMS TRUE)
 remake_find_package(FLTK)
 
 remake_include(${wxWidgets_INCLUDE_DIRS})

@@ -37,7 +37,7 @@ remake_pack_deb(
 remake_pack_deb(
   COMPONENT tools
   DESCRIPTION "Tools"
-  DEPENDS libmv libwxgtk2.8-0 libfltk[0-9.]*
+  DEPENDS libmv libwxgtk2.8-0 libfltk1.1
 )
 
 remake_pack_deb(
@@ -50,7 +50,7 @@ remake_distribute_deb(
   DISTRIBUTION lucid
   SECTION libs
   UPLOAD ppa:jmaye/ethz
-  DEPENDS remake doxygen libfltk1.1-dev libwxgtk2.8-dev
+  DEPENDS remake doxygen libfltk1.1-dev libwxgtk2.8-dev libexpat1-dev
   PASS CMAKE_BUILD_TYPE LIBMV_GIT_REVISION
 )
 
@@ -58,6 +58,6 @@ remake_distribute_deb(
   DISTRIBUTION precise
   SECTION libs
   UPLOAD ppa:jmaye/ethz
-  DEPENDS remake doxygen libfltk1.3-dev libwxgtk2.8-dev
+  DEPENDS remake doxygen libfltk1.1-dev libwxgtk2.8-dev libexpat1-dev
   PASS CMAKE_BUILD_TYPE LIBMV_GIT_REVISION
 )
