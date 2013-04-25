@@ -26,6 +26,7 @@ remake_doc(
 
 remake_pack_deb(
   DESCRIPTION "Main library"
+  EXTRA debian/*
 )
 
 remake_pack_deb(
