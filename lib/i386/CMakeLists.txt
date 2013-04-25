@@ -1,1 +1,2 @@
-remake_add_files(INSTALL ${LIBMV_LIBRARY_DESTINATION})
+remake_add_files(*.so* *.cti INSTALL
+  ${CMAKE_INSTALL_PREFIX}/${LIBMV_LIBRARY_DESTINATION})

@@ -1,3 +1,9 @@
+libmv (2.5.4-13) lucid; urgency=low
+
+  * mistake in 32-bits version 
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Thu, 25 Apr 2013 14:15:19 +0200
+
 libmv (2.5.4-12) precise; urgency=low
 
   * symlink correction 
