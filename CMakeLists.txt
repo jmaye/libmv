@@ -52,6 +52,7 @@ remake_distribute_deb(
   SECTION libs
   UPLOAD ppa:jmaye/ethz
   DEPENDS remake doxygen libfltk1.1-dev libwxgtk2.8-dev libexpat1-dev
+    libgl1-mesa-dev
   PASS CMAKE_BUILD_TYPE LIBMV_GIT_REVISION
 )
 
@@ -60,5 +61,6 @@ remake_distribute_deb(
   SECTION libs
   UPLOAD ppa:jmaye/ethz
   DEPENDS remake doxygen libfltk1.1-dev libwxgtk2.8-dev libexpat1-dev
+    libgl1-mesa-dev
   PASS CMAKE_BUILD_TYPE LIBMV_GIT_REVISION
 )

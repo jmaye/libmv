@@ -1,3 +1,9 @@
+libmv (2.5.4-10) lucid; urgency=low
+
+  * GL 
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Thu, 25 Apr 2013 11:28:49 +0200
+
 libmv (2.5.4-9) lucid; urgency=low
 
   * post installation script 
