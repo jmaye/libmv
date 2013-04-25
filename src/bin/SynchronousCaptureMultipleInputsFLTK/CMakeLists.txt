@@ -1,1 +1,1 @@
-remake_add_executables(LINK ${MVDEVICEMANAGER_LIBRARY} ${FLTK_LIBRARIES})
+remake_add_executables(LINK ${MVDEVICEMANAGER_LIBRARY} ${FLTK_LIBRARY})
