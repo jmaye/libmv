@@ -160,7 +160,8 @@ public:
 	int							ForceIP( const char* pMACAddress, const char* pNewDeviceIPAddress, const char* pStaticSubnetMask, const char* pStaticDefaultGateway, const char* pAdapterIPAddress, unsigned int timeout_ms );
 protected:
 	// event handlers (these functions should _not_ be virtual)
-	void OnAbout( wxCommandEvent& e );
+	void OnHelp_About( wxCommandEvent& e );
+	void OnHelp_OnlineDocumentation( wxCommandEvent& )               { ::wxLaunchDefaultBrowser( wxT("http://www.matrix-vision.com/manuals/") ); }
 	void OnAssignTemporaryIP( wxCommandEvent& e );
 	void OnBtnApplyChanges( wxCommandEvent& e );
 	void OnBtnConfigure( wxCommandEvent& e );
@@ -260,7 +261,8 @@ private:
 	//-----------------------------------------------------------------------------
 	{
 		miQuit = 1,
-		miAbout,
+		miHelp_About,
+		miHelp_OnlineDocumentation,
 		miAction_AssignTemporaryIP,
 		miAction_UpdateDeviceList,
 		miSettings_UseAdvancedDeviceDiscovery

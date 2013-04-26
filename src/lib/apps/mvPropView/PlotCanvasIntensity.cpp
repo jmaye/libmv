@@ -9,7 +9,7 @@
 //-----------------------------------------------------------------------------
 PlotCanvasIntensity::PlotCanvasIntensity( wxWindow* parent, wxWindowID id /* = -1 */, const wxPoint& pos /* = wxDefaultPosition */,
 	const wxSize& size /* = wxDefaultSize */, long style /* = wxSUNKEN_BORDER */, const wxString& name /* = "Intensity Plot" */, bool boActive /* = true */ )
-	: HistogramCanvasPixel(parent, id, pos, size, style, name, boActive), m_SelectedPlot(psAverageIntensity),
+	: HistogramCanvasPixel(parent, wxT("IntensityPlot"), id, pos, size, style, name, boActive), m_SelectedPlot(psAverageIntensity),
 	m_ppPlotValues(0), m_CurrentMaxPlotValues(), m_CurrentMinPlotValues(),
 	m_CurrentMaxPlotValue(std::numeric_limits<plot_datatype>::min()), m_CurrentMinPlotValue(std::numeric_limits<plot_datatype>::max())
 //-----------------------------------------------------------------------------

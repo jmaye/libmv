@@ -72,7 +72,7 @@ public:
 	explicit			VectorScopeCanvas() {}
 	explicit			VectorScopeCanvas( wxWindow* parent, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition,
 							const wxSize& size = wxDefaultSize, long style = wxSUNKEN_BORDER,
-							const wxString& name = wxT("VectorScope"), bool boActive = false );
+							const wxString& name = wxT("Vector Scope"), bool boActive = false );
 					   ~VectorScopeCanvas();
 	virtual wxString	GetGridValue( int row, int col ) const;
 	virtual void		RefreshData( const RequestData& data, int x = -1, int y = -1, int w = -1, int h = -1, bool boForceRefresh = false );

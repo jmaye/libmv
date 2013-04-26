@@ -16207,7 +16207,7 @@ PYTHON_ONLY(ENUM_PROPERTY(PropertyITriggerMoment, EnumPropertyI, mvIMPACT::acqui
 			 *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TAutoOffsetCalibration.
 			 */
 			PropertyIAutoOffsetCalibration offsetAutoCalibration;
-			/// \brief A float property defining and \b additional analogue sensor offset in percent of the allowed range (sensor specific) PER COLOR CHANNEL.
+			/// \brief A float property defining and \b additional analogue sensor offset in percent of the allowed range (sensor specific) \b per \b color \b channel.
 			/**
 			 *  Together with value of the property \b mvIMPACT::acquire::CameraSettingsBlueDevice::offset_pc this property influences the average grey level
 			 *  when no light reaches the sensor.

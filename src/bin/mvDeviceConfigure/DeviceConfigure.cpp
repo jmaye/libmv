@@ -1,4 +1,3 @@
-#include <apps/Common/Info.h>
 #include <apps/Common/mvIcon.xpm>
 #include <apps/Common/wxAbstraction.h>
 #include "apps/mvDeviceConfigure/DeviceConfigureFrame.h"
@@ -88,8 +87,9 @@ public:
 // handlers) which process them. It can be also done at run-time, but for the
 // simple menu events like this the static method is much simpler.
 BEGIN_EVENT_TABLE(DeviceConfigureFrame, wxFrame)
-	EVT_MENU(miAbout, DeviceConfigureFrame::OnAbout)
-	EVT_MENU(miQuit, DeviceConfigureFrame::OnQuit)
+	EVT_MENU(miHelp_About, DeviceConfigureFrame::OnHelp_About)
+	EVT_MENU(miHelp_OnlineDocumentation, DeviceConfigureFrame::OnHelp_OnlineDocumentation)
+	EVT_MENU(miAction_Quit, DeviceConfigureFrame::OnQuit)
 	EVT_MENU(miAction_SetID, DeviceConfigureFrame::OnSetID)
 	EVT_MENU(miAction_UpdateFW, DeviceConfigureFrame::OnUpdateFirmware)
 	EVT_MENU(miAction_UpdateKernelDriver, DeviceConfigureFrame::OnUpdateKernelDriver)
@@ -158,49 +158,51 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
 			CTRL+S : Set ID
 			CTRL+U : Unregister All Devices(for DirectShow)
 			    F5 : Update Device List
+				F12: Online Documentation
 		ALT+     X : Exit
 	*/
 
-	wxMenu *menuAction = new wxMenu;
-	m_pMIActionSetID = menuAction->Append( miAction_SetID, wxT("&Set ID\tCTRL+S") );
-	m_pMIActionUpdateFW = menuAction->Append( miAction_UpdateFW, wxT("Update &Firmware\tCTRL+F") );
-	m_pMIActionUpdateKernelDriver = menuAction->Append( miAction_UpdateKernelDriver, wxT("Update &Kernel Driver\tCTRL+K") );
-	m_pMIActionUpdateDMABufferSize = menuAction->Append( miAction_UpdateDMABufferSize, wxT("Update Permanent &DMA Buffer Size\tCTRL+D") );
+	wxMenu* pMenuAction = new wxMenu;
+	m_pMIActionSetID = pMenuAction->Append( miAction_SetID, wxT("&Set ID\tCTRL+S") );
+	m_pMIActionUpdateFW = pMenuAction->Append( miAction_UpdateFW, wxT("Update &Firmware\tCTRL+F") );
+	m_pMIActionUpdateKernelDriver = pMenuAction->Append( miAction_UpdateKernelDriver, wxT("Update &Kernel Driver\tCTRL+K") );
+	m_pMIActionUpdateDMABufferSize = pMenuAction->Append( miAction_UpdateDMABufferSize, wxT("Update Permanent &DMA Buffer Size\tCTRL+D") );
 
-	menuAction->AppendSeparator();
-	menuAction->Append( miAction_ConfigureLogOutput, wxT("&Configure Log Output\tCTRL+C") );
-	m_pMIActionUpdateDeviceList = menuAction->Append( miAction_UpdateDeviceList, wxT("&Update Device List\tF5") );
-	menuAction->AppendSeparator();
+	pMenuAction->AppendSeparator();
+	pMenuAction->Append( miAction_ConfigureLogOutput, wxT("&Configure Log Output\tCTRL+C") );
+	m_pMIActionUpdateDeviceList = pMenuAction->Append( miAction_UpdateDeviceList, wxT("&Update Device List\tF5") );
+	pMenuAction->AppendSeparator();
 
-	menuAction->Append( miQuit, wxT("E&xit\tALT+X"));
+	pMenuAction->Append( miAction_Quit, wxT("E&xit\tALT+X"));
 
-	wxMenu *menuHelp = new wxMenu;
-	menuHelp->Append( miAbout, wxT("About mvDeviceConfigure\tF1") );
+	wxMenu* pMenuHelp = new wxMenu;
+	pMenuHelp->Append( miHelp_About, wxT("About mvDeviceConfigure\tF1") );
+	pMenuHelp->Append( miHelp_OnlineDocumentation, wxT("Online Documentation...\tF12"));
 
 	// create a menu bar...
-	wxMenuBar *menuBar = new wxMenuBar;
+	wxMenuBar *pMenuBar = new wxMenuBar;
 	// ... add all the menu items...
-	menuBar->Append( menuAction, wxT("&Action") );
+	pMenuBar->Append( pMenuAction, wxT("&Action") );
 #ifdef BUILD_WITH_DIRECT_SHOW_SUPPORT
 	wxMenu *menuDirectShow = new wxMenu;
 	menuDirectShow->Append( miDirectShow_RegisterAllDevices, wxT("&Register All Devices\tCTRL+R") );
 	menuDirectShow->Append( miDirectShow_UnregisterAllDevices, wxT("&Unregister All Devices\tCTRL+U") );
 	menuDirectShow->AppendSeparator();
 	m_pMIDirectShow_SetFriendlyName = menuDirectShow->Append( miDirectShow_SetFriendlyName, wxT("Set Friendly Name\tALT+CTRL+F") );
-	menuBar->Append( menuDirectShow, wxT("&DirectShow") );
+	pMenuBar->Append( menuDirectShow, wxT("&DirectShow") );
 	m_DSDevMgr.create( this );
 #endif // #ifdef BUILD_WITH_DIRECT_SHOW_SUPPORT
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
-	wxMenu *menuSettings = new wxMenu;
-	m_pMISettings_CPUIdleStatesEnabled = menuSettings->Append( miSettings_CPUIdleStatesEnabled, wxT("CPU &Idle States Enabled\tCTRL+I"), wxT(""), wxITEM_CHECK );
+	wxMenu *pMenuSettings = new wxMenu;
+	m_pMISettings_CPUIdleStatesEnabled = pMenuSettings->Append( miSettings_CPUIdleStatesEnabled, wxT("CPU &Idle States Enabled\tCTRL+I"), wxT(""), wxITEM_CHECK );
 	bool boValue = false;
 	GetPowerState( boValue );
 	m_pMISettings_CPUIdleStatesEnabled->Check( boValue );
-	menuBar->Append( menuSettings, wxT("&Settings") );
+	pMenuBar->Append( pMenuSettings, wxT("&Settings") );
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
-	menuBar->Append( menuHelp, wxT("&Help") );
+	pMenuBar->Append( pMenuHelp, wxT("&Help") );
 	// ... and attach this menu bar to the frame
-	SetMenuBar(menuBar);
+	SetMenuBar(pMenuBar);
 
 	// define the applications icon
 	wxIcon icon(mvIcon_xpm);
@@ -495,25 +497,41 @@ void DeviceConfigureFrame::BuildList( void )
 			m_pDevListCtrl->SetItemBackgroundColour( index, col );
 		}
 
+		auto_ptr<DeviceHandler> pHandler(m_deviceHandlerFactory.CreateObject( ConvertedString(pDev->family.read()), pDev ));
+
+		bool boUpdateAvailable = false;
+		Version latestFirmware;
+		wxString latestFirmwareS;
+		if( pHandler.get() && ( pHandler->GetLatestFirmwareVersion( latestFirmware ) == DeviceHandler::urOperationSuccessful ) )
+		{
+			latestFirmwareS = wxString::Format( wxT("(Version %ld.%ld.%ld.%ld)"), latestFirmware.major_, latestFirmware.minor_, latestFirmware.subMinor_, latestFirmware.release_ );
+			boUpdateAvailable = true;
+		}
+		else
 		{
 			map<string, int>::const_iterator it = productFirmwareTable.find( product );
-			bool boUpdateAvailable = false;
 			if( it != productFirmwareTable.end() )
 			{
 				const int firmwareVersion(pDev->firmwareVersion.read());
 				if( firmwareVersion < it->second )
 				{
 					m_pDevListCtrl->SetItemTextColour( index, *wxRED );
-					WriteErrorMessage( wxString::Format( wxT("WARNING: The device in row %ld(%s) uses an outdated firmware version.\n"), index, ConvertedString(pDev->serial.read()).c_str() ) );
 					boUpdateAvailable = true;
 				}
 			}
-			m_pDevListCtrl->SetItem( index, lcFWVersion, wxString::Format( wxT("%s%s"), ConvertedString(pDev->firmwareVersion.readS()).c_str(), boUpdateAvailable ? wxT("(UPDATE AVAILABLE)") : wxT("") ) );
 		}
+
+		const wxString updateNotification(boUpdateAvailable ? wxString::Format( wxT("(UPDATE AVAILABLE%s)"), latestFirmwareS.c_str() ) : wxT(""));
+		m_pDevListCtrl->SetItem( index, lcFWVersion, wxString::Format( wxT("%s%s"), ConvertedString(pDev->firmwareVersion.readS()).c_str(), updateNotification.c_str() ) );
+		if( boUpdateAvailable )
+		{
+			WriteErrorMessage( wxString::Format( wxT("WARNING: The device in row %ld(%s) uses an outdated firmware version.\n"), index, ConvertedString(pDev->serial.read()).c_str() ) );
+			m_pDevListCtrl->SetItemBackgroundColour( index, wxColour(255, 0, 0) );
+		}
+
 		string kernelDriverName;
 		bool boNewerDriverAvailable = false;
 		bool boFeatureSupported = false;
-		auto_ptr<DeviceHandler> pHandler(m_deviceHandlerFactory.CreateObject( ConvertedString(pDev->family.read()), pDev ));
 		if( pHandler.get() )
 		{
 			boFeatureSupported = pHandler->SupportsKernelDriverUpdate( boNewerDriverAvailable, kernelDriverName );
@@ -574,7 +592,7 @@ std::map<wxString, DeviceConfigureFrame::DeviceConfigurationData>::iterator Devi
 }
 
 //-----------------------------------------------------------------------------
-void DeviceConfigureFrame::OnAbout(wxCommandEvent& )
+void DeviceConfigureFrame::OnHelp_About(wxCommandEvent& )
 //-----------------------------------------------------------------------------
 {
 	wxBoxSizer *pTopDownSizer;
@@ -588,14 +606,11 @@ void DeviceConfigureFrame::OnAbout(wxCommandEvent& )
 	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
 	pText = new wxStaticText( &dlg, wxID_ANY, wxString::Format( wxT("Version %s"), VERSION_STRING ) );
 	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
-	pText = new wxStaticText( &dlg, wxID_ANY, wxT("Support contact: www.matrix-vision.de") );
-	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
-	pText = new wxStaticText( &dlg, wxID_ANY, wxString::Format( wxT("This tool has been written using wxWidgets (www.wxwidgets.org) and was compiled with version %d.%d.%d of this library"), wxMAJOR_VERSION, wxMINOR_VERSION, wxRELEASE_NUMBER ) );
-	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
+	AddSupportInfo( &dlg, pTopDownSizer );
+	AddwxWidgetsInfo( &dlg, pTopDownSizer );
 	pText = new wxStaticText( &dlg, wxID_ANY, wxT("The expat wrapper class used internally has been written by Descartes Systems Sciences, Inc.") );
 	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
-	pText = new wxStaticText( &dlg, wxID_ANY, wxString::Format( wxT("The complete source of this application can be obtained by contacting %s"), COMPANY_NAME ) );
-	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
+	AddSourceInfo( &dlg, pTopDownSizer );
 	wxButton *pBtnOK = new wxButton(&dlg, wxID_OK, wxT("OK"));
 	pBtnOK->SetDefault();
 	pTopDownSizer->Add( pBtnOK, 0, wxALL | wxALIGN_RIGHT, 15 );

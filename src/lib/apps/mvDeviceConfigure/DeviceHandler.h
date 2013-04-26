@@ -3,6 +3,7 @@
 #define DeviceHandlerH DeviceHandlerH
 //-----------------------------------------------------------------------------
 #include <mvIMPACT_CPP/mvIMPACT_acquire.h>
+#include "PackageDescriptionParser.h"
 
 class DeviceConfigureFrame;
 
@@ -21,6 +22,7 @@ public:
 	virtual ~DeviceHandler() {}
 	void AttachParent( DeviceConfigureFrame* pParent ) { pParent_ = pParent; }
 	virtual bool SupportsFirmwareUpdate( void ) const = 0;
+	virtual int GetLatestFirmwareVersion( Version& /*latestFirmwareVersion*/ ) const { return urFeatureUnsupported; }
 	virtual bool SupportsKernelDriverUpdate( bool& /*boNewerDriverAvailable*/, std::string& /*kernelDriverName*/ ) { return false; }
 	bool SupportsSetID( void ) const { return boSetIDSupported_; }
 	virtual bool GetIDFromUser( long& newID, const long minValue, const long maxValue );

@@ -14,6 +14,9 @@ public:
 	explicit			HistogramCanvasPixel( wxWindow* parent, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition,
 							const wxSize& size = wxDefaultSize, long style = wxSUNKEN_BORDER,
 							const wxString& name = wxT("Pixel Histogram"), bool boActive = false );
+	explicit			HistogramCanvasPixel( wxWindow* parent, const wxString& configName, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition,
+							const wxSize& size = wxDefaultSize, long style = wxSUNKEN_BORDER,
+							const wxString& name = wxT("Pixel Histogram"), bool boActive = false );
 	virtual void		RefreshData( const RequestData& data, int x = -1, int y = -1, int w = -1, int h = -1, bool boForceRefresh = false );
 };
 

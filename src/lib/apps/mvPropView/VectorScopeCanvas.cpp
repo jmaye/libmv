@@ -11,7 +11,7 @@
 //=============================================================================
 //-----------------------------------------------------------------------------
 VectorScopeCanvas::VectorScopeCanvas( wxWindow* parent, wxWindowID id /* = -1 */, const wxPoint& pos /* = wxDefaultPosition */,
-	const wxSize& size /* = wxDefaultSize */, long style /* = wxSUNKEN_BORDER */, const wxString& name /* = wxT("histogram") */, bool boActive /* = false */ ) :
+	const wxSize& size /* = wxDefaultSize */, long style /* = wxSUNKEN_BORDER */, const wxString& name /* = wxT("Vector Scope") */, bool boActive /* = false */ ) :
 	PlotCanvasImageAnalysis(parent, wxT("VectorScope"), id, pos, size, style, name, boActive, 1),
 	m_pDataBuffer(0), m_MaxPixelValue(VAL_COUNT_8_BIT)
 //-----------------------------------------------------------------------------

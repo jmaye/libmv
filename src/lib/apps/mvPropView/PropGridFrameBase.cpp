@@ -548,7 +548,7 @@ void PropGridFrameBase::OnPropertyRightClicked( wxPropertyGridEvent& e )
 			wxMenu menu(wxT(""));
 			menu.Append( miPopUpMethExec, wxT("&Execute") );
 			menu.Append( miPopUpDetailedFeatureInfo, wxT("Detailed Feature Information") )->Enable( true );
-			PopupMenu(&menu);
+			PopupMenu( &menu );
 		}
 	}
 	OnPropertyRightClickedCustom( e );

@@ -2,11 +2,15 @@
 #ifndef wxAbstractionH
 #define wxAbstractionH wxAbstractionH
 //-----------------------------------------------------------------------------
+#include <apps/Common/Info.h>
 #include <string>
 #include <wx/config.h>
 #include <wx/dynlib.h>
 #include <wx/gdicmn.h>
+#include <wx/hyperlink.h>
 #include <wx/log.h>
+#include <wx/sizer.h>
+#include <wx/stattext.h>
 #include <wx/string.h>
 #include <wx/window.h>
 
@@ -132,5 +136,35 @@ inline wxString LoadGenTLProducer( wxDynamicLibrary& lib )
 	return message;
 }
 
+//-----------------------------------------------------------------------------
+inline void AddSourceInfo( wxWindow* pParent, wxSizer* pParentSizer )
+//-----------------------------------------------------------------------------
+{
+	wxBoxSizer* pSizer = new wxBoxSizer(wxHORIZONTAL);
+	pSizer->Add( new wxStaticText(pParent, wxID_ANY, wxT("The complete source of this application can be obtained by contacting ")) );
+	pSizer->Add( new wxHyperlinkCtrl(pParent, wxID_ANY, COMPANY_NAME, COMPANY_WEBSITE) );
+	pParentSizer->Add( pSizer, 0, wxALL | wxALIGN_CENTER, 5 );
+}
+
+//-----------------------------------------------------------------------------
+inline void AddSupportInfo( wxWindow* pParent, wxSizer* pParentSizer )
+//-----------------------------------------------------------------------------
+{
+	wxBoxSizer* pSizer = new wxBoxSizer(wxHORIZONTAL);
+	pSizer->Add( new wxStaticText(pParent, wxID_ANY, wxT("Support contact: ")) );
+	pSizer->Add( new wxHyperlinkCtrl(pParent, wxID_ANY, COMPANY_SUPPORT_MAIL, COMPANY_SUPPORT_MAIL) );
+	pParentSizer->Add( pSizer, 0, wxALL | wxALIGN_CENTER, 5 );
+}
+
+//-----------------------------------------------------------------------------
+inline void AddwxWidgetsInfo( wxWindow* pParent, wxSizer* pParentSizer )
+//-----------------------------------------------------------------------------
+{
+	wxBoxSizer* pSizer = new wxBoxSizer(wxHORIZONTAL);
+	pSizer->Add( new wxStaticText(pParent, wxID_ANY, wxT("This tool has been written using ")) );
+	pSizer->Add( new wxHyperlinkCtrl(pParent, wxID_ANY, wxT("wxWidgets"), wxT("http://www.wxwidgets.org")) );
+	pSizer->Add( new wxStaticText(pParent, wxID_ANY, wxString::Format( wxT(" and was compiled with version %d.%d.%d of this library"), wxMAJOR_VERSION, wxMINOR_VERSION, wxRELEASE_NUMBER )) );
+	pParentSizer->Add( pSizer, 0, wxALL | wxALIGN_CENTER, 5 );
+}
 
 #endif // wxAbstractionH

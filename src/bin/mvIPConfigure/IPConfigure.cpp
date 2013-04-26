@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <apps/Common/Info.h>
 #include <apps/Common/mvIcon.xpm>
 #include <apps/Common/wxAbstraction.h>
 #include "apps/mvIPConfigure/AssignIPDlg.h"
@@ -133,7 +132,8 @@ public:
 // simple menu events like this the static method is much simpler.
 BEGIN_EVENT_TABLE(IPConfigureFrame, wxFrame)
 	EVT_CLOSE(IPConfigureFrame::OnClose)
-	EVT_MENU(miAbout, IPConfigureFrame::OnAbout)
+	EVT_MENU(miHelp_About, IPConfigureFrame::OnHelp_About)
+	EVT_MENU(miHelp_OnlineDocumentation, IPConfigureFrame::OnHelp_OnlineDocumentation)
 	EVT_MENU(miQuit, IPConfigureFrame::OnQuit)
 	EVT_MENU(miAction_AssignTemporaryIP, IPConfigureFrame::OnAssignTemporaryIP)
 	EVT_MENU(miAction_UpdateDeviceList, IPConfigureFrame::OnUpdateDeviceList)
@@ -186,27 +186,27 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 	m_pTCPersistentSubnetMask(0), m_pTCPersistentDefaultGateway(0), m_hTLI(0), m_TLILib()
 //-----------------------------------------------------------------------------
 {
-	wxMenu *menuAction = new wxMenu;
-	menuAction->Append( miAction_AssignTemporaryIP, wxT("&Assign Temporary IPv4 Address\tCTRL+A") );
+	wxMenu* pMenuAction = new wxMenu;
+	pMenuAction->Append( miAction_AssignTemporaryIP, wxT("&Assign Temporary IPv4 Address\tCTRL+A") );
 
-	menuAction->AppendSeparator();
-	menuAction->Append( miAction_UpdateDeviceList, wxT("Update Device List\tF5") );
+	pMenuAction->AppendSeparator();
+	pMenuAction->Append( miAction_UpdateDeviceList, wxT("Update Device List\tF5") );
+	pMenuAction->AppendSeparator();
+	pMenuAction->Append( miQuit, wxT("E&xit\tALT+X"));
 
-	menuAction->AppendSeparator();
-	menuAction->Append( miQuit, wxT("E&xit\tALT+X"));
+	wxMenu* pMenuSettings = new wxMenu;
+	m_pMISettings_UseAdvancedDeviceDiscovery = pMenuSettings->Append( miSettings_UseAdvancedDeviceDiscovery, wxT("Use Advanced Device Discovery"), wxT(""), wxITEM_CHECK );
 
-	wxMenu *menuSettings = new wxMenu;
-	m_pMISettings_UseAdvancedDeviceDiscovery = menuSettings->Append( miSettings_UseAdvancedDeviceDiscovery, wxT("Use Advanced Device Discovery"), wxT(""), wxITEM_CHECK );
+	wxMenu* pMenuHelp = new wxMenu;
+	pMenuHelp->Append( miHelp_OnlineDocumentation, wxT("Online Documentation...\tF12"));
+	pMenuHelp->Append( miHelp_About, wxT("About mvIPConfigure\tF1"));
 
-	wxMenu *menuHelp = new wxMenu;
-	menuHelp->Append( miAbout, wxT("About mvIPConfigure\tF1"));
-
-	wxMenuBar *menuBar = new wxMenuBar;
-	menuBar->Append( menuAction, wxT("&Action") );
-	menuBar->Append( menuSettings, wxT("&Settings") );
-	menuBar->Append( menuHelp, wxT("&Help") );
+	wxMenuBar* pMenuBar = new wxMenuBar;
+	pMenuBar->Append( pMenuAction, wxT("&Action") );
+	pMenuBar->Append( pMenuSettings, wxT("&Settings") );
+	pMenuBar->Append( pMenuHelp, wxT("&Help") );
 	// ... and attach this menu bar to the frame
-	SetMenuBar(menuBar);
+	SetMenuBar(pMenuBar);
 
 	// define the applications icon
 	wxIcon icon(mvIcon_xpm);
@@ -279,7 +279,7 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 	pCurrentIPElementsGridSizer->AddGrowableCol( 1, 3 );
 
 	// row 1
-	pCurrentIPElementsGridSizer->Add( new wxStaticText(pControlsPanel, wxID_ANY, wxT("IPv4 Address: ")), wxSizerFlags().Left() );
+	pCurrentIPElementsGridSizer->Add( new wxHyperlinkCtrl(pControlsPanel, wxID_ANY, wxT("IPv4 Address: "), wxT("http://en.wikipedia.org/wiki/Ipv4")), wxSizerFlags().Left() );
 	m_pSTCurrentIPAddress = new wxStaticText(pControlsPanel, wxID_ANY, wxT("-"));
 	pCurrentIPElementsGridSizer->Add( m_pSTCurrentIPAddress, wxSizerFlags(2).Align( wxGROW | wxALIGN_CENTER_VERTICAL ) );
 	// row 2
@@ -287,11 +287,11 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 	m_pSTCurrentSubnetMask = new wxStaticText(pControlsPanel, wxID_ANY, wxT("-"));
 	pCurrentIPElementsGridSizer->Add( m_pSTCurrentSubnetMask, wxSizerFlags(2).Align( wxGROW | wxALIGN_CENTER_VERTICAL ) );
 	// row 3
-	pCurrentIPElementsGridSizer->Add( new wxStaticText(pControlsPanel, wxID_ANY, wxT("Default Gateway: ")), wxSizerFlags().Left() );
+	pCurrentIPElementsGridSizer->Add( new wxHyperlinkCtrl(pControlsPanel, wxID_ANY, wxT("Default Gateway: "), wxT("http://en.wikipedia.org/wiki/Gateway_address")), wxSizerFlags().Left() );
 	m_pSTCurrentDefaultGateway = new wxStaticText(pControlsPanel, wxID_ANY, wxT("-"));
 	pCurrentIPElementsGridSizer->Add( m_pSTCurrentDefaultGateway, wxSizerFlags(2).Align( wxGROW | wxALIGN_CENTER_VERTICAL ) );
 	// row 4
-	pCurrentIPElementsGridSizer->Add( new wxStaticText(pControlsPanel, wxID_ANY, wxT("MAC Address: ")), wxSizerFlags().Left() );
+	pCurrentIPElementsGridSizer->Add( new wxHyperlinkCtrl(pControlsPanel, wxID_ANY, wxT("MAC Address: "), wxT("http://en.wikipedia.org/wiki/MAC_address")), wxSizerFlags().Left() );
 	m_pSTMACAddress = new wxStaticText(pControlsPanel, wxID_ANY, wxT("-"));
 	pCurrentIPElementsGridSizer->Add( m_pSTMACAddress, wxSizerFlags(2).Align( wxGROW | wxALIGN_CENTER_VERTICAL ) );
 	// row 5
@@ -341,8 +341,16 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 	pIPConfigurationSizer->Add( m_pCBUsePersistentIP, wxSizerFlags().Expand().Border( wxALL, CHECKBOX_BORDER_PIXEL_WIDTH ) );
 	m_pCBUseDHCP = new wxCheckBox(pControlsPanel, widCBUseDHCP, wxT("Use DHCP"));
 	pIPConfigurationSizer->Add( m_pCBUseDHCP, wxSizerFlags().Expand().Border( wxALL, CHECKBOX_BORDER_PIXEL_WIDTH ) );
-	m_pCBUseLLA = new wxCheckBox(pControlsPanel, wxID_ANY, wxT("Use LLA"));
+	m_pCBUseLLA = new wxCheckBox(pControlsPanel, wxID_ANY, wxT("Use LLA (Link-local address a.k.a auto-IP or zero config)"));
 	pIPConfigurationSizer->Add( m_pCBUseLLA, wxSizerFlags().Expand().Border( wxALL, CHECKBOX_BORDER_PIXEL_WIDTH ) );
+
+	wxBoxSizer* pIPConfigurationHelpSizer = new wxBoxSizer(wxHORIZONTAL);
+	pIPConfigurationHelpSizer->Add( new wxStaticText(pControlsPanel, wxID_ANY, wxT("More Information: ")) );
+	pIPConfigurationHelpSizer->Add( new wxHyperlinkCtrl(pControlsPanel, wxID_ANY, wxT("DHCP"), wxT("http://en.wikipedia.org/wiki/Dhcp")) );
+	pIPConfigurationHelpSizer->Add( new wxStaticText(pControlsPanel, wxID_ANY, wxT(", ")) );
+	pIPConfigurationHelpSizer->Add( new wxHyperlinkCtrl(pControlsPanel, wxID_ANY, wxT("LLA"), wxT("http://en.wikipedia.org/wiki/Link-local_address")) );
+	pIPConfigurationSizer->Add( pIPConfigurationHelpSizer, 0, wxALL | wxALIGN_LEFT, 5 );
+
 	m_pCBUseLLA->Enable( false );
 	m_pCBUseLLA->SetValue( true );
 
@@ -643,7 +651,7 @@ void IPConfigureFrame::OnBtnApplyChanges( wxCommandEvent& )
 	info.m_mask = wxLIST_MASK_TEXT;
 	if( !m_pDevListCtrl->GetItem( info ) )
 	{
-		WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain serial number for device %s.\n"), itemText.c_str() ) );
+		WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain serial number for device %s.\n"), itemText.c_str() ), m_ERROR_STYLE );
 		return;
 	}
 
@@ -669,14 +677,14 @@ void IPConfigureFrame::ApplyChanges( const wxString& serial, const wxString& pro
 
 	if( itInterface == m_TLIInterfaces.end() )
 	{
-		WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain interface handle to adapter %s.\n"), connectedToIPAddress.c_str() ) );
+		WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain interface handle to adapter %s.\n"), connectedToIPAddress.c_str() ), m_ERROR_STYLE );
 		return;
 	}
 
 	DeviceMap::const_iterator itDev = m_devices.find( string(m_pSTSerialNumber->GetLabel().mb_str()) );
 	if( itDev == m_devices.end() )
 	{
-		WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain device name for device %s on adapter %s.\n"), serial.c_str(), connectedToIPAddress.c_str() ) );
+		WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain device name for device %s on adapter %s.\n"), serial.c_str(), connectedToIPAddress.c_str() ), m_ERROR_STYLE );
 		return;
 	}
 
@@ -751,13 +759,13 @@ void IPConfigureFrame::AssignTemporaryIP( int listItemIndex )
 		info.m_mask = wxLIST_MASK_TEXT;
 		if( !m_pDevListCtrl->GetItem( info ) )
 		{
-			WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain serial number for selected device %s.\n"), itemText.c_str() ) );
+			WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain serial number for selected device %s.\n"), itemText.c_str() ), m_ERROR_STYLE );
 		}
 
 		DeviceMap::const_iterator itDev = m_devices.find( string(m_pSTSerialNumber->GetLabel().mb_str()) );
 		if( itDev == m_devices.end() )
 		{
-			WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain device name for selected device %s on adapter %s.\n"), m_pSTSerialNumber->GetLabel().c_str(), m_pCBConnectedToIPAddress->GetValue().c_str() ) );
+			WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain device name for selected device %s on adapter %s.\n"), m_pSTSerialNumber->GetLabel().c_str(), m_pCBConnectedToIPAddress->GetValue().c_str() ), m_ERROR_STYLE );
 		}
 		deviceMACAddress = ConvertedString(itDev->second->interfaceInfo_[0].MACAddress_);
 		connectedIPAddress = m_pCBConnectedToIPAddress->GetValue();
@@ -893,26 +901,24 @@ string IPConfigureFrame::GetDeviceStringInfo( MVTLI_INTERFACE_HANDLE hInterface,
 }
 
 //-----------------------------------------------------------------------------
-void IPConfigureFrame::OnAbout( wxCommandEvent& )
+void IPConfigureFrame::OnHelp_About( wxCommandEvent& )
 //-----------------------------------------------------------------------------
 {
 	wxBoxSizer *pTopDownSizer;
 	wxDialog dlg(this, wxID_ANY, wxString(_("About mvIPConfigure")));
 	wxIcon icon(mvIcon_xpm);
 	dlg.SetIcon( icon );
+
 	pTopDownSizer = new wxBoxSizer(wxVERTICAL);
-	wxStaticText *pText = new wxStaticText( &dlg, wxID_ANY, wxT("Configuration tool for GigE Vision (tm) devices") );
+	wxStaticText* pText = new wxStaticText(&dlg, wxID_ANY, wxT("Configuration tool for GigE Vision (tm) devices"));
 	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
-	pText = new wxStaticText( &dlg, wxID_ANY, wxString::Format( wxT("(C) 2008 - %s by %s"), CURRENT_YEAR, COMPANY_NAME ) );
+	pText = new wxStaticText(&dlg, wxID_ANY, wxString::Format( wxT("(C) 2008 - %s by %s"), CURRENT_YEAR, COMPANY_NAME ));
 	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
-	pText = new wxStaticText( &dlg, wxID_ANY, wxString::Format( wxT("Version %s"), VERSION_STRING ) );
+	pText = new wxStaticText(&dlg, wxID_ANY, wxString::Format( wxT("Version %s"), VERSION_STRING ));
 	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
-	pText = new wxStaticText( &dlg, wxID_ANY, wxT("Support contact: www.matrix-vision.de") );
-	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
-	pText = new wxStaticText( &dlg, wxID_ANY, wxString::Format( wxT("This tool has been written using wxWidgets (www.wxwidgets.org) and was compiled with version %d.%d.%d of this library"), wxMAJOR_VERSION, wxMINOR_VERSION, wxRELEASE_NUMBER ) );
-	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
-	pText = new wxStaticText( &dlg, wxID_ANY, wxString::Format( wxT("The complete source of this application can be obtained by contacting %s"), COMPANY_NAME ) );
-	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
+	AddSupportInfo( &dlg, pTopDownSizer );
+	AddwxWidgetsInfo( &dlg, pTopDownSizer );
+	AddSourceInfo( &dlg, pTopDownSizer );
 	wxButton *pBtnOK = new wxButton(&dlg, wxID_OK, wxT("OK"));
 	pBtnOK->SetDefault();
 	pTopDownSizer->Add( pBtnOK, 0, wxALL | wxALIGN_RIGHT, 15 );
@@ -1174,6 +1180,8 @@ void IPConfigureFrame::UpdateDeviceList( void )
 	m_devices.clear();
 	InterfaceContainer::iterator itInterfaces = m_TLIInterfaces.begin();
 	InterfaceContainer::iterator itInterfacesEnd = m_TLIInterfaces.end();
+	map<unsigned int, set<string> > detectedNets;
+
 	while( itInterfaces != itInterfacesEnd )
 	{
 		const wxString interfaceTLType(ConvertedString(GetInterfaceStringInfo( itInterfaces->second, INTERFACE_INFO_TLTYPE )));
@@ -1213,6 +1221,21 @@ void IPConfigureFrame::UpdateDeviceList( void )
 							LOGGED_TLI_CALL( IFGetInfo, ( itInterfaces->second, INTERFACE_INFO_LINK_SPEED, 0, &adapterLinkSpeed, &bufferSize ), WriteLogMessage )
 							const string adapterIPAddress(GetInterfaceStringInfo( itInterfaces->second, INTERFACE_INFO_IP_STRING ));
 							const string adapterNetmask(GetInterfaceStringInfo( itInterfaces->second, INTERFACE_INFO_NETMASK_STRING ));
+
+							unsigned int interfaceIP = 0;
+							bufferSize = sizeof(interfaceIP);
+							LOGGED_TLI_CALL( IFGetInfo, ( itInterfaces->second, INTERFACE_INFO_IP, 0, &interfaceIP, &bufferSize ), WriteLogMessage )
+							unsigned int interfaceNetmask = 0;
+							bufferSize = sizeof(interfaceNetmask);
+							LOGGED_TLI_CALL( IFGetInfo, ( itInterfaces->second, INTERFACE_INFO_NETMASK, 0, &interfaceNetmask, &bufferSize ), WriteLogMessage )
+							unsigned int net = interfaceIP & interfaceNetmask;
+							if( detectedNets.find( net ) == detectedNets.end() )
+							{
+								detectedNets.insert( make_pair( net, set<string>() ) );
+							}
+							map<unsigned int, set<string> >::iterator itNets = detectedNets.find( net );
+							itNets->second.insert( itInterfaces->first );
+
 							if( itDev == m_devices.end() )
 							{
 								// this is the first time this device has been located in this 'Enumerate' run. It might
@@ -1305,6 +1328,37 @@ void IPConfigureFrame::UpdateDeviceList( void )
 		}
 		++itInterfaces;
 	}
+
+	map<unsigned int, set<string> >::const_iterator itNet = detectedNets.begin();
+	const map<unsigned int, set<string> >::const_iterator itNetEND = detectedNets.end();
+	wxString netConflicts;
+	while( itNet != itNetEND )
+	{
+		if( itNet->second.size() > 1 )
+		{
+			netConflicts.Append( wxString::Format( wxT("- Net %d.%d.%d.%d is used by the following adapters: "), itNet->first >> 24, ( itNet->first >> 16 ) & 0xFF, ( itNet->first >> 8 ) & 0xFF, itNet->first & 0xFF ) );
+			set<string>::const_iterator itConflictingNet = itNet->second.begin();
+			const set<string>::const_iterator itConflictingNetEND = itNet->second.end();
+			while( itConflictingNet != itConflictingNetEND )
+			{
+				netConflicts.Append( ConvertedString(*itConflictingNet) );
+				netConflicts.Append( wxT(", ") );
+				++itConflictingNet;
+			}
+			// remove last ", " again
+			netConflicts.RemoveLast( 2 );
+			netConflicts.Append( wxT(".\n") );
+		}
+		++itNet;
+	}
+
+	if( !netConflicts.IsEmpty() )
+	{
+		wxString conflictMessage(wxString::Format( wxT("More than one adapter resides in the same subnet. This is almost certainly a potential source of routing problems and should be resolved. This is a list of all detected conflicts:\n\n%s"), netConflicts.c_str() ));
+		WriteLogMessage( conflictMessage, m_ERROR_STYLE );
+		wxMessageBox(conflictMessage, wxT("Subnet Conflict(s) Detected"), wxOK | wxICON_EXCLAMATION, this);
+	}
+
 	BuildList();
 }
 

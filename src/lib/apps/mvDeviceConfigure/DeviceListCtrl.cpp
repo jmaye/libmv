@@ -280,5 +280,5 @@ void LogOutputListCtrl::ShowPopup( wxListEvent& e )
 		menu.Append( LIST_DELETE, wxT("&Delete Item") );
 	}
 	menu.Append( LIST_DELETE_ALL, wxT("C&lear List") );
-	PopupMenu(&menu, e.GetPoint());
+	PopupMenu( &menu, e.GetPoint() );
 }

@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <apps/Common/Info.h>
 #include <apps/Common/mvIcon.xpm>
 #include <apps/Common/wxAbstraction.h>
 #include "apps/mvPropView/CaptureThread.h"
@@ -275,6 +274,7 @@ BEGIN_EVENT_TABLE(PropViewFrame, PropGridFrameBase)
 	EVT_MENU(miWizards_LUTControl, PropViewFrame::OnWizards_LUTControl)
 	EVT_MENU(miWizards_ColorCorrection, PropViewFrame::OnWizards_ColorCorrection)
 	EVT_MENU(miHelp_About, PropViewFrame::OnHelp_About)
+	EVT_MENU(miHelp_OnlineDocumentation, PropViewFrame::OnHelp_OnlineDocumentation)
 	EVT_MENU(miHelp_DriverInformation, PropViewFrame::OnHelp_DriverInformation)
 	EVT_MENU(miHelp_FindFeature, PropViewFrame::OnHelp_FindFeature)
 	EVT_COMMAND_SCROLL_THUMBTRACK(widSLRecordDisplay, PropViewFrame::OnSLRecordDisplay)
@@ -590,6 +590,7 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
 	m_pMISettings_ShowUpperToolBar = pMenuSettings->Append( miSettings_ShowUpperToolBar, wxT("Show Upper &Tool Bar\tCTRL+T"), wxT(""), wxITEM_CHECK );
 	m_pMISettings_ShowStatusBar = pMenuSettings->Append( miSettings_ShowStatusBar, wxT("Show S&tatus Bar\tALT+CTRL+T"), wxT(""), wxITEM_CHECK );
 	m_pMISettings_WarnOnOutdatedFirmware = pMenuSettings->Append( wxID_ANY, wxT("Warn On Outdated Firmware"), wxT(""), wxITEM_CHECK );
+	m_pMISettings_WarnOnReducedDriverPerformance = pMenuSettings->Append( wxID_ANY, wxT("Warn On Reduced Driver Performance"), wxT(""), wxITEM_CHECK );
 	pMenuSettings->AppendSeparator();
 	m_pMISettings_ToggleFullScreenMode = pMenuSettings->Append( miSettings_ToggleFullScreenMode, wxT("Full Screen Mode\tF11"), wxT(""), wxITEM_CHECK );
 
@@ -609,6 +610,7 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
 	pMenuHelp->Append( miHelp_FindFeature, wxT("&Find Feature...\tCTRL+F"));
 	pMenuHelp->Append( miHelp_DriverInformation, wxT("Driver Information...\tF8"));
 	pMenuHelp->AppendSeparator();
+	pMenuHelp->Append( miHelp_OnlineDocumentation, wxT("Online Documentation...\tF12"));
 	pMenuHelp->Append( miHelp_About, wxT("About...\tF1"));
 
 	// add all menus to the menu bar
@@ -1078,6 +1080,7 @@ PropViewFrame::~PropViewFrame()
 		pConfig->Write( wxT("/MainFrame/Settings/showLeftToolBar"), m_pMISettings_ShowLeftToolBar->IsChecked() );
 		pConfig->Write( wxT("/MainFrame/Settings/showStatusBar"), m_pMISettings_ShowStatusBar->IsChecked() );
 		pConfig->Write( wxT("/MainFrame/Settings/warnOnOutdatedFirmware"), m_pMISettings_WarnOnOutdatedFirmware->IsChecked() );
+		pConfig->Write( wxT("/MainFrame/Settings/warnOnReducedDriverPerformance"), m_pMISettings_WarnOnReducedDriverPerformance->IsChecked() );
 		pConfig->Write( wxT("/MainFrame/Settings/propgrid_showMethodExecutionErrors"), m_pMISettings_PropGrid_ShowMethodExecutionErrors->IsChecked() );
 		pConfig->Write( wxT("/MainFrame/Settings/automaticallyReconnectToUnusedDevices"), m_pMIAction_AutomaticallyReconnectToUnusedDevices->IsChecked() );
 		pConfig->Write( wxT("/MainFrame/Settings/displayPropsWithHexIndices"), m_pMISettings_PropGrid_DisplayPropIndicesAsHex->IsChecked() );
@@ -1340,6 +1343,62 @@ size_t PropViewFrame::BuildStringArrayFromPropertyDict( wxArrayString& choices, 
 }
 
 //-----------------------------------------------------------------------------
+void PropViewFrame::CheckForDriverPerformanceIssues( Device* pDev )
+//-----------------------------------------------------------------------------
+{
+	if( m_pMISettings_WarnOnReducedDriverPerformance->IsChecked() )
+	{
+#if wxCHECK_VERSION(2, 7, 1)
+		wxPlatformInfo platformInfo;
+		if( ( platformInfo.GetOperatingSystemId() & wxOS_WINDOWS ) != 0 )
+		{
+			wxString msg;
+			const wxString product(ConvertedString(pDev->product.read()));
+			if( product.Contains( wxT("mvBlueFOX") ) )
+			{
+				ComponentLocator locator(pDev->hDev());
+				PropertyI kernelDriver;
+				locator.bindComponent( kernelDriver, "KernelDriver" );
+				if( kernelDriver.isValid() && 
+					( static_cast<TBlueFOXKernelDriver>(kernelDriver.read()) == bfkdmvBlueFOX ) )
+				{
+					msg = wxString::Format( wxT("Device '%s' is bound to an outdated kernel driver. It's highly recommended to update to the latest driver version which offers a much better performance. This update can be performed using 'mvDeviceConfigure'."), ConvertedString(pDev->serial.read()).c_str() );
+				}
+			}
+			else
+			{
+				ComponentLocator locator(pDev->hDrv());
+				PropertyS mvStreamDriverTechnology;
+				locator.bindComponent( mvStreamDriverTechnology, "mvStreamDriverTechnology" );
+				if( mvStreamDriverTechnology.isValid() )
+				{
+					const wxString streamTechnology(ConvertedString(mvStreamDriverTechnology.read()));
+					if( streamTechnology.Contains( wxT("Socket") ) )
+					{
+						msg = wxString::Format( wxT("Device '%s' runs with the socket API based GEV capture driver. It's highly recommended to work with NDIS based filter driver instead which offers a much better performance. The filter driver can be installed and/or activated using 'mvGigEConfigure'."), ConvertedString(pDev->serial.read()).c_str() );
+					}
+				}
+			}
+
+			if( !msg.IsEmpty() )
+			{
+				WriteErrorMessage( wxString::Format( wxT("WARNING while opening device '%s': %s\n"), ConvertedString(pDev->serial.read()).c_str(), msg.c_str() ) );
+				switch( wxMessageBox( wxString::Format( wxT("%s\n\nPress 'Yes' to continue anyway.\n\nPress 'No' to end this application and resolve the issue.\n\nPress 'Cancel' to continue anyway and never see this message again. You can later re-enable this message box under 'Settings -> Warn On Reduced Driver Performance'."), msg.c_str() ), wxT("Potential Performance Issue Detected"), wxYES_NO | wxCANCEL | wxICON_EXCLAMATION, this) )
+				{
+				case wxNO:
+					Close( true );
+					break;
+				case wxCANCEL:
+					m_pMISettings_WarnOnReducedDriverPerformance->Check( false );
+					break;
+				}
+			}
+		}
+#endif // #if wxCHECK_VERSION(2, 7, 1)
+	}
+}
+
+//-----------------------------------------------------------------------------
 void PropViewFrame::ClearDisplayInProgressStates( void )
 //-----------------------------------------------------------------------------
 {
@@ -1583,10 +1642,12 @@ void PropViewFrame::CreateLeftToolBar( void )
 	m_pLeftToolBar->AddTool( miHelp_DriverInformation, wxT("Info"), info_xpm, wxNullBitmap, wxITEM_NORMAL,
 		wxT("Displays detailed information about detected drivers"),
 		wxT("Displays detailed information about detected drivers") );
+	m_pLeftToolBar->AddTool( miHelp_OnlineDocumentation, wxT("Help"), about_xpm, wxNullBitmap, wxITEM_NORMAL,
+		wxT("Launches a browser and navigates to the online documentation"),
+		wxT("Launches a browser and navigates to the online documentation") );
 	m_pLeftToolBar->AddTool( miHelp_About, wxT("About"), about_xpm, wxNullBitmap, wxITEM_NORMAL,
 		wxT("Displays the about dialog(including some usage hints)"),
 		wxT("Displays the about dialog(including some usage hints)") );
-	m_pLeftToolBar->AddSeparator();
 	m_pLeftToolBar->Realize();
 }
 
@@ -2276,15 +2337,20 @@ void PropViewFrame::OnHelp_About(wxCommandEvent& )
 	wxDialog dlg(this, wxID_ANY, wxString(wxT("About wxPropView")), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER | wxMAXIMIZE_BOX | wxMINIMIZE_BOX);
 	wxIcon icon(mvIcon_xpm);
 	dlg.SetIcon( icon );
+
+	wxBoxSizer* pPropGridInfoSizer = new wxBoxSizer(wxHORIZONTAL);
+	pPropGridInfoSizer->Add( new wxStaticText(&dlg, wxID_ANY, wxT("The latest stable version can be obtained from ")) );
+	pPropGridInfoSizer->Add( new wxHyperlinkCtrl(&dlg, wxID_ANY, wxT("http://wxpropgrid.sourceforge.net"), wxT("http://wxpropgrid.sourceforge.net")) );
+
 	pTopDownSizer = new wxBoxSizer(wxVERTICAL);
 	pTopDownSizer->Add( new wxStaticText(&dlg, wxID_ANY, wxString::Format( wxT("Configuration tool for %s devices"), COMPANY_NAME )), 0, wxALL | wxALIGN_CENTER, 5 );
 	pTopDownSizer->Add( new wxStaticText(&dlg, wxID_ANY, wxString::Format( wxT("(C) 2005 - %s by %s"), CURRENT_YEAR, COMPANY_NAME )), 0, wxALL | wxALIGN_CENTER, 5 );
 	pTopDownSizer->Add( new wxStaticText(&dlg, wxID_ANY, wxString::Format( wxT("Version %s"), VERSION_STRING )), 0, wxALL | wxALIGN_CENTER, 5 );
-	pTopDownSizer->Add( new wxStaticText(&dlg, wxID_ANY, wxT("Support contact: www.matrix-vision.de")), 0, wxALL | wxALIGN_CENTER, 5 );
-	pTopDownSizer->Add( new wxStaticText(&dlg, wxID_ANY, wxString::Format( wxT("This tool has been written using wxWidgets (www.wxwidgets.org) and was compiled with version %d.%d.%d of this library"), wxMAJOR_VERSION, wxMINOR_VERSION, wxRELEASE_NUMBER )), 0, wxALL | wxALIGN_CENTER, 5 );
+	AddSupportInfo( &dlg, pTopDownSizer );
+	AddwxWidgetsInfo( &dlg, pTopDownSizer );
 	pTopDownSizer->Add( new wxStaticText(&dlg, wxID_ANY, wxT("The property grid control is based on code written by Jaakko Salli")), 0, wxALL | wxALIGN_CENTER, 5 );
-	pTopDownSizer->Add( new wxStaticText(&dlg, wxID_ANY, wxT("The latest stable version can be obtained from http://wxpropgrid.sourceforge.net/cgi-bin/index")), 0, wxALL | wxALIGN_CENTER, 5 );
-	pTopDownSizer->Add( new wxStaticText(&dlg, wxID_ANY, wxString::Format( wxT("The complete source of this application can be obtained by contacting %s"), COMPANY_NAME )), 0, wxALL | wxALIGN_CENTER, 5 );
+	pTopDownSizer->Add( pPropGridInfoSizer, 0, wxALL | wxALIGN_CENTER, 5 );
+	AddSourceInfo( &dlg, pTopDownSizer );
 
 	wxNotebook* pNotebook = new wxNotebook(&dlg, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 
@@ -2473,6 +2539,7 @@ void PropViewFrame::OnHelp_About(wxCommandEvent& )
 	v.push_back( make_pair( wxT("F9"), wxT("Capture Settings Usage Mode 'Manual'") ) );
 	v.push_back( make_pair( wxT("F10"), wxT("Capture Settings Usage Mode 'Automatic'") ) );
 	v.push_back( make_pair( wxT("F11"), wxT("Full Screen mode on/off") ) );
+	v.push_back( make_pair( wxT("F12"), wxT("Online Documentation") ) );
 	AddListControlToAboutNotebook( pNotebook, wxT("Keyboard Shortcuts"), false, wxT("Shortcut"), wxT("Command"), v );
 
 	v.clear();
@@ -3709,6 +3776,8 @@ wxRect PropViewFrame::RestoreConfiguration( const unsigned int displayCount, dou
 	m_pMISettings_ShowStatusBar->Check( boActive );
 	boActive = pConfig->Read( wxT("/MainFrame/Settings/warnOnOutdatedFirmware"), 1l ) != 0;
 	m_pMISettings_WarnOnOutdatedFirmware->Check( boActive );
+	boActive = pConfig->Read( wxT("/MainFrame/Settings/warnOnReducedDriverPerformance"), 1l ) != 0;
+	m_pMISettings_WarnOnReducedDriverPerformance->Check( boActive );
 	boActive = pConfig->Read( wxT("/MainFrame/Settings/propgrid_showMethodExecutionErrors"), 1l ) != 0;
 	m_pMISettings_PropGrid_ShowMethodExecutionErrors->Check( boActive );
 	boActive = pConfig->Read( wxT("/MainFrame/Settings/automaticallyReconnectToUnusedDevices"), 1l ) != 0;
@@ -4321,6 +4390,10 @@ void PropViewFrame::ToggleCurrentDevice( void )
 			WriteErrorMessage( wxString::Format( wxT("Error origin: %s.\n"), ConvertedString(e.getErrorOrigin()).c_str() ) );
 		}
 		SetupDlgControls();
+		if( !isOpen )
+		{
+			CheckForDriverPerformanceIssues( pDev );
+		}
 	}
 }
 

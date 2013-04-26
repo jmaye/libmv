@@ -112,6 +112,7 @@ protected:
 	void OnHelp_About( wxCommandEvent& e );
 	void OnHelp_DriverInformation( wxCommandEvent& e );
 	void OnHelp_FindFeature( wxCommandEvent& e );
+	void OnHelp_OnlineDocumentation( wxCommandEvent& )               { ::wxLaunchDefaultBrowser( wxT("http://www.matrix-vision.com/manuals/") ); }
 	void OnImageCanvasSelected( wxCommandEvent& e )                  { SelectImageCanvas( e.GetInt() ); }
 	void OnImageCanvasFullScreen( wxCommandEvent& e );
 	void OnImageInfo( wxCommandEvent& e );
@@ -274,6 +275,7 @@ private:
 		miWizards_LUTControl,
 		miWizards_ColorCorrection,
 		miHelp_About,
+		miHelp_OnlineDocumentation,
 		miHelp_DriverInformation,
 		miHelp_FindFeature,
 		widStatusBar,
@@ -460,6 +462,7 @@ private:
 	wxMenuItem*							m_pMISettings_ShowUpperToolBar;
 	wxMenuItem*							m_pMISettings_ShowStatusBar;
 	wxMenuItem*							m_pMISettings_WarnOnOutdatedFirmware;
+	wxMenuItem*							m_pMISettings_WarnOnReducedDriverPerformance;
 	wxMenuItem*							m_pMISettings_ToggleFullScreenMode;
 	wxMenuItem*							m_pMIWizards_FileAccessControl_UploadFile;
 	wxMenuItem*							m_pMIWizards_FileAccessControl_DownloadFile;
@@ -490,7 +493,7 @@ private:
 	static int							BuildPlotWindowStartID( int index ) { return ( index + 1 ) * PLOT_WINDOW_ID_RANGE; }
 	template<typename _Ty, typename _Tx>
 	size_t								BuildStringArrayFromPropertyDict( wxArrayString& choices, _Tx prop ) const;
-	bool								UpdateAcquisitionModes( void );
+	void								CheckForDriverPerformanceIssues( Device* pDev );
 	void								ClearDisplayInProgressStates( void );
 	void								CloneAllRequests( void );
 	void								ConfigureAnalysisPlot( const wxRect* pAOI = 0 );
@@ -527,6 +530,7 @@ private:
 	void								SetupDisplayLogSplitter( bool boForceSplit = false );
 	void								SetupUpdateFrequencies( bool boCurrentValue );
 	void								SetupVerSplitter( void );
+	bool								UpdateAcquisitionModes( void );
 	void								UpdateAnalysisPlotAOIParameter( PlotCanvasImageAnalysis* pPlotCanvas, int x = -1, int y = -1, int w = -1, int h = -1 );
 	void								UpdateAnalysisPlotGridSteps( PlotCanvasImageAnalysis* pPlotCanvas, int XSteps, int YSteps );
 	void								UpdateData( const bool boShowInfo = false, bool const boForceUnlock = false );

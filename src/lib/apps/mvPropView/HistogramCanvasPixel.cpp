@@ -6,8 +6,14 @@
 //=============================================================================
 //-----------------------------------------------------------------------------
 HistogramCanvasPixel::HistogramCanvasPixel( wxWindow* parent, wxWindowID id /* = -1 */, const wxPoint& pos /* = wxDefaultPosition */,
-	const wxSize& size /* = wxDefaultSize */, long style /* = wxSUNKEN_BORDER */, const wxString& name /* = "pixelhistogram" */, bool boActive /* = true */ )
-	: HistogramCanvas(parent, wxT("Histogram"), id, pos, size, style, name, boActive) {}
+	const wxSize& size /* = wxDefaultSize */, long style /* = wxSUNKEN_BORDER */, const wxString& name /* = "Pixel Histogram" */, bool boActive /* = true */ )
+	: HistogramCanvas(parent, wxT("PixelHistogram"), id, pos, size, style, name, boActive) {}
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+HistogramCanvasPixel::HistogramCanvasPixel( wxWindow* parent, const wxString& configName, wxWindowID id /* = -1 */, const wxPoint& pos /* = wxDefaultPosition */,
+	const wxSize& size /* = wxDefaultSize */, long style /* = wxSUNKEN_BORDER */, const wxString& name /* = "Pixel Histogram" */, bool boActive /* = true */ )
+	: HistogramCanvas(parent, configName, id, pos, size, style, name, boActive) {}
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------

@@ -221,13 +221,18 @@ DeviceHandlerBlueDevice::DeviceHandlerBlueDevice( mvIMPACT::acquire::Device* pDe
 			pParent_->WriteErrorMessage( wxT("Can't install new firmware automatically as a crucial environment variable(MVIMPACT_ACQUIRE_DIR) is missing...\nPlease select the folder containing the files manually.\n") );
 		}
 	}
-	else if( product_ == pgBlueFOX3 )
-	{
-		firmwareUpdateFolder_.append( wxT("/FirmwareUpdates/mvBlueFOX") );
-	}
 	else
 	{
-		firmwareUpdateFolder_.append( wxT("/FirmwareUpdates/mvBlueCOUGAR") );
+		firmwareUpdateFolderDevelopment_ = firmwareUpdateFolder_;
+		if( product_ == pgBlueFOX3 )
+		{
+			firmwareUpdateFolder_.append( wxT("/FirmwareUpdates/mvBlueFOX") );
+		}
+		else
+		{
+			firmwareUpdateFolder_.append( wxT("/FirmwareUpdates/mvBlueCOUGAR") );
+		}
+		firmwareUpdateFolderDevelopment_.append( wxT("/mvBlueCOUGAR/Firmware") );
 	}
 }
 
@@ -480,7 +485,7 @@ bool DeviceHandlerBlueDevice::ExtractFileVersion( const wxString& fileName, Vers
 }
 
 //-----------------------------------------------------------------------------
-bool DeviceHandlerBlueDevice::GetFileFromArchive( const wxString& firmwareFileAndPath, const char* pArchive, size_t archiveSize, const wxString& filename, auto_array_ptr<char>& data )
+bool DeviceHandlerBlueDevice::GetFileFromArchive( const wxString& firmwareFileAndPath, const char* pArchive, size_t archiveSize, const wxString& filename, auto_array_ptr<char>& data ) const
 //-----------------------------------------------------------------------------
 {
 	wxMemoryInputStream zipData(pArchive, archiveSize);
@@ -555,6 +560,137 @@ bool DeviceHandlerBlueDevice::GetIDFromUser( long& /*newID*/, const long /*minVa
 		::wxExecute( tool );
 	}
 	return false;
+}
+
+//-----------------------------------------------------------------------------
+int DeviceHandlerBlueDevice::GetLatestFirmwareVersion( Version& latestFirmwareVersion ) const
+//-----------------------------------------------------------------------------
+{
+	switch( product_ )
+	{
+	case pgBlueCOUGAR_X:
+	case pgBlueFOX3:
+		return GetLatestFirmwareVersionCOUGAR_XAndFOX3Device( latestFirmwareVersion );
+	default:
+		break;
+	}
+	return urFeatureUnsupported;
+}
+
+//-----------------------------------------------------------------------------
+int DeviceHandlerBlueDevice::GetLatestFirmwareVersionCOUGAR_XAndFOX3Device( Version& latestFirmwareVersion ) const
+//-----------------------------------------------------------------------------
+{
+	ConvertedString serial(pDev_->serial.read());
+	wxString firmwareFileAndPath;
+	wxString descriptionFileAndPath;
+
+	firmwareFileAndPath = firmwareUpdateFolder_ + wxString(wxT("/")) + firmwareUpdateFileName_;
+	if( !::wxFileExists( firmwareFileAndPath ) )
+	{
+		firmwareFileAndPath = firmwareUpdateFolderDevelopment_ + wxString(wxT("/")) + firmwareUpdateFileName_;
+		if( !::wxFileExists( firmwareFileAndPath ) )
+		{
+			return urFileIOError;
+		}
+	}
+
+	wxFFile archive(firmwareFileAndPath.c_str(), wxT("rb"));
+	if( !archive.IsOpened() )
+	{
+		return urFileIOError;
+	}
+
+	auto_array_ptr<char> pBuffer(archive.Length());
+	size_t bytesRead = archive.Read( pBuffer.get(), pBuffer.parCnt() );
+	if( bytesRead != static_cast<size_t>(archive.Length()) )
+	{
+		return urFileIOError;
+	}
+
+	wxMemoryInputStream zipData(pBuffer.get(), pBuffer.parCnt());
+	wxZipInputStream zipStream(zipData);
+	int fileCount = zipStream.GetTotalEntries();
+	if( fileCount < 2 )
+	{
+		return urInvalidFileSelection;
+	}
+
+	auto_array_ptr<char> pPackageDescription;
+	if( !GetFileFromArchive( firmwareFileAndPath, pBuffer.get(), pBuffer.parCnt(), wxString(wxT("packageDescription.xml")), pPackageDescription ) )
+	{
+		return urFileIOError;
+	}
+
+	PackageDescriptionFileParser fileParser;
+	fileParser.Create();
+	bool fSuccess = true;
+	char* pszBuffer = static_cast<char*>(fileParser.GetBuffer( static_cast<int>(pPackageDescription.parCnt()) + 1 ));
+	if( !pszBuffer )
+	{
+		fSuccess = false;
+	}
+	else
+	{
+		memcpy( pszBuffer, pPackageDescription.get(), pPackageDescription.parCnt() );
+		pszBuffer[pPackageDescription.parCnt()] = '\0';
+		fSuccess = fileParser.ParseBuffer( static_cast<int>(pPackageDescription.parCnt()), true );
+	}
+
+	if( !fSuccess || ( fileParser.GetErrorCode() != XML_ERROR_NONE ) )
+	{
+		return urFileIOError;
+	}
+
+	if( !fileParser.GetLastError().empty() )
+	{
+		return urFileIOError;
+	}
+
+	const FileEntryContainer& fileEntries = fileParser.GetResults();
+	const FileEntryContainer::size_type cnt = fileEntries.size();
+	wxString product(ConvertedString(pDev_->product.read()));
+	wxString deviceVersionAsString(pDev_->deviceVersion.isValid() ? ConvertedString(pDev_->deviceVersion.read()) : wxString(wxT("1.0")));
+	Version deviceVersion(VersionFromString( deviceVersionAsString ));
+	wxArrayString choices;
+	for( FileEntryContainer::size_type i=0; i<cnt; i++ )
+	{
+		std::map<wxString, SuitableProductKey>::const_iterator it = fileEntries[i].suitableProductKeys_.find( product );
+		bool boSuitable = it != fileEntries[i].suitableProductKeys_.end();
+		if( boSuitable && ( fileEntries[i].type_ == wxString(wxT("Firmware")) ) &&
+			IsVersionWithinRange( deviceVersion, it->second.revisionMin_, it->second.revisionMax_ ) )
+		{
+			choices.Add( wxString::Format( wxT("%s(%s, file version: %ld.%ld.%ld.%ld)"), fileEntries[i].name_.c_str(), fileEntries[i].description_.c_str(), fileEntries[i].version_.major_, fileEntries[i].version_.minor_, fileEntries[i].version_.subMinor_, fileEntries[i].version_.release_ ) );
+		}
+	}
+	choices.Sort( CompareFileVersion );
+
+	wxString selection;
+	if( choices.IsEmpty() )
+	{
+		return urInvalidFileSelection;
+	}
+
+	selection = choices[0].BeforeFirst( wxT('(') );
+
+	const Version currentFirmwareVersion = VersionFromString( ConvertedString(pDev_->firmwareVersion.readS()) );
+	for( FileEntryContainer::size_type i=0; i<cnt; i++ )
+	{
+		if( fileEntries[i].name_ == selection )
+		{
+			if( currentFirmwareVersion >= fileEntries[i].version_ )
+			{
+				return urOperationCanceled;
+			}
+			else
+			{
+				latestFirmwareVersion = fileEntries[i].version_;
+				break;
+			}
+		}
+	}
+
+	return urOperationSuccessful;
 }
 
 //-----------------------------------------------------------------------------
@@ -865,7 +1001,6 @@ int DeviceHandlerBlueDevice::UpdateCOUGAR_XAndFOX3Device( bool boSilentMode )
 			{
 				pParent_->WriteErrorMessage( unusableFiles[i] );
 			}
-
 		}
 		return urInvalidFileSelection;
 	}

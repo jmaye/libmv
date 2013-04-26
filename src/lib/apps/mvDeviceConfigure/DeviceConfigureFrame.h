@@ -110,7 +110,8 @@ public:
 	int UpdateDMABufferSize( int deviceIndex );
 protected:
 	// event handlers (these functions should _not_ be virtual)
-	void OnAbout( wxCommandEvent& e );
+	void OnHelp_About( wxCommandEvent& e );
+	void OnHelp_OnlineDocumentation( wxCommandEvent& )               { ::wxLaunchDefaultBrowser( wxT("http://www.matrix-vision.com/manuals/") ); }
 	void OnConfigureLogOutput( wxCommandEvent& e );
 	void OnQuit( wxCommandEvent& e );
 	void OnSetID( wxCommandEvent& e );
@@ -176,14 +177,15 @@ private:
 	enum TMenuItem
 	//-----------------------------------------------------------------------------
 	{
-		miQuit = 1,
-		miAbout,
-		miAction_SetID = 1000,
+		miAction_Quit = 1,
+		miAction_SetID,
 		miAction_UpdateFW,
 		miAction_UpdateKernelDriver,
 		miAction_ConfigureLogOutput,
 		miAction_UpdateDeviceList,
 		miAction_UpdateDMABufferSize,
+		miHelp_About,
+		miHelp_OnlineDocumentation,
 		miCOMMON_LAST
 	};
 	//-----------------------------------------------------------------------------

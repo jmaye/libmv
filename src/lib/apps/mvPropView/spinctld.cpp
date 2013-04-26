@@ -278,7 +278,7 @@ bool wxSpinCtrlDbl::Create( wxWindow *parent, wxWindowID id,
                            const wxString& name,
                            bool boWithSlider /* = false */ )
 {
-    if (!wxControl::Create(parent, id, pos, size, style|wxNO_BORDER, wxDefaultValidator, name))
+    if (!wxControl::Create(parent, id, pos, size, style | wxNO_BORDER, wxDefaultValidator, name))
         return false;
 
     wxControl::SetLabel(name);

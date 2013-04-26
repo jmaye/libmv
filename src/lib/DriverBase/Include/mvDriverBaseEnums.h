@@ -529,7 +529,7 @@ enum TBayerWhiteBalanceResult
 		/// \brief Enable the <i>data clip</i> mode.
 		/**
 		 *  The image pixel values will be clipped to <b>247</b>. The other values
-		 *  <b>[248-255]</b> can be used for colour display.
+		 *  <b>[248-255]</b> can be used for color display.
 		 */
 		blcdcmOn = 1
 	};
@@ -577,11 +577,11 @@ enum TCameraAoiMode
 /// \brief Defines valid binning modes for the camera.
 /**
  *  \note
- *  Binning might be available for colour sensors that do not support colour
- *  binning. This will result in incorrect colour information when the data
+ *  Binning might be available for color sensors that do not support color
+ *  binning. This will result in incorrect color information when the data
  *  is converted from a Bayer sensor. However under some circumstances this feature
  *  might be useful (e.g. when taking image in a very dark surrounding or at night
- *  where almost no colour information will be contained in the image anyway thus
+ *  where almost no color information will be contained in the image anyway thus
  *  resulting in useful images again). Therefore this feature has deliberately
  *  left available. \n \n
  *  \image html Binning_modes.png
@@ -643,7 +643,7 @@ enum TCameraBinningMode // flags_attribute, uint_type
 		cdfMono,
 		/// \brief This is a Bayer format.
 		cdfBayer,
-		/// \brief This is a Bayer Packed format. For each object line there is a red and a blue raw line to calculate the resulting colour line.
+		/// \brief This is a Bayer Packed format. For each object line there is a red and a blue raw line to calculate the resulting color line.
 		cdfBayerPacked,
 		/// \brief This is a RGB format.
 		cdfRGB,
@@ -1512,15 +1512,15 @@ enum TColorTwistOutputCorrectionMatrixMode
 enum TColorProcessingMode
 //-----------------------------------------------------------------------------
 {
-	/// \brief The driver decides (depending on the connected camera) what kind of colour processing has to be applied.
+	/// \brief The driver decides (depending on the connected camera) what kind of color processing has to be applied.
 	cpmAuto = 0,
-	/// \brief No colour processing will be performed.
+	/// \brief No color processing will be performed.
 	cpmRaw,
-	/// \brief A Bayer colour conversion will be applied before the image is transferred to the user.
+	/// \brief A Bayer color conversion will be applied before the image is transferred to the user.
 	cpmBayer,
 	/// \brief A Bayer to mono conversion will be applied before the image is transferred to the user.
 	cpmBayerToMono,
-	/// \brief No colour processing will be performed but the packed raw Bayer data will be re-arranged within the buffer.
+	/// \brief No color processing will be performed but the packed raw Bayer data will be re-arranged within the buffer.
 	/**
 	 *  In the resulting image the top left quarter of the image will contain the red pixels,
 	 *  the top right quarter the blue pixels, the lower left quarter the green pixels from the
@@ -2762,7 +2762,7 @@ enum TImageBufferPixelFormat
 	ibpfYUV422Planar = 12,
 	/// \brief The image will be transferred as an RGB image with 30 bit of usable data per pixel.
 	/**
-	 *  This is an interleaved pixel format with 2 bytes per colour component.
+	 *  This is an interleaved pixel format with 2 bytes per color component.
 	 *  The data is stored pixel-wise:
 	 * 
 	 * \code
@@ -2772,7 +2772,7 @@ enum TImageBufferPixelFormat
 	 *  ...........................   B(n)G(n)R(n)
 	 * \endcode
 	 * 
-	 *  The data of each colour component will be LSB aligned, thus the 6 MSB of each 16 bit will
+	 *  The data of each color component will be LSB aligned, thus the 6 MSB of each 16 bit will
 	 *  not contain valid data.
 	 * 
 	 *  So the first 2 bytes in memory are the first pixels blue component. <b>ImageBuffer::vpData</b> will therefore
@@ -2781,7 +2781,7 @@ enum TImageBufferPixelFormat
 	ibpfRGB101010Packed = 13,
 	/// \brief The image will be transferred as an RGB image with 36 bit of usable data per pixel.
 	/**
-	 *  This is an interleaved pixel format with 2 bytes per colour component.
+	 *  This is an interleaved pixel format with 2 bytes per color component.
 	 *  The data is stored pixel-wise:
 	 * 
 	 * \code
@@ -2791,7 +2791,7 @@ enum TImageBufferPixelFormat
 	 *  ...........................   B(n)G(n)R(n)
 	 * \endcode
 	 * 
-	 *  The data of each colour component will be LSB aligned, thus the 4 MSB of each 16 bit will
+	 *  The data of each color component will be LSB aligned, thus the 4 MSB of each 16 bit will
 	 *  not contain valid data.
 	 * 
 	 *  So the first 2 bytes in memory are the first pixels blue component. <b>ImageBuffer::vpData</b> will therefore
@@ -2800,7 +2800,7 @@ enum TImageBufferPixelFormat
 	ibpfRGB121212Packed = 14,
 	/// \brief The image will be transferred as an RGB image with 42 bit of usable data per pixel.
 	/**
-	 *  This is an interleaved pixel format with 2 bytes per colour component.
+	 *  This is an interleaved pixel format with 2 bytes per color component.
 	 *  The data is stored pixel-wise:
 	 * 
 	 * \code
@@ -2810,7 +2810,7 @@ enum TImageBufferPixelFormat
 	 *  ...........................   B(n)G(n)R(n)
 	 * \endcode
 	 * 
-	 *  The data of each colour component will be LSB aligned, thus the 2 MSB of each 16 bit will
+	 *  The data of each color component will be LSB aligned, thus the 2 MSB of each 16 bit will
 	 *  not contain valid data.
 	 * 
 	 *  So the first 2 bytes in memory are the first pixels blue component. <b>ImageBuffer::vpData</b> will therefore
@@ -2819,7 +2819,7 @@ enum TImageBufferPixelFormat
 	ibpfRGB141414Packed = 15,
 	/// \brief The image will be transferred as an RGB image with 48 bit of usable data per pixel.
 	/**
-	 *  This is an interleaved pixel format with 2 bytes per colour component.
+	 *  This is an interleaved pixel format with 2 bytes per color component.
 	 *  The data is stored pixel-wise:
 	 * 
 	 * \code
@@ -2829,7 +2829,7 @@ enum TImageBufferPixelFormat
 	 *  ...........................   B(n)G(n)R(n)
 	 * \endcode
 	 * 
-	 *  The data of each colour component will be LSB aligned.
+	 *  The data of each color component will be LSB aligned.
 	 * 
 	 *  So the first 2 bytes in memory are the first pixels blue component. <b>ImageBuffer::vpData</b> will therefore
 	 *  point to B(1) when using a 16 bit pointer.
@@ -2946,9 +2946,9 @@ enum TImageBufferPixelFormat
 	 *  point to R(1) when using a byte pointer.
 	 */
 	ibpfBGR888Packed = 22,
-	/// \brief A 10 bit per colour component RGB packed format.
+	/// \brief A 10 bit per color component RGB packed format.
 	/**
-	 *  This format will use 4 bytes to store one 10 bit per colour component RGB pixel. The following memory layout is
+	 *  This format will use 4 bytes to store one 10 bit per color component RGB pixel. The following memory layout is
 	 *  used for each pixel:
 	 * 
 	 * \code
@@ -3003,7 +3003,7 @@ enum TImageBufferPixelFormat
 	ibpfYUV444_UYVPacked = 24,
 	/// \brief The image will be transferred as an YUV image with 30 bit of usable data per pixel.
 	/**
-	 *  This is an interleaved pixel format with 2 bytes per colour component.
+	 *  This is an interleaved pixel format with 2 bytes per color component.
 	 *  The data is stored pixel-wise:
 	 * 
 	 * \code
@@ -3225,7 +3225,7 @@ enum TImageDestinationPixelFormat
 	idpfYUV422Planar = 13,
 	/// \brief The image will be transferred as an RGB image with 30 bit of usable data per pixel.
 	/**
-	 *  This is an interleaved pixel format with 2 bytes per colour component.
+	 *  This is an interleaved pixel format with 2 bytes per color component.
 	 *  The data is stored pixel-wise:
 	 * 
 	 * \code
@@ -3235,7 +3235,7 @@ enum TImageDestinationPixelFormat
 	 *  ...........................   B(n)G(n)R(n)
 	 * \endcode
 	 * 
-	 *  The data of each colour component will be LSB aligned, thus the 6 MSB of each 16 bit will
+	 *  The data of each color component will be LSB aligned, thus the 6 MSB of each 16 bit will
 	 *  not contain valid data.
 	 * 
 	 *  So the first byte in memory is the first pixels blue component. <b>ImageBuffer::vpData</b> will therefore
@@ -3244,7 +3244,7 @@ enum TImageDestinationPixelFormat
 	idpfRGB101010Packed = 14,
 	/// \brief The image will be transferred as an RGB image with 36 bit of usable data per pixel.
 	/**
-	 *  This is an interleaved pixel format with 2 bytes per colour component.
+	 *  This is an interleaved pixel format with 2 bytes per color component.
 	 *  The data is stored pixel-wise:
 	 * 
 	 * \code
@@ -3254,7 +3254,7 @@ enum TImageDestinationPixelFormat
 	 *  ...........................   B(n)G(n)R(n)
 	 * \endcode
 	 * 
-	 *  The data of each colour component will be LSB aligned, thus the 4 MSB of each 16 bit will
+	 *  The data of each color component will be LSB aligned, thus the 4 MSB of each 16 bit will
 	 *  not contain valid data.
 	 * 
 	 *  So the first byte in memory is the first pixels blue component. <b>ImageBuffer::vpData</b> will therefore
@@ -3263,7 +3263,7 @@ enum TImageDestinationPixelFormat
 	idpfRGB121212Packed = 15,
 	/// \brief The image will be transferred as an RGB image with 42 bit of usable data per pixel.
 	/**
-	 *  This is an interleaved pixel format with 2 bytes per colour component.
+	 *  This is an interleaved pixel format with 2 bytes per color component.
 	 *  The data is stored pixel-wise:
 	 * 
 	 * \code
@@ -3273,7 +3273,7 @@ enum TImageDestinationPixelFormat
 	 *  ...........................   B(n)G(n)R(n)
 	 * \endcode
 	 * 
-	 *  The data of each colour component will be LSB aligned, thus the 2 MSB of each 16 bit will
+	 *  The data of each color component will be LSB aligned, thus the 2 MSB of each 16 bit will
 	 *  not contain valid data.
 	 * 
 	 *  So the first byte in memory is the first pixels blue component. <b>ImageBuffer::vpData</b> will therefore
@@ -3282,7 +3282,7 @@ enum TImageDestinationPixelFormat
 	idpfRGB141414Packed = 16,
 	/// \brief The image will be transferred as an RGB image with 48 bit of usable data per pixel.
 	/**
-	 *  This is an interleaved pixel format with 2 bytes per colour component.
+	 *  This is an interleaved pixel format with 2 bytes per color component.
 	 *  The data is stored pixel-wise:
 	 * 
 	 * \code
@@ -3292,7 +3292,7 @@ enum TImageDestinationPixelFormat
 	 *  ...........................   B(n)G(n)R(n)
 	 * \endcode
 	 * 
-	 *  The data of each colour component will be LSB aligned.
+	 *  The data of each color component will be LSB aligned.
 	 * 
 	 *  So the first byte in memory is the first pixels blue component. <b>ImageBuffer::vpData</b> will therefore
 	 *  point to B(1) when using a 16 bit pointer.
@@ -3409,9 +3409,9 @@ enum TImageDestinationPixelFormat
 	 *  point to R(1) when using a byte pointer.
 	 */
 	idpfBGR888Packed = 22,
-	/// \brief A 10 bit per colour component RGB packed format.
+	/// \brief A 10 bit per color component RGB packed format.
 	/**
-	 *  This format will use 4 bytes to store one 10 bit per colour component RGB pixel. The following memory layout is
+	 *  This format will use 4 bytes to store one 10 bit per color component RGB pixel. The following memory layout is
 	 *  used for each pixel:
 	 * 
 	 * \code
@@ -3466,7 +3466,7 @@ enum TImageDestinationPixelFormat
 	idpfYUV444_UYVPacked = 24,
 	/// \brief The image will be transferred as an YUV image with 30 bit of usable data per pixel.
 	/**
-	 *  This is an interleaved pixel format with 2 bytes per colour component.
+	 *  This is an interleaved pixel format with 2 bytes per color component.
 	 *  The data is stored pixel-wise:
 	 * 
 	 * \code
@@ -3476,7 +3476,7 @@ enum TImageDestinationPixelFormat
 	 *  ...........................   Cb(n)Y(n)Cr(n)
 	 * \endcode
 	 * 
-	 *  The data of each colour component will be LSB aligned, thus the 6 MSB of each 16 bit will
+	 *  The data of each color component will be LSB aligned, thus the 6 MSB of each 16 bit will
 	 *  not contain valid data.
 	 * 
 	 *  So the first byte in memory is the first pixels Cb component. <b>ImageBuffer::vpData</b> will therefore
@@ -3502,7 +3502,7 @@ enum TImageDestinationPixelFormat
 	idpfYUV444Packed = 26,
 	/// \brief The image will be transferred as an YUV image with 30 bit of usable data per pixel.
 	/**
-	 *  This is an interleaved pixel format with 2 bytes per colour component.
+	 *  This is an interleaved pixel format with 2 bytes per color component.
 	 *  The data is stored pixel-wise:
 	 * 
 	 * \code
@@ -3512,7 +3512,7 @@ enum TImageDestinationPixelFormat
 	 *  ...........................   Y(n)Cb(n)Cr(n)
 	 * \endcode
 	 * 
-	 *  The data of each colour component will be LSB aligned, thus the 6 MSB of each 16 bit will
+	 *  The data of each color component will be LSB aligned, thus the 6 MSB of each 16 bit will
 	 *  not contain valid data.
 	 * 
 	 *  So the first byte in memory is the first pixels luminance component. <b>ImageBuffer::vpData</b> will therefore
@@ -3628,9 +3628,9 @@ enum TInfoSensorColorMode
 	iscmUnknown = 0,
 	/// \brief This is a mono sensor.
 	iscmMono,
-	/// \brief This is a Bayer colour sensor.
+	/// \brief This is a Bayer color sensor.
 	iscmBayer,
-	/// \brief This is a colour sensor.
+	/// \brief This is a color sensor.
 	iscmColor,
 	/// \brief This is a sensor sensitive in the near IF spectrum only.
 	iscmNIR

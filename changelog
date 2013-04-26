@@ -1,3 +1,9 @@
+libmv (2.5.5-14) lucid; urgency=low
+
+  * port to version 2.5.5
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Fri, 26 Apr 2013 11:09:36 +0200
+
 libmv (2.5.4-13) lucid; urgency=low
 
   * mistake in 32-bits version 
