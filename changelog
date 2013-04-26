@@ -1,3 +1,9 @@
+libmv (2.5.5-15ubuntu1) precise; urgency=low
+
+  * update version
+
+ -- Jerome Maye <jmaye@jmaye-laptop>  Fri, 26 Apr 2013 09:12:57 +0000
+
 libmv (2.5.5-14) lucid; urgency=low
 
   * port to version 2.5.5
