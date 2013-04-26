@@ -1,3 +1,9 @@
+libmv (2.5.5-16) precise; urgency=low
+
+  * mistake in changelog
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Fri, 26 Apr 2013 09:14:02 +0000
+
 libmv (2.5.5-15ubuntu1) precise; urgency=low
 
   * update version
