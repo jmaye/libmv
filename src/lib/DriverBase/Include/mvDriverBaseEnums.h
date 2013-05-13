@@ -1653,7 +1653,15 @@ enum TDeviceAdvancedOptions // flags_attribute, uint_type
 	 *  Allow per channel offset correction in non auto offset mode for sensors with a bayer (RGGB) based analog path.
 	 *  The per channel offset value will be added to the master offset (Offset_pc).
 	*/
-	daoEnablePerChannelOffsetCorrection = 0x40
+	daoEnablePerChannelOffsetCorrection = 0x40,
+	/// \brief Enable raw sensor gain.
+	/**
+	 *  Use mathematical correct gain for sensor setting. Thus increasing the gain by 6 dB will actually result in a factor of 2.
+	 *  However with this option enabled the gain range will include values so low that the pixel saturation charge will
+	 *  be with in ADC digitizer range thus an over-saturated image will contain pixels that do \b NOT contain the maximum
+	 *  value for the given pixel format.
+	*/
+	daoUseRawSensorGain = 0x80
 };
 
 //-----------------------------------------------------------------------------

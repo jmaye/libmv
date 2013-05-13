@@ -1,3 +1,9 @@
+libmv (2.5.7-17) precise; urgency=low
+
+  * update version
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Mon, 13 May 2013 09:37:27 +0000
+
 libmv (2.5.5-16) precise; urgency=low
 
   * mistake in changelog

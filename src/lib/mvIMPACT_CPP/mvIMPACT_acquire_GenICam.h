@@ -3532,6 +3532,92 @@ public:
 	 */
 	PropertyI64 mvGevSCBW;
 	PYTHON_ONLY(%mutable;)
+	/// \brief Calculates the effective number of payload packets (not including leader and trailer) per block of data (e.g. an image) for a GigE Vision data stream when transferring the payload type \a image.
+	/**
+	 *  This will include all overhead introduced by the network protocol. The value will be correct for payload type image only, thus e.g. when
+	 *  transferring chunk data the result will not be 100 per cent accurate as then some packets will use a slightly different layout. However
+	 *  these differences are negligible when working in modes, where individual images are not smaller then roughly 64 by 64 pixels.
+	 *  \return The effective number of payload packets (not including leader and trailer) per block of data (e.g. an image) transferred by a GigE Vision device with the current parameters.
+	 */
+	int64_type gevGetEffectivePayloadPacketsPerImage(
+		/// [in] The current or desired gevSCPSPacketSizeValue. This value depends e.g. on the MTU of the NIC the stream has been created on. See network configuration chapters for details.
+		const int64_type gevSCPSPacketSizeValue,
+		/// [in] Indicates whether the bandwidth shall be calculated for the extended ID mode (introduced in GigE Vision 2.0) or not.
+		/// With \a boExtendedID the protocol overhead will increase slightly.
+		const bool boExtendedID = false ) const
+	{
+		const int64_type PacketSizeWithoutEthernet = boExtendedID ? 48LL : 36LL; // 20 (IP Header) + 8 (UDP Header) + boExtendedID ? 20 : 8 (GVSP Header)
+		const int64_type gevSCPSPacketSizeValue_effective = gevSCPSPacketSizeValue - PacketSizeWithoutEthernet; // The ethernet header is not taken into account here!
+		return ( payloadSize.read() + gevSCPSPacketSizeValue_effective - 1LL ) / gevSCPSPacketSizeValue_effective;
+	}
+	/// \brief Calculates the effective bytes per block of data (e.g. an image) for a GigE Vision data stream when transferring the payload type \a image.
+	/**
+	 *  This will include all overhead introduced by the network protocol. The value will be correct for payload type image only, thus e.g. when
+	 *  transferring chunk data the result will not be 100 per cent accurate as then some packets will use a slightly different layout. However
+	 *  these differences are negligible when working in modes, where individual images are not smaller then roughly 64 by 64 pixels.
+	 *  \return The effective bytes per block of data (e.g. an image) transferred by a GigE Vision device with the current parameters.
+	 */
+	int64_type gevGetEffectiveBytesPerImage(
+		/// [in] The current or desired gevSCPSPacketSizeValue. This value depends e.g. on the MTU of the NIC the stream has been created on. See network configuration chapters for details.
+		const int64_type gevSCPSPacketSizeValue,
+		/// [in] Indicates whether the bandwidth shall be calculated for the extended ID mode (introduced in GigE Vision 2.0) or not.
+		/// With \a boExtendedID the protocol overhead will increase slightly.
+		const bool boExtendedID = false ) const
+	{
+		const int64_type PacketSizeWithoutEthernet = boExtendedID ? 48LL : 36LL; // 20 (IP Header) + 8 (UDP Header) + boExtendedID ? 20 : 8 (GVSP Header)
+		const int64_type GVSPHeaderSize = PacketSizeWithoutEthernet + 14LL; // 14 (Ethernet Header)
+		const int64_type GVSPImageLeaderSize = GVSPHeaderSize + 36LL;
+		const int64_type GVSPImageTrailerSize = GVSPHeaderSize + 8LL;
+		const int64_type protocolOverhead = GVSPImageLeaderSize + ( gevGetEffectivePayloadPacketsPerImage( gevSCPSPacketSizeValue, boExtendedID ) * GVSPHeaderSize ) + GVSPImageTrailerSize;
+		return protocolOverhead + payloadSize.read();
+	}
+	/// \brief Calculates the overall resulting bandwidth (in bytes) needed for GigE Vision data streams when transferring the payload type \a image.
+	/**
+	 *  This will include all overhead introduced by the network protocol. The value will be correct for payload type image only, thus e.g. when
+	 *  transferring chunk data the result will not be 100 per cent precise as then some packets will use a slightly different layout. However
+	 *  these differences are negligible when working in modes, where individual images are not smaller then roughly 64 by 64 pixels.
+	 *  \return The overall resulting bandwidth (in bytes) needed for GigE Vision data streams when transferring the payload type \a image.
+	 */
+	int64_type gevGetResultingBandwidth(
+		/// [in] The overall current or desired frame rate.
+		const double acquisitionFrameRateValue,
+		/// [in] The current or desired gevSCPSPacketSizeValue. This value depends e.g. on the MTU of the NIC the stream has been created on. See network configuration chapters for details.
+		const int64_type gevSCPSPacketSizeValue,
+		/// [in] Indicates whether the bandwidth shall be calculated for the extended ID mode (introduced in GigE Vision 2.0) or not.
+		/// With \a boExtendedID the protocol overhead will increase slightly.
+		const bool boExtendedID = false ) const
+	{
+		return static_cast<int64_type>(static_cast<double>(gevGetEffectiveBytesPerImage( gevSCPSPacketSizeValue, boExtendedID )) * acquisitionFrameRateValue);
+	}
+	/// \brief Calculates the inter-packet delay needed to achieve a uniform packet and thus payload distribution for for GigE Vision data streams when transferring the payload type \a image.
+	/**
+	 *  This will include all overhead introduced by the network protocol. The value will be correct for payload type image only, thus e.g. when
+	 *  transferring chunk data the result will not be 100 per cent accurate as then some packets will use a slightly different layout. However
+	 *  these differences are negligible when working in modes, where individual images are not smaller then roughly 64 by 64 pixels.
+	 *
+	 *  The result of this function should be written to the property <b>mvIMPACT::acquire::TransportLayerControl::gevSCPD</b> if supported by the device.
+	 *  \return The \a GevSCPD value for the given input parameters.
+	 */
+	int64_type gevGetResultingPacketDelay(
+		/// [in] The overall current or desired frame rate.
+		const double acquisitionFrameRateValue,
+		/// [in] The current or desired gevSCPSPacketSizeValue. This value depends e.g. on the MTU of the NIC the stream has been created on. See network configuration chapters for details.
+		const int64_type gevSCPSPacketSizeValue,
+		/// [in] The timestamp tick frequency of the GEV remote device.
+		const int64_type gevTimestampTickFrequencyValue,
+		/// [in] The overall bandwidth in bytes that is available on the given link.
+		const int64_type bandwidthAvailable,
+		/// [in] Indicates whether the bandwidth shall be calculated for the extended ID mode (introduced in GigE Vision 2.0) or not.
+		/// With \a boExtendedID the protocol overhead will increase slightly.
+		const bool boExtendedID = false ) const
+	{
+		const int64_type bytesPerImage = gevGetEffectiveBytesPerImage( gevSCPSPacketSizeValue, boExtendedID );
+		const int64_type packetsPerImage = gevGetEffectivePayloadPacketsPerImage( gevSCPSPacketSizeValue, boExtendedID ) + 2; // one leader, one trailer
+		const double bandwidthNeeded = static_cast<double>(bytesPerImage) * acquisitionFrameRateValue;
+		const double totalDelayTime = 1. - static_cast<double>(bandwidthNeeded) / static_cast<double>(bandwidthAvailable);
+		const double interPacketDelayTime = totalDelayTime / ( static_cast<double>(packetsPerImage) * acquisitionFrameRateValue );
+		return static_cast<int64_type>(interPacketDelayTime * gevTimestampTickFrequencyValue);
+	}
 #ifdef DOTNET_ONLY_CODE
 	PropertyI64 getPayloadSize( void ) const { return payloadSize; }
 	PropertyI64 getGevVersionMajor( void ) const { return gevVersionMajor; }
@@ -5229,7 +5315,7 @@ public:
 		/// [in] A pointer to a <b>mvIMPACT::acquire::Device</b> object obtained from a <b>mvIMPACT::acquire::DeviceManager</b> object.
 		mvIMPACT::acquire::Device* pDev,
 		/// [in] The \a index of the instance this object shall be created for. Passing an invalid index will raise an exception.
-		int index ) :
+		int64_type index ) :
 			mvIMPACT::acquire::ComponentCollection(INVALID_ID),
 			interfaceID(),
 			interfaceType(),
@@ -5708,7 +5794,7 @@ public:
 		/// [in] A pointer to a <b>mvIMPACT::acquire::Device</b> object obtained from a <b>mvIMPACT::acquire::DeviceManager</b> object.
 		mvIMPACT::acquire::Device* pDev,
 		/// [in] The \a index of the instance this object shall be created for. Passing an invalid index will raise an exception.
-		int index,
+		int64_type index,
 		/// [in] The name of the driver internal setting to access with this instance.
 		/// A list of valid setting names can be obtained by a call to
 		/// <b>mvIMPACT::acquire::FunctionInterface::getAvailableSettings</b>, new

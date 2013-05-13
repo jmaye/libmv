@@ -8940,6 +8940,9 @@ public:
 	 *  \b mvIMPACT::acquire::FunctionInterface::imageRequestConfigure
 	 *  \return
 	 *  - \b mvIMPACT::acquire::DMR_NO_ERROR if successful.
+	 *  - \b mvIMPACT::acquire::DEV_NO_FREE_REQUEST_AVAILABLE if all mvIMPACT::acquire::Request objects are currently in use (either owned by the user or queued for acquisition).
+	 *  - \b mvIMPACT::acquire::DEV_INVALID_REQUEST_NUMBER if the request number defined by the property \b ImageRequestControl::requestToUse is invalid (out of bounds).
+	 *  - \b mvIMPACT::acquire::DEV_REQUEST_ALREADY_IN_USE if the request number defined by the property \b ImageRequestControl::requestToUse is already in use (either owned by the user or queued for acquisition).
 	 *  - A negative error code of type \b mvIMPACT::acquire::TDMR_ERROR otherwise.
 	 */
 	int imageRequestSingle( /// [in] A pointer to the \b mvIMPACT::acquire::ImageRequestControl object
@@ -8994,6 +8997,11 @@ public:
 	 *  \b mvIMPACT::acquire::Request::configure
 	 *  \return
 	 *  - \b mvIMPACT::acquire::DMR_NO_ERROR if successful.
+	 *  - \b mvIMPACT::acquire::DEV_REQUEST_CANT_BE_UNLOCKED if the request number defined by \a nr is currently not owned by the application (either already unlocked or queued for acquisition).
+	 *  - \b mvIMPACT::acquire::DMR_INPUT_BUFFER_TOO_SMALL if the request number defined by \a nr has been configured to capture into a user supplied buffer but the buffer is too small to acquire data into.
+	 *  - \b mvIMPACT::acquire::DEV_REQUEST_BUFFER_MISALIGNED if the request number defined by \a nr has been configured to capture into a user supplied buffer but this buffer is not aligned in order to the alignment restrictions reported by this driver/device combination.
+	 *  - \b mvIMPACT::acquire::DEV_REQUEST_BUFFER_INVALID if the request number defined by \a nr has been configured to capture into a user supplied buffer but an invalid (NULL) pointer has been attached to the request.
+	 *  - \b mvIMPACT::acquire::DEV_INVALID_REQUEST_NUMBER if the request number defined by \a nr is invalid (out of bounds).
 	 *  - A negative error code of type \b mvIMPACT::acquire::TDMR_ERROR otherwise.
 	 */
 	int imageRequestUnlock(	/// [in] The number of the request to unlock. This is typically

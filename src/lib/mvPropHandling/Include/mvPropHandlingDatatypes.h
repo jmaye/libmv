@@ -17,12 +17,14 @@
 #if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY)
 #	ifdef _WIN32
 		typedef __int64 int64_type;
+		typedef unsigned __int64 uint64_type;
 #		ifdef __BORLANDC__ // is Borland compiler?
 #			pragma option push -b // force enums to the size of integer
 #		endif // __BORLANDC__
 #	elif defined(linux)
 #		include <stdint.h>
 		typedef int64_t int64_type;
+		typedef uint64_t uint64_type;
 #	else
 #		error "unsupported target environment"
 #	endif // _WIN32
