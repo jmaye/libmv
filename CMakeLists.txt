@@ -19,6 +19,9 @@ remake_add_directories(
   bin lib xml
 )
 
+remake_pkg_config_generate(EXTRA_LIBS
+  -L${CMAKE_INSTALL_PREFIX}/${LIBMV_LIBRARY_DESTINATION} -lmvDeviceManager)
+
 remake_doc(
   html
   latex
