@@ -1,3 +1,9 @@
+libmv (2.5.7-21) precise; urgency=low
+
+  * missing pkg-config dep 
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Tue, 14 May 2013 08:42:48 +0000
+
 libmv (2.5.7-20) precise; urgency=low
 
   * adding pkg-config 
