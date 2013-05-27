@@ -455,7 +455,10 @@ DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueFOX3(
 	if( dc.deviceReset.isValid() )
 	{
 		const int deviceResetResult = dc.deviceReset.call();
-		MessageToUser( wxT("Update Result"), wxString::Format( wxT("Update successful but resetting device failed. Please disconnect and reconnect device %s now to activate the new firmware. Error reported from driver: %d(%s)."), ConvertedString(serial).c_str(), deviceResetResult, ConvertedString(ImpactAcquireException::getErrorCodeAsString( deviceResetResult )).c_str() ), boSilentMode, wxOK | wxICON_INFORMATION );
+		if( static_cast<TDMR_ERROR>(deviceResetResult) != DMR_NO_ERROR )
+		{
+			MessageToUser( wxT("Update Result"), wxString::Format( wxT("Update successful but resetting device failed. Please disconnect and reconnect device %s now to activate the new firmware. Error reported from driver: %d(%s)."), ConvertedString(serial).c_str(), deviceResetResult, ConvertedString(ImpactAcquireException::getErrorCodeAsString( deviceResetResult )).c_str() ), boSilentMode, wxOK | wxICON_INFORMATION );
+		}
 	}
 	else
 	{

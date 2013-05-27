@@ -1,6 +1,7 @@
 remake_include()
 
 remake_add_directories(apps COMPONENT tools)
+remake_add_directories(common COMPONENT tools)
 remake_add_directories(DriverBase)
 remake_add_directories(mvDeviceManager)
 remake_add_directories(mvIMPACT_CPP)

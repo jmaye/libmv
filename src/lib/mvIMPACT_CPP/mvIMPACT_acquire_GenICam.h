@@ -2504,6 +2504,7 @@ public:
 			mvLowLight(),
 			mvADCGain(),
 			mvVRamp(),
+			mvLinearLogarithmicMode(),
 			mvDigitalGainOffset(),
 			mvSaveCalibrationData()
 	{
@@ -2553,6 +2554,7 @@ public:
 		locator.bindComponent( mvLowLight, "mvLowLight" );
 		locator.bindComponent( mvADCGain, "mvADCGain" );
 		locator.bindComponent( mvVRamp, "mvVRamp" );
+		locator.bindComponent( mvLinearLogarithmicMode, "mvLinearLogarithmicMode" );
 		locator.bindComponent( mvDigitalGainOffset, "mvDigitalGainOffset" );
 		locator.bindComponent( mvSaveCalibrationData, "mvSaveCalibrationData@i" );
 	}
@@ -2784,6 +2786,11 @@ public:
 	 *  Adjusting this value will result in better column CDS (correlated double sampling) which will remove the column FPN from the image.
 	 */
 	PropertyI64 mvVRamp;
+	/// \brief Controls the knee point between linear response and logarithmic response.
+	/**
+	 *  Controls the knee point between linear response and logarithmic response.
+	 */
+	PropertyI64 mvLinearLogarithmicMode;
 	/// \brief Used for fine tuning of the brightness of the sensor.
 	/**
 	 *  Used for fine tuning of the brightness of the sensor.
@@ -2840,6 +2847,7 @@ public:
 	PropertyI64 getmvLowLight( void ) const { return mvLowLight; }
 	PropertyI64 getmvADCGain( void ) const { return mvADCGain; }
 	PropertyI64 getmvVRamp( void ) const { return mvVRamp; }
+	PropertyI64 getmvLinearLogarithmicMode( void ) const { return mvLinearLogarithmicMode; }
 	PropertyI64 getmvDigitalGainOffset( void ) const { return mvDigitalGainOffset; }
 	Method getmvSaveCalibrationData( void ) const { return mvSaveCalibrationData; }
 #endif // #ifdef DOTNET_ONLY_CODE
@@ -3611,9 +3619,8 @@ public:
 		/// With \a boExtendedID the protocol overhead will increase slightly.
 		const bool boExtendedID = false ) const
 	{
-		const int64_type bytesPerImage = gevGetEffectiveBytesPerImage( gevSCPSPacketSizeValue, boExtendedID );
+		const int64_type bandwidthNeeded = gevGetResultingBandwidth( acquisitionFrameRateValue, gevSCPSPacketSizeValue, boExtendedID );
 		const int64_type packetsPerImage = gevGetEffectivePayloadPacketsPerImage( gevSCPSPacketSizeValue, boExtendedID ) + 2; // one leader, one trailer
-		const double bandwidthNeeded = static_cast<double>(bytesPerImage) * acquisitionFrameRateValue;
 		const double totalDelayTime = 1. - static_cast<double>(bandwidthNeeded) / static_cast<double>(bandwidthAvailable);
 		const double interPacketDelayTime = totalDelayTime / ( static_cast<double>(packetsPerImage) * acquisitionFrameRateValue );
 		return static_cast<int64_type>(interPacketDelayTime * gevTimestampTickFrequencyValue);

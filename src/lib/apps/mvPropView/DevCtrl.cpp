@@ -89,13 +89,16 @@ void DevicePropertyHandler::CheckForWizards( mvIMPACT::acquire::Device* pDev, De
 
 		// check for SFNC compliant LUT Control
 		mvIMPACT::acquire::GenICam::LUTControl lc(pDev);
-		if( lc.LUTEnable.isValid() && lc.LUTIndex.isValid() && lc.LUTSelector.isValid() &&
+		if( lc.LUTEnable.isValid() && lc.LUTIndex.isValid() &&
 			lc.LUTValue.isValid() )
 		{
 			set<HOBJ> s;
 			s.insert( lc.LUTEnable.hObj() );
 			s.insert( lc.LUTIndex.hObj() );
-			s.insert( lc.LUTSelector.hObj() );
+			if( lc.LUTSelector.isValid() )
+			{
+				s.insert( lc.LUTSelector.hObj() );
+			}
 			s.insert( lc.LUTValue.hObj() );
 			pDevData->supportedWizards.insert( make_pair( wLUTControl, s ) );
 		}

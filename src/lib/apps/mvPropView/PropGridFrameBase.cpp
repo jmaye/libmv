@@ -490,6 +490,7 @@ void PropGridFrameBase::OnPropertyRightClicked( wxPropertyGridEvent& e )
 			bool boWriteable = prop_data->GetComponent().isWriteable();
 			menu.Append( miPopUpPropRestoreDefault, wxT("&Restore Default") )->Enable( boWriteable );
 			menu.Append( miPopUpDetailedFeatureInfo, wxT("Detailed Feature Information") )->Enable( true );
+			menu.AppendSeparator();
 			if( FeatureChangedCallbacksSupported() )
 			{
 				const bool boFeatureHasCallbackRegistered = FeatureHasChangedCallback( prop_data->GetComponent() );

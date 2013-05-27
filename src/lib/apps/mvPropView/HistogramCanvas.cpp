@@ -297,25 +297,26 @@ void HistogramCanvas::CalculateSpatialNoiseHistogram( const RequestData& data )
 					
 					if( pixel < m_AOIw - 1 )
 					{
-						difference = abs( saveAssign( pData[0], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) - saveAssign( pData[0 + pIB->iBytesPerPixel], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) );
+						difference = abs( saveAssign( pData[0], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) - saveAssign( pData[0 + pIB->iChannelCount], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) );
 						m_pHistogramAverage[pChannel0Hor] += difference;
 						++m_ppHistogramBuffer[pChannel0Hor][difference];
-						difference = abs( saveAssign( pData[1], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) - saveAssign( pData[1 + pIB->iBytesPerPixel], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) );
+						difference = abs( saveAssign( pData[1], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) - saveAssign( pData[1 + pIB->iChannelCount], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) );
 						m_pHistogramAverage[pChannel1Hor] += difference;
 						++m_ppHistogramBuffer[pChannel1Hor][difference];
-						difference = abs( saveAssign( pData[2], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) - saveAssign( pData[2 + pIB->iBytesPerPixel], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) );
+						difference = abs( saveAssign( pData[2], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) - saveAssign( pData[2 + pIB->iChannelCount], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) );
 						m_pHistogramAverage[pChannel2Hor] += difference;
 						++m_ppHistogramBuffer[pChannel2Hor][difference];
 					}
 					if( line < m_AOIh - 1 )
 					{
-						difference = abs( saveAssign( pData[0], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) - saveAssign( pData[0 + pIB->pChannels[0].iLinePitch], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) );
+						unsigned short* pNext_pixel_down = reinterpret_cast<unsigned short*>(reinterpret_cast<unsigned char*>(pData)+pIB->pChannels[0].iLinePitch);
+						difference = abs( saveAssign( pData[0], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) - saveAssign( pNext_pixel_down[0], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) );
 						m_pHistogramAverage[pChannel0Ver] += difference;
 						++m_ppHistogramBuffer[pChannel0Ver][difference];
-						difference = abs( saveAssign( pData[1], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) - saveAssign( pData[1 + pIB->pChannels[0].iLinePitch], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) );
+						difference = abs( saveAssign( pData[1], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) - saveAssign( pNext_pixel_down[1], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) );
 						m_pHistogramAverage[pChannel1Ver] += difference;
 						++m_ppHistogramBuffer[pChannel1Ver][difference];
-						difference = abs( saveAssign( pData[2], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) - saveAssign( pData[2 + pIB->pChannels[0].iLinePitch], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) );
+						difference = abs( saveAssign( pData[2], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) - saveAssign( pNext_pixel_down[2], static_cast<unsigned short>(0), static_cast<unsigned short>(m_valCount-1) ) );
 						m_pHistogramAverage[pChannel2Ver] += difference;
 						++m_ppHistogramBuffer[pChannel2Ver][difference];
 					}

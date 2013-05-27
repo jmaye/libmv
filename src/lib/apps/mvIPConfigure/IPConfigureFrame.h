@@ -5,6 +5,7 @@
 #include "wx/wx.h"
 #include "wx/dynlib.h"
 #include "wx/imaglist.h"
+#include <wx/treectrl.h>
 #include <apps/Common/wxAbstraction.h>
 #include "CustomValidators.h"
 #include <map>
@@ -105,8 +106,43 @@ struct AdapterInfo
 	explicit AdapterInfo( const std::string& netMask, unsigned int MTU, unsigned int linkSpeed ) : netMask_(netMask), MTU_(MTU), linkSpeed_(linkSpeed) {}
 };
 
+struct DetectedDeviceInfo;
+
 //-----------------------------------------------------------------------------
-struct DetecedDeviceInfo
+class PerformanceIssuesDlg : public wxDialog
+//-----------------------------------------------------------------------------
+{
+	DECLARE_EVENT_TABLE()
+protected:
+	wxButton*					pBtnCancel_;
+	wxButton*					pBtnOk_;
+	wxTreeCtrl*					pTreeCtrl_;
+	DetectedDeviceInfo*			pDeviceInfo_;
+
+	virtual void OnBtnCancel( wxCommandEvent& ) { EndModal( wxID_CANCEL ); }
+	virtual void OnBtnOk( wxCommandEvent& )     { EndModal( wxID_OK ); }
+	void AddButtons( wxWindow* pWindow, wxSizer* pSizer );
+	void FinalizeDlgCreation( wxWindow* pWindow, wxSizer* pSizer );
+	wxTreeItemId AddComponentListToList( wxTreeCtrl* pTreeCtrl, wxTreeItemId parent, mvIMPACT::acquire::ComponentLocator locator, const char* pName );
+	void AddStringPropToList( wxTreeCtrl* pTreeCtrl, wxTreeItemId parent, mvIMPACT::acquire::ComponentLocator locator, const char* pName );
+	void ExpandAll( wxTreeCtrl* pTreeCtrl );
+	void ExpandAllChildren( wxTreeCtrl* pTreeCtrl, const wxTreeItemId& item );
+	//-----------------------------------------------------------------------------
+	enum TWidgetIDs
+	//-----------------------------------------------------------------------------
+	{
+		widBtnOk = 1,
+		widBtnCancel = 2,
+		widFirst = 100
+	};
+public:
+	explicit PerformanceIssuesDlg( wxWindow* pParent, wxWindowID id, const wxString& title, DetectedDeviceInfo* pDeviceInfo );
+	wxTreeCtrl* GetTreeCtrl( void ) { return pTreeCtrl_; }
+	void Refresh( void );
+};
+
+//-----------------------------------------------------------------------------
+struct DetectedDeviceInfo
 //-----------------------------------------------------------------------------
 {
 	std::string deviceName_;
@@ -120,14 +156,40 @@ struct DetecedDeviceInfo
 	static const size_t MAX_INTERFACE_COUNT = 4;
 	InterfaceInfo interfaceInfo_[MAX_INTERFACE_COUNT];
 	long id_;
-	DetecedDeviceInfo( const std::string& deviceName, const std::string& devSerial, const std::string& modelName,
+	enum TPerformanceIssueStatus
+	{
+		pisNotChecked,
+		pisNone,
+		pisCannotAccess,
+		pisIssuesDetected
+	};
+	TPerformanceIssueStatus potentialPerformanceIssueStatus_;
+	std::string potentialPerformanceIssuesMsg_;
+	PerformanceIssuesDlg* pPerformanceIssuesDlg_;
+	DetectedDeviceInfo( const std::string& deviceName, const std::string& devSerial, const std::string& modelName,
 		const std::string& manufacturer, const std::string& userDefinedName, unsigned char const supportsUserDefinedName,
 		std::string adapterIPAddress, const std::string& adapterNetmask, unsigned int adapterMTU, unsigned int adapterLinkSpeed, unsigned int interfaceCount,
 		long id )
 		: deviceName_(deviceName), deviceSerial_(devSerial), modelName_(modelName), manufacturer_(manufacturer), userDefinedName_(userDefinedName),
-		supportsUserDefinedName_(supportsUserDefinedName), interfaceCount_(interfaceCount), id_(id)
+		supportsUserDefinedName_(supportsUserDefinedName), interfaceCount_(interfaceCount), id_(id), potentialPerformanceIssueStatus_(pisNotChecked),
+		potentialPerformanceIssuesMsg_("Not Checked"), pPerformanceIssuesDlg_(0)
 	{
 		adapters_.push_back( std::make_pair( adapterIPAddress, AdapterInfo(adapterNetmask, adapterMTU, adapterLinkSpeed) ) );
+	}
+	~DetectedDeviceInfo()
+	{
+		delete pPerformanceIssuesDlg_;
+	}
+	static std::string PerformanceIssueStatusToString( TPerformanceIssueStatus status )
+	{
+		switch( status )
+		{
+		case pisNotChecked:     return "Not Checked";
+		case pisNone:           return "None";
+		case pisCannotAccess:   return "Cannot Access Device (In Use By Another Process?)";
+		case pisIssuesDetected: return "Issues Detected (right-click For Details)";
+		}
+		return "Unknown Status";
 	}
 };
 
@@ -136,7 +198,7 @@ class wxSplitterWindow;
 class wxSpinCtrl;
 
 typedef std::map<std::string, MVTLI_INTERFACE_HANDLE> InterfaceContainer;
-typedef std::map<std::string, DetecedDeviceInfo*> DeviceMap;
+typedef std::map<std::string, DetectedDeviceInfo*> DeviceMap;
 
 //-----------------------------------------------------------------------------
 class IPConfigureFrame : public wxFrame
@@ -146,37 +208,39 @@ public:
 	explicit					IPConfigureFrame( const wxString& title, const wxPoint& pos, const wxSize& size, int argc, wxChar** argv );
 							   ~IPConfigureFrame();
 	void						AssignTemporaryIP( int listItemIndex );
-	const DeviceMap&			GetDeviceMap( void ) const { return m_devices; }
-	std::string					GetInterfaceStringInfo( MVTLI_INTERFACE_HANDLE hInterface, INTERFACE_INFO_CMD info );
+	int							ForceIP( const char* pMACAddress, const char* pNewDeviceIPAddress, const char* pStaticSubnetMask, const char* pStaticDefaultGateway, const char* pAdapterIPAddress, unsigned int timeout_ms );
 	std::string					GetDeviceInterfaceStringInfo( MVTLI_INTERFACE_HANDLE hInterface, const std::string& deviceName, unsigned int interfaceIndex, DEVICE_INFO_CMD info );
 	std::string					GetDeviceStringInfo( MVTLI_INTERFACE_HANDLE hInterface, const std::string& deviceName, DEVICE_INFO_CMD info );
+	const DeviceMap&			GetDeviceMap( void ) const { return m_devices; }
+	std::string					GetInterfaceStringInfo( MVTLI_INTERFACE_HANDLE hInterface, INTERFACE_INFO_CMD info );
 	const InterfaceContainer&	GetInterfaces( void ) const { return m_TLIInterfaces; }
+	int							IsValidIPv4Address( const char* pData ) const;
+	int							MACFromSerial( const char* pSerial, char* pBuf, size_t* pBufSize ) const;
+	void						OnListItemDeselected( int ) { UpdateDlgControls( false ); }
 	void						OnListItemSelected( int listItemIndex );
-	void						OnListItemDeselected( int listItemIndex );
-	void						WriteLogMessage( const wxString& msg, const wxTextAttr& style = wxTextAttr(wxColour(0, 0, 0)) );
+	void						ViewPotentialPerformanceIssues( int listItemIndex );
+	void						WriteLogMessage( const wxString& msg, const wxTextAttr& style = wxTextAttr(wxColour(0, 0, 0)) ) const;
 
-	int							IsValidIPv4Address( const char* pData );
-	int							MACFromSerial( const char* pSerial, char* pBuf, size_t* pBufSize );
-	int							ForceIP( const char* pMACAddress, const char* pNewDeviceIPAddress, const char* pStaticSubnetMask, const char* pStaticDefaultGateway, const char* pAdapterIPAddress, unsigned int timeout_ms );
 protected:
 	// event handlers (these functions should _not_ be virtual)
-	void OnHelp_About( wxCommandEvent& e );
-	void OnHelp_OnlineDocumentation( wxCommandEvent& )               { ::wxLaunchDefaultBrowser( wxT("http://www.matrix-vision.com/manuals/") ); }
-	void OnAssignTemporaryIP( wxCommandEvent& e );
+	void OnAction_AssignTemporaryIP( wxCommandEvent& e );
+	void OnAction_UpdateDeviceList( wxCommandEvent& )                  { UpdateDeviceList(); }
+	void OnAction_ViewPotentialPerformanceIssues( wxCommandEvent& e );
 	void OnBtnApplyChanges( wxCommandEvent& e );
-	void OnBtnConfigure( wxCommandEvent& e );
+	void OnBtnConfigure( wxCommandEvent& )                             { UpdateDlgControls( true ); }
 	void OnCBUseDHCP( wxCommandEvent& e );
 	void OnCBUsePersistentIP( wxCommandEvent& e );
 	void OnClose( wxCloseEvent& e );
 	void OnConnectedToIPAddressTextChanged( wxCommandEvent& e );
+	void OnHelp_About( wxCommandEvent& e );
+	void OnHelp_OnlineDocumentation( wxCommandEvent& )                 { ::wxLaunchDefaultBrowser( wxT("http://www.matrix-vision.com/manuals/") ); }
 	void OnInterfaceSelectorTextChanged( wxCommandEvent& e );
+	void OnPersistentGatewayTextChanged( wxCommandEvent& e );
 	void OnPersistentIPTextChanged( wxCommandEvent& e );
 	void OnPersistentNetmaskTextChanged( wxCommandEvent& e );
-	void OnPersistentGatewayTextChanged( wxCommandEvent& e );
-	void OnQuit( wxCommandEvent& e );
+	void OnQuit( wxCommandEvent& )                                     { Close( true ); }
+	void OnSettings_UseAdvancedDeviceDiscovery( wxCommandEvent& )      { UpdateDeviceList(); }
 	void OnTimer( wxTimerEvent& e );
-	void OnUpdateDeviceList( wxCommandEvent& e );
-	void OnUseAdvancedDeviceDiscovery( wxCommandEvent& e );
 private:
 	//-----------------------------------------------------------------------------
 	enum TTimerEvent
@@ -186,7 +250,9 @@ private:
 	};
 	void								ApplyChanges( const wxString& serial, const wxString& product, const wxString& connectedToIPAddress, const wxString& userDefinedName );
 	void								BuildList( void );
+	void								CheckForPotentialPerformanceIssues( DetectedDeviceInfo* pDeviceInfo );
 	void								Deinit( void );
+	std::string							GetStreamID( MVTLI_DEVICE_HANDLE hDev, unsigned int streamChannelIndex ) const;
 	template<typename _Ty>
 	_Ty									ResolveSymbol( const wxDynamicLibrary& lib, const wxString& name );
 	bool								SelectDevice( const wxString& deviceToConfigure );
@@ -201,6 +267,7 @@ private:
 	wxCheckBox*							m_pCBUsePersistentIP;
 	wxCheckBox*							m_pCBUseDHCP;
 	wxCheckBox*							m_pCBUseLLA;
+	wxMenuItem*							m_pMIAction_ViewPotentialPerformanceIssues;
 	wxMenuItem*							m_pMISettings_UseAdvancedDeviceDiscovery;
 	wxTextCtrl*							m_pLogWindow;
 	wxSpinCtrl*							m_pSCInterfaceSelector;
@@ -228,7 +295,7 @@ private:
 	IPv4StringValidator					m_IPv4StringValidator;
 	InterfaceContainer					m_TLIInterfaces;
 	DeviceMap							m_devices;
-	InterfaceInfo						m_interfaceInfo[DetecedDeviceInfo::MAX_INTERFACE_COUNT];
+	InterfaceInfo						m_interfaceInfo[DetectedDeviceInfo::MAX_INTERFACE_COUNT];
 	wxDynamicLibrary					m_TLILib;
 	PTLOpen								m_pTLOpen;
 	PTLClose							m_pTLClose;
@@ -247,7 +314,11 @@ private:
 	PTLIMV_IFGetDeviceInterfaceInfo		m_pTLIMV_IFGetDeviceInterfaceInfo;
 	PTLIMV_DevSetInterfaceParam			m_pTLIMV_DevSetInterfaceParam;
 	PTLIMV_DevSetParam					m_pTLIMV_DevSetParam;
+	PDevGetNumDataStreams				m_pDevGetNumDataStreams;
+	PDevGetDataStreamID					m_pDevGetDataStreamID;
+	PDevOpenDataStream					m_pDevOpenDataStream;
 	PDevClose							m_pDevClose;
+	PDSGetInfo							m_pDSGetInfo;
 	PTLIMV_MACFromSerial				m_pTLIMV_MACFromSerial;
 	PTLIMV_IsValidIPv4Address			m_pTLIMV_IsValidIPv4Address;
 	PTLIMV_ForceIP						m_pTLIMV_ForceIP;
@@ -260,11 +331,12 @@ private:
 	enum TMenuItem
 	//-----------------------------------------------------------------------------
 	{
-		miQuit = 1,
+		miAction_Quit = 1,
+		miAction_AssignTemporaryIP,
+		miAction_ViewPotentialPerformanceIssues,
+		miAction_UpdateDeviceList,
 		miHelp_About,
 		miHelp_OnlineDocumentation,
-		miAction_AssignTemporaryIP,
-		miAction_UpdateDeviceList,
 		miSettings_UseAdvancedDeviceDiscovery
 	};
 	//-----------------------------------------------------------------------------

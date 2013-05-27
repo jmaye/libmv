@@ -46,7 +46,8 @@ enum
 enum
 //-----------------------------------------------------------------------------
 {
-	LIST_ASSIGN_TEMPORARY_IP = LIST_CTRL + 1
+	LIST_ASSIGN_TEMPORARY_IP = LIST_CTRL + 1,
+	LIST_VIEW_POTENTIAL_PERFORMANCE_ISSUES
 };
 
 //-----------------------------------------------------------------------------
@@ -56,6 +57,7 @@ enum TListColumn
 	lcProduct,
 	lcSerial,
 	lcPrimaryInterfaceIPAddress,
+	lcPotentialPerformanceIssues,
 	lcLAST_COLUMN
 };
 
@@ -64,14 +66,16 @@ class DeviceListCtrl: public wxListCtrl
 //-----------------------------------------------------------------------------
 {
 public:
-	DeviceListCtrl(wxWindow *parent, const wxWindowID id, const wxPoint& pos, const wxSize& size, long style, IPConfigureFrame* pParentFrame );
+	explicit DeviceListCtrl(wxWindow *parent, const wxWindowID id, const wxPoint& pos, const wxSize& size, long style, IPConfigureFrame* pParentFrame );
+
+	int  GetCurrentItemIndex( void ) const                      { return m_selectedItemID; }
+	void OnAction_AssignTemporaryIP( wxCommandEvent& e );
 	void OnColClick( wxListEvent& e );
-	void OnDeleteAllItems( wxListEvent& e );
-	void OnSelected( wxListEvent& e ) { SetCurrentItemIndex( e.GetIndex() ); }
+	void OnDeleteAllItems( wxListEvent& )                       { m_selectedItemID = -1; }
 	void OnDeselected( wxListEvent& e );
 	void OnItemRightClick( wxListEvent& e );
-	void OnAssignTemporaryIP( wxCommandEvent& e );
-	int  GetCurrentItemIndex( void ) const { return m_selectedItemID; }
+	void OnSelected( wxListEvent& e )                           { SetCurrentItemIndex( e.GetIndex() ); }
+	void OnViewPotentialPerformanceIssues( wxCommandEvent& e );
 	void SetCurrentItemIndex( int index );
 private:
 	IPConfigureFrame*		m_pParentFrame;

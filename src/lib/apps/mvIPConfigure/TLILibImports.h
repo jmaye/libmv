@@ -11,6 +11,7 @@
 typedef void* MVTLI_HANDLE;
 typedef void* MVTLI_INTERFACE_HANDLE;
 typedef void* MVTLI_DEVICE_HANDLE;
+typedef void* MVTLI_DATASTREAM_HANDLE;
 
 enum INFO_DATATYPE
 {
@@ -100,10 +101,34 @@ enum DEVICE_ACCESS_FLAGS
 	DEVICE_ACCESS_READONLY  = 2,         ///< Open the device read only. All Port functions can only read from the device.
 	DEVICE_ACCESS_CONTROL   = 3,         ///< Open the device in a way that other hosts/processes can have read only access to the device. Device access level is read/write for this process.
 	DEVICE_ACCESS_EXCLUSIVE = 4,         ///< Open the device in a way that only this host/process can have access to the device. Device access level is read/write for this process.
-	DEVICE_ACCESS_CUSTOM_ID = 1000       ///<  Starting value for GenTL Producer custom IDs. 
+	DEVICE_ACCESS_CUSTOM_ID = 1000       ///<  Starting value for GenTL Producer custom IDs.
 };
 
-#     define TLTypeGEVName             "GEV"      /* Type to use for GigE Vision technology */
+/* This enumeration defines commands to retrieve information with the GenICam::TL::Client::DSGetInfo function on a data stream handle */
+enum STREAM_INFO_CMD
+{
+	STREAM_INFO_ID                           =  0,   /// STRING     Unique ID of the data stream.
+	STREAM_INFO_NUM_DELIVERED                =  1,   /// UINT64     Number of acquired frames since last acquisition start.
+	STREAM_INFO_NUM_UNDERRUN                 =  2,   /// UINT64     Number of lost frames due to queue underrun.
+	STREAM_INFO_NUM_ANNOUNCED                =  3,   /// SIZET      Number of announced buffers.
+	STREAM_INFO_NUM_QUEUED                   =  4,   /// SIZET      Number of buffers in the input pool.
+	STREAM_INFO_NUM_AWAIT_DELIVERY           =  5,   /// SIZET      Number of buffers in the output queue.
+	STREAM_INFO_NUM_STARTED                  =  6,   /// UINT64     Number of frames started in the acquisition engine.
+	STREAM_INFO_PAYLOAD_SIZE                 =  7,   /// SIZET      Size of the expected data in bytes.
+	STREAM_INFO_IS_GRABBING                  =  8,   /// BOOL8      Flag indicating whether the acquisition engine is started or not.
+	STREAM_INFO_DEFINES_PAYLOADSIZE          =  9,   /// BOOL8      Flag that indicated that this data stream defines a payload size independent from the remote device.
+	STREAM_INFO_TLTYPE                       = 10,   /// STRING     Transport layer technology that is supported.
+	STREAM_INFO_NUM_CHUNKS_MAX               = 11,   /// SIZET      Max number of chunks in a buffer, if known. GenTL v1.3
+	STREAM_INFO_NUM_ANNOUNCE_MIN             = 12,   /// SIZET      Min number of buffers to announce before acq can start, if known. GenTL v1.3
+	STREAM_INFO_BUF_ALIGNMENT                = 13,   /// SIZET      Buffer alignment in bytes. GenTL v1.3
+	STREAM_INFO_CUSTOM_ID                    = 1000, /// Starting value for GenTL Producer custom IDs.
+	STREAM_INFO_NUM_PENDING = STREAM_INFO_CUSTOM_ID, /// UINT64     Number of buffers that have been queued but havn't been completed
+	STREAM_INFO_RESEND_PARAMS,                       /// struct
+	STREAM_INFO_NUM_ANNOUNCE_MAX,                    /// SIZET      Max number of buffers to announce before acq can start, if known.
+	STREAM_INFO_SCPS                                 /// UINT64     Current packet size used by this stream.
+};
+
+#     define TLTypeGEVName             "GEV"      /// Type to use for GigE Vision technology
 
 #ifndef GC_CALLTYPE
 /* Function declaration modifiers */
@@ -160,7 +185,11 @@ GC_API_P(PIFOpenDevice)                    ( MVTLI_INTERFACE_HANDLE hInterface, 
 GC_API_P(PTLIMV_IFGetDeviceInterfaceInfo)  ( MVTLI_INTERFACE_HANDLE hInterface, const char* pDevName, unsigned int interfaceIndex, DEVICE_INFO_CMD iInfoCmd, INFO_DATATYPE *pType, void* pBuffer, size_t* piSize );
 GC_API_P(PTLIMV_DevSetInterfaceParam)      ( MVTLI_DEVICE_HANDLE hDev, unsigned int interfaceIndex, DEVICE_INFO_CMD iInfoCmd, const void* pBuffer, size_t bufSize );
 GC_API_P(PTLIMV_DevSetParam)               ( MVTLI_DEVICE_HANDLE hDev, DEVICE_INFO_CMD iInfoCmd, const void* pBuffer, size_t bufSize );
+GC_API_P(PDevGetNumDataStreams)            ( MVTLI_DEVICE_HANDLE hDevice, unsigned int* piNumDataStreams );
+GC_API_P(PDevGetDataStreamID)              ( MVTLI_DEVICE_HANDLE hDevice, unsigned int iIndex, char* sDataStreamID, size_t* piSize );
+GC_API_P(PDevOpenDataStream)               ( MVTLI_DEVICE_HANDLE hDevice, const char *sDataStreamID, MVTLI_DATASTREAM_HANDLE *phDataStream );
 GC_API_P(PDevClose)                        ( MVTLI_DEVICE_HANDLE hDev );
+GC_API_P(PDSGetInfo)                       ( MVTLI_DATASTREAM_HANDLE hDataStream, STREAM_INFO_CMD iInfoCmd, INFO_DATATYPE *piType, void *pBuffer, size_t *piSize );
 GC_API_P(PTLIMV_MACFromSerial)             ( const char* pSerial, char* pBuffer, size_t* pBufSize );
 GC_API_P(PTLIMV_IsValidIPv4Address)        ( const char* pData );
 GC_API_P(PTLIMV_DoAdressesMatch)           ( const char* pIP1, const char* pNM1, const char* pIP2, const char* pNM2 );

@@ -1329,7 +1329,7 @@ size_t PropViewFrame::BuildStringArrayFromPropertyDict( wxArrayString& choices, 
 //-----------------------------------------------------------------------------
 {
 	choices.Clear();
-	if( prop.hasDict() )
+	if( prop.isValid() && prop.hasDict() )
 	{
 		vector<pair<string, _Ty> > dict;
 		prop.getTranslationDict( dict );
@@ -5213,14 +5213,15 @@ void PropViewFrame::Wizard_LUTControl( void )
 		{
 			mvIMPACT::acquire::GenICam::LUTControl lc(pDev);
 			wxArrayString choices;
-			if( BuildStringArrayFromPropertyDict<int64_type, PropertyI64>( choices, lc.LUTSelector ) > 0 )
+			if( lc.LUTSelector.isValid() )
 			{
-				m_pLUTControlDlg = new WizardLUTControl(this, wxT("LUT Control"), lc, choices);
+				BuildStringArrayFromPropertyDict<int64_type, PropertyI64>( choices, lc.LUTSelector );
 			}
-			else
+			if( choices.IsEmpty() ) // a device might support a LUT but no LUT selector!
 			{
-				WriteErrorMessage( wxString::Format( wxT("%s(%d): '%s' of device '%s' does not allow the selection of any LUT.\n"), ConvertedString(__FUNCTION__).c_str(), __LINE__, ConvertedString(lc.LUTSelector.name()).c_str(), ConvertedString(pDev->serial.read()).c_str() ) );
+				choices.Add( wxT("LUT-0") );
 			}
+			m_pLUTControlDlg = new WizardLUTControl(this, wxT("LUT Control"), lc, choices);
 		}
 		catch( const ImpactAcquireException& e )
 		{

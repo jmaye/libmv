@@ -1,3 +1,9 @@
+libmv (2.5.8-22) precise; urgency=low
+
+  * update to version 2.5.8
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Mon, 27 May 2013 14:34:31 +0000
+
 libmv (2.5.7-21) precise; urgency=low
 
   * missing pkg-config dep 

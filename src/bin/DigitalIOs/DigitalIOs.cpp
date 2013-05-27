@@ -15,24 +15,13 @@
 #	error unsupported target platform
 #endif // #ifdef _WIN32
 #include <apps/Common/exampleHelper.h>
+#include <common/minmax.h>
 #include <mvIMPACT_CPP/mvIMPACT_acquire.h>
 #include <mvIMPACT_CPP/mvIMPACT_acquire_GenICam.h>
 
 using namespace std;
 using namespace mvIMPACT::acquire;
 using namespace mvIMPACT::acquire::GenICam;
-
-//-----------------------------------------------------------------------------
-template<typename _Ty>
-_Ty bitMask( _Ty bitcnt )
-//-----------------------------------------------------------------------------
-{
-	if( bitcnt <= 1 )
-	{
-		return 1;
-	}
-	return ( ( 1 << ( bitcnt - 1 ) ) | bitMask( bitcnt-1 ) );
-}
 
 //-----------------------------------------------------------------------------
 string getStringFromCIN( void )

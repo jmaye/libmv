@@ -329,9 +329,6 @@ enum TComponentVisibility
 	cvGuru = 2,
 	/// \brief Defines a feature that should not be displayed in a GUI but is still accessible via API function calls.
 	cvInvisible = 3
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-	, cvLast
-#endif // DOXYGEN_SHOULD_SKIP_THIS
 };
 
 //-----------------------------------------------------------------------------

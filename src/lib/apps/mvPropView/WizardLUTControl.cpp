@@ -131,16 +131,18 @@ WizardLUTControl::WizardLUTControl( wxWindow* pParent, const wxString& title, mv
 	{
 		pCBLUTSelection_->Insert( lutSelectorEntries_[i], 0 );
 	}
+	pCBLUTSelection_->Enable( lc_.LUTSelector.isValid() && ( lutCnt_ > 1 ) );
+	const bool boLUTSelectorIsWriteable = lc_.LUTSelector.isValid() && lc_.LUTSelector.isWriteable();
 	pCBLUTSelection_->Select( 0 );
-	pCBLUTSelection_->SetToolTip( wxT("Contains a list of all LUTs currently supported by the device") );
+	pCBLUTSelection_->SetToolTip( wxT("Contains a list of all LUTs currently supported by the device. If this list is read-only, the device does support a single LUT only") );
 	pBtnSynchronize_ = new wxButton(pPanel, widBtnSynchronize, wxT("Synchronize"));
 	pBtnSynchronize_->SetToolTip( wxT("Force the device and the internal cache to re-synchronize") );
 	pBtnEnableAll_ = new wxButton(pPanel, widBtnEnableAll, wxT("Enable All"));
 	pBtnEnableAll_->SetToolTip( wxT("Enables all LUTs on the device") );
-	pBtnEnableAll_->Enable( lc_.LUTSelector.isWriteable() );
+	pBtnEnableAll_->Enable( boLUTSelectorIsWriteable );
 	pBtnDisableAll_ = new wxButton(pPanel, widBtnDisableAll, wxT("Disable All"));
 	pBtnDisableAll_->SetToolTip( wxT("Disables all LUTs on the device") );
-	pBtnDisableAll_->Enable( lc_.LUTSelector.isWriteable() );
+	pBtnDisableAll_->Enable( boLUTSelectorIsWriteable );
 
 	// left middle line of controls
 	pCBEnable_ = new wxCheckBox(pPanel, widCBEnable, wxT("Enable"));
@@ -153,7 +155,7 @@ WizardLUTControl::WizardLUTControl( wxWindow* pParent, const wxString& title, mv
 	pBtnInterpolate_->SetToolTip( wxT("Create data from the selected LUT from a selectable number of values using a selectable interpolation method") );
 	pBtnCopyTo_ = new wxButton(pPanel, widBtnCopyTo, wxT("Copy To..."));
 	pBtnCopyTo_->SetToolTip( wxT("Copy data from the selected LUT into one or many others") );
-	pBtnCopyTo_->Enable( lc_.LUTSelector.isWriteable() );
+	pBtnCopyTo_->Enable( boLUTSelectorIsWriteable );
 	pBtnImport_ = new wxButton(pPanel, widBtnImport, wxT("Import..."));
 	pBtnImport_->SetToolTip( wxT("Import data into the selected LUT from a *.csv file") );
 	pBtnExport_ = new wxButton(pPanel, widBtnExport, wxT("Export..."));
@@ -173,7 +175,9 @@ WizardLUTControl::WizardLUTControl( wxWindow* pParent, const wxString& title, mv
 
 	wxBoxSizer* pUpperControlsSizer = new wxBoxSizer(wxHORIZONTAL);
 	pUpperControlsSizer->AddSpacer( 5 );
-	pUpperControlsSizer->Add( new wxStaticText(pPanel, wxID_ANY, wxT("LUT Selector: ")), wxSizerFlags().Left().Center() );
+	wxStaticText* pSTLUTSelector(new wxStaticText(pPanel, wxID_ANY, wxT("LUT Selector: ")));
+	pSTLUTSelector->SetToolTip( wxT("If the LUT selection list is read-only, the device does support a single LUT only") );
+	pUpperControlsSizer->Add( pSTLUTSelector, wxSizerFlags().Left().Center() );
 	pUpperControlsSizer->Add( pCBLUTSelection_ );
 	pUpperControlsSizer->AddSpacer( 20 );
 	pUpperControlsSizer->Add( pBtnSynchronize_ );
@@ -658,7 +662,7 @@ void WizardLUTControl::ReadLUTFromDevice( const wxString& LUTSelectorValue, vect
 	PropGridUpdateTimerSuspendScope timerSuspendScope(dynamic_cast<PropGridFrameBase*>(GetParent()));
 	try
 	{
-		if( lc_.LUTSelector.isWriteable() )
+		if( lc_.LUTSelector.isValid() && lc_.LUTSelector.isWriteable() )
 		{
 			lc_.LUTSelector.writeS( string(LUTSelectorValue.mb_str()) );
 		}
@@ -724,7 +728,7 @@ void WizardLUTControl::SetupLUTEnable( void )
 {
 	try
 	{
-		if( lc_.LUTSelector.isWriteable() )
+		if( lc_.LUTSelector.isValid() && lc_.LUTSelector.isWriteable() )
 		{
 			lc_.LUTSelector.writeS( string(pCBLUTSelection_->GetValue().mb_str()) );
 		}
@@ -782,7 +786,7 @@ void WizardLUTControl::WriteLUTToDevice( const wxString& LUTSelectorValue, vecto
 	PropGridUpdateTimerSuspendScope timerSuspendScope(dynamic_cast<PropGridFrameBase*>(GetParent()));
 	try
 	{
-		if( lc_.LUTSelector.isWriteable() )
+		if( lc_.LUTSelector.isValid() && lc_.LUTSelector.isWriteable() )
 		{
 			lc_.LUTSelector.writeS( string(LUTSelectorValue.mb_str()) );
 		}

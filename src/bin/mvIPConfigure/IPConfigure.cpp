@@ -2,6 +2,9 @@
 #include <apps/Common/mvIcon.xpm>
 #include <apps/Common/wxAbstraction.h>
 #include "apps/mvIPConfigure/AssignIPDlg.h"
+#include <common/auto_array_ptr.h>
+#include <common/function_cast.h>
+#include <common/STLHelper.h>
 #include "apps/mvIPConfigure/DeviceListCtrl.h"
 #include "apps/mvIPConfigure/error_icon.xpm"
 #include "apps/mvIPConfigure/IPConfigureFrame.h"
@@ -17,127 +20,156 @@
 
 using namespace std;
 
+//=============================================================================
+//=================== internal helper function ================================
+//=============================================================================
 #define CHECK_INTERFACE_INDEX \
 	const size_t interfaceIndex = static_cast<size_t>(atoi( value.BeforeFirst( wxT(';') ).mb_str() )); \
-	if( interfaceIndex >= DetecedDeviceInfo::MAX_INTERFACE_COUNT ) \
+	if( interfaceIndex >= DetectedDeviceInfo::MAX_INTERFACE_COUNT ) \
 	{ \
 		parserErrors.Append( wxString::Format( wxT("Invalid interface index in command line parameter: '%s'. Ignored.\n"), param.c_str() ) ); \
 		continue; \
 	} \
 
-//-----------------------------------------------------------------------------
-/// \brief A automatically managed buffer type to handle subscriptable data.
-template<class T>
-class auto_array_ptr
-//-----------------------------------------------------------------------------
-{
-	size_t	m_cnt;
-	T*		m_pBuf;
-public:
-	auto_array_ptr( size_t initial_size = 0 ) : m_cnt(initial_size), m_pBuf(0)
-	{
-		if( initial_size > 0 )
-		{
-			m_pBuf = new T[initial_size];
-		}
-	}
-	/// \brief Pass ownership to the new object.
-	auto_array_ptr( auto_array_ptr& rhs ) : m_cnt(rhs.m_cnt), m_pBuf(rhs.release()) {}
-	/// \brief Pass ownership to the new object.
-	///
-	/// Do NOT delete the original T*. This is done by this class now.
-	auto_array_ptr( T* pBuf, size_t cnt ) : m_cnt(cnt), m_pBuf(pBuf) {}
-	~auto_array_ptr()
-	{
-		delete [] m_pBuf;
-	}
-	// functions
-	operator T*() { return m_pBuf; }
-	/// \brief Pass ownership. Old buffer of the left hand side object is
-	/// freed, the lhs object takes ownership of the buffer of the rhs object.
-	auto_array_ptr& operator=( auto_array_ptr& rhs )
-	{
-		if( this != &rhs )
-		{
-			delete [] m_pBuf;
-			m_cnt = rhs.m_cnt;
-			m_pBuf = rhs.release();
-		}
-		return *this;
-	}
-	/// \brief free old buffer, allocate new buffer
-	void realloc( size_t newsize )
-	{
-		if( newsize > 0 )
-		{
-			delete [] m_pBuf;
-			m_pBuf = new T[newsize];
-			m_cnt = newsize;
-		}
-	}
-	/// \brief increases the buffer size and keeps the old data
-	void grow( size_t newsize )
-	{
-		if( newsize > m_cnt )
-		{
-			T* p = new T[newsize];
-			memcpy( p, m_pBuf, m_cnt );
-			delete [] m_pBuf;
-			m_pBuf = p;
-			m_cnt = newsize;
-		}
-	}
-	/// \brief Release ownership, return pointer to buffer.
-	T* release( void ) { T* p = m_pBuf; m_pBuf = 0; m_cnt = 0; return p; }
-	/// \brief Return pointer to buffer.
-	T* get( void ) { return m_pBuf; }
-	/// \brief Return const pointer to buffer.
-	const T* get( void ) const { return m_pBuf; }
-	/// \brief Return element count.
-	size_t parCnt( void ) const { return m_cnt; }
-};
+IPConfigureFrame* g_pFrame = 0;
 
-//-----------------------------------------------------------------------------
-template<class _Ty1, class _Ty2>
-void DeleteSecond( std::pair<_Ty1, _Ty2>& data )
-//-----------------------------------------------------------------------------
-{
-	delete data.second;
-	data.second = 0;
-}
-
-//-----------------------------------------------------------------------------
-template<typename OutputPtr>
-union function_cast
-//-----------------------------------------------------------------------------
-{
-	void* pI;
-	OutputPtr pO;
-};
-
+//=============================================================================
+//================= Implementation MyApp ======================================
+//=============================================================================
 //-----------------------------------------------------------------------------
 class MyApp : public wxApp
 //-----------------------------------------------------------------------------
 {
 public:
-	virtual bool OnInit();
+	virtual bool OnInit()
+	{
+		g_pFrame = new IPConfigureFrame(wxString::Format( wxT("Configuration tool for GigE Vision(tm) devices(%s)"), VERSION_STRING ), wxDefaultPosition, wxDefaultSize, argc, argv);
+		g_pFrame->Show( true );
+		SetTopWindow( g_pFrame );
+		return true;
+	}
 };
 
-// ----------------------------------------------------------------------------
-// event tables and other macros for wxWidgets
-// ----------------------------------------------------------------------------
+IMPLEMENT_APP(MyApp)
 
-// the event tables connect the wxWidgets events with the functions (event
-// handlers) which process them. It can be also done at run-time, but for the
-// simple menu events like this the static method is much simpler.
+//=============================================================================
+//============== Implementation PerformanceIssuesDlg ===========================
+//=============================================================================
+BEGIN_EVENT_TABLE(PerformanceIssuesDlg, wxDialog)
+	EVT_BUTTON(widBtnOk, PerformanceIssuesDlg::OnBtnOk)
+	EVT_BUTTON(widBtnCancel, PerformanceIssuesDlg::OnBtnCancel)
+END_EVENT_TABLE()
+
+//-----------------------------------------------------------------------------
+PerformanceIssuesDlg::PerformanceIssuesDlg( wxWindow* pParent, wxWindowID id, const wxString& title, DetectedDeviceInfo* pDeviceInfo )
+ : wxDialog(pParent, id, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER | wxMAXIMIZE_BOX | wxMINIMIZE_BOX),
+   pBtnCancel_(0), pBtnOk_(0), pDeviceInfo_(pDeviceInfo)
+//-----------------------------------------------------------------------------
+{
+	wxBoxSizer* pTopDownSizer = new wxBoxSizer(wxVERTICAL);
+	pTopDownSizer->AddSpacer( 10 );
+	wxPanel* pPanel = new wxPanel(this);
+	pTreeCtrl_ = new wxTreeCtrl(pPanel, wxID_ANY);
+	pTopDownSizer->Add( pTreeCtrl_, wxSizerFlags(3).Expand() );
+	AddButtons( pPanel, pTopDownSizer );
+	FinalizeDlgCreation( pPanel, pTopDownSizer );
+	SetSize( 800, 300 );
+}
+
+//-----------------------------------------------------------------------------
+void PerformanceIssuesDlg::AddButtons( wxWindow* pWindow, wxSizer* pSizer )
+//-----------------------------------------------------------------------------
+{
+	// lower line of buttons
+	wxBoxSizer* pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+	pButtonSizer->AddStretchSpacer( 100 );
+	pBtnOk_ = new wxButton(pWindow, widBtnOk, wxT("&Ok"));
+	pButtonSizer->Add( pBtnOk_, wxSizerFlags().Right().Border( wxALL, 7 ) );
+	pBtnCancel_ = new wxButton(pWindow, widBtnCancel, wxT("&Cancel"));
+	pButtonSizer->Add( pBtnCancel_, wxSizerFlags().Right().Border( wxALL, 7 ) );
+	pSizer->AddSpacer( 10 );
+	pSizer->Add( pButtonSizer, wxSizerFlags().Expand() );
+}
+
+//-----------------------------------------------------------------------------
+void PerformanceIssuesDlg::FinalizeDlgCreation( wxWindow* pWindow, wxSizer* pSizer )
+//-----------------------------------------------------------------------------
+{
+	pWindow->SetSizer( pSizer );
+	pSizer->SetSizeHints( this );
+	SetClientSize( pSizer->GetMinSize() );
+	SetSizeHints( GetSize() );
+}
+
+//-----------------------------------------------------------------------------
+wxTreeItemId PerformanceIssuesDlg::AddComponentListToList( wxTreeCtrl* pTreeCtrl, wxTreeItemId parent, mvIMPACT::acquire::ComponentLocator locator, const char* pName )
+//-----------------------------------------------------------------------------
+{
+	ComponentList list;
+	locator.bindComponent( list, string(pName) );
+	if( !list.isValid() )
+	{
+		return wxTreeItemId();
+	}
+	return pTreeCtrl->AppendItem( parent, ConvertedString(list.name()) );
+}
+
+//-----------------------------------------------------------------------------
+void PerformanceIssuesDlg::AddStringPropToList( wxTreeCtrl* pTreeCtrl, wxTreeItemId parent, ComponentLocator locator, const char* pName )
+//-----------------------------------------------------------------------------
+{
+	PropertyS prop;
+	locator.bindComponent( prop, string(pName) );
+	if( prop.isValid() )
+	{
+		pTreeCtrl->AppendItem( parent, wxString::Format( wxT("%s: %s"), ConvertedString(prop.name()).c_str(), ConvertedString(prop.read()).c_str() ) );
+	}
+}
+
+//-----------------------------------------------------------------------------
+void PerformanceIssuesDlg::ExpandAll( wxTreeCtrl* pTreeCtrl )
+//-----------------------------------------------------------------------------
+{
+	ExpandAllChildren( pTreeCtrl, pTreeCtrl->GetRootItem() );
+}
+
+//-----------------------------------------------------------------------------
+/// \brief this code is 'stolen' from the wxWidgets 2.8.0 source as this application
+/// might be compiled with older versions of wxWidgets not supporting the wxTreeCtrl::ExpandAll function
+void PerformanceIssuesDlg::ExpandAllChildren( wxTreeCtrl* pTreeCtrl, const wxTreeItemId& item )
+//-----------------------------------------------------------------------------
+{
+	// expand this item first, this might result in its children being added on
+	// the fly
+	pTreeCtrl->Expand(item);
+
+	// then (recursively) expand all the children
+	wxTreeItemIdValue cookie;
+	for( wxTreeItemId idCurr = pTreeCtrl->GetFirstChild( item, cookie ); idCurr.IsOk(); idCurr = pTreeCtrl->GetNextChild( item, cookie ) )
+	{
+		ExpandAllChildren( pTreeCtrl, idCurr );
+	}
+}
+
+//-----------------------------------------------------------------------------
+void PerformanceIssuesDlg::Refresh( void )
+//-----------------------------------------------------------------------------
+{
+	ExpandAll( pTreeCtrl_ );
+}
+
+//=============================================================================
+//================= Implementation IPConfigureFrame ===========================
+//=============================================================================
 BEGIN_EVENT_TABLE(IPConfigureFrame, wxFrame)
 	EVT_CLOSE(IPConfigureFrame::OnClose)
 	EVT_MENU(miHelp_About, IPConfigureFrame::OnHelp_About)
 	EVT_MENU(miHelp_OnlineDocumentation, IPConfigureFrame::OnHelp_OnlineDocumentation)
-	EVT_MENU(miQuit, IPConfigureFrame::OnQuit)
-	EVT_MENU(miAction_AssignTemporaryIP, IPConfigureFrame::OnAssignTemporaryIP)
-	EVT_MENU(miAction_UpdateDeviceList, IPConfigureFrame::OnUpdateDeviceList)
-	EVT_MENU(miSettings_UseAdvancedDeviceDiscovery, IPConfigureFrame::OnUseAdvancedDeviceDiscovery)
+	EVT_MENU(miAction_Quit, IPConfigureFrame::OnQuit)
+	EVT_MENU(miAction_AssignTemporaryIP, IPConfigureFrame::OnAction_AssignTemporaryIP)
+	EVT_MENU(miAction_ViewPotentialPerformanceIssues, IPConfigureFrame::OnAction_ViewPotentialPerformanceIssues)
+	EVT_MENU(miAction_UpdateDeviceList, IPConfigureFrame::OnAction_UpdateDeviceList)
+	EVT_MENU(miSettings_UseAdvancedDeviceDiscovery, IPConfigureFrame::OnSettings_UseAdvancedDeviceDiscovery)
 	EVT_TEXT(widInterfaceSelector, IPConfigureFrame::OnInterfaceSelectorTextChanged)
 	EVT_TEXT(widPersistentIPAddress, IPConfigureFrame::OnPersistentIPTextChanged)
 	EVT_TEXT(widPersistentSubnetMask, IPConfigureFrame::OnPersistentNetmaskTextChanged)
@@ -150,33 +182,6 @@ BEGIN_EVENT_TABLE(IPConfigureFrame, wxFrame)
 	EVT_TIMER(wxID_ANY, IPConfigureFrame::OnTimer)
 END_EVENT_TABLE()
 
-// Create a new application object: this macro will allow wxWidgets to create
-// the application object during program execution (it's better than using a
-// static object for many reasons) and also declares the accessor function
-// wxGetApp() which will return the reference of the right type (i.e. MyApp and
-// not wxApp)
-IMPLEMENT_APP(MyApp)
-
-IPConfigureFrame* g_pFrame = 0;
-
-//-----------------------------------------------------------------------------
-// `Main program' equivalent: the program execution "starts" here
-bool MyApp::OnInit()
-//-----------------------------------------------------------------------------
-{
-	// Create the main application window
-	g_pFrame = new IPConfigureFrame(wxString::Format( wxT("Configuration tool for GigE Vision(tm) devices(%s)"), VERSION_STRING ), wxDefaultPosition, wxDefaultSize, argc, argv);
-	g_pFrame->Show( true );
-	SetTopWindow( g_pFrame );
-	// success: wxApp::OnRun() will be called which will enter the main message
-	// loop and the application will run. If we returned false here, the
-	// application would exit immediately.
-	return true;
-}
-
-//=============================================================================
-//================= Implementation IPConfigureFrame ===========================
-//=============================================================================
 const wxTextAttr IPConfigureFrame::m_ERROR_STYLE(wxColour(255, 0, 0));
 const wxString IPConfigureFrame::m_technologyIdentifier(wxT(TLTypeGEVName));
 
@@ -188,11 +193,12 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 {
 	wxMenu* pMenuAction = new wxMenu;
 	pMenuAction->Append( miAction_AssignTemporaryIP, wxT("&Assign Temporary IPv4 Address\tCTRL+A") );
+	m_pMIAction_ViewPotentialPerformanceIssues = pMenuAction->Append( miAction_ViewPotentialPerformanceIssues, wxT("&View Potential Performance Issues\tCTRL+V") );
 
 	pMenuAction->AppendSeparator();
 	pMenuAction->Append( miAction_UpdateDeviceList, wxT("Update Device List\tF5") );
 	pMenuAction->AppendSeparator();
-	pMenuAction->Append( miQuit, wxT("E&xit\tALT+X"));
+	pMenuAction->Append( miAction_Quit, wxT("E&xit\tALT+X"));
 
 	wxMenu* pMenuSettings = new wxMenu;
 	m_pMISettings_UseAdvancedDeviceDiscovery = pMenuSettings->Append( miSettings_UseAdvancedDeviceDiscovery, wxT("Use Advanced Device Discovery"), wxT(""), wxITEM_CHECK );
@@ -231,6 +237,7 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 	m_pDevListCtrl->InsertColumn( lcProduct, wxT("Product") );
 	m_pDevListCtrl->InsertColumn( lcSerial, wxT("Serial") );
 	m_pDevListCtrl->InsertColumn( lcPrimaryInterfaceIPAddress, wxT("IP Address(Primary Interface)") );
+	m_pDevListCtrl->InsertColumn( lcPotentialPerformanceIssues, wxT("Potential Performance Issues") );
 	m_pDevListCtrl->SetImageList( &m_iconList, wxIMAGE_LIST_SMALL );
 
 	// and a new panel for the device info and controls on the right
@@ -279,7 +286,7 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 	pCurrentIPElementsGridSizer->AddGrowableCol( 1, 3 );
 
 	// row 1
-	pCurrentIPElementsGridSizer->Add( new wxHyperlinkCtrl(pControlsPanel, wxID_ANY, wxT("IPv4 Address: "), wxT("http://en.wikipedia.org/wiki/Ipv4")), wxSizerFlags().Left() );
+	pCurrentIPElementsGridSizer->Add( new wxStaticText(pControlsPanel, wxID_ANY, wxT("IPv4 Address: ")), wxSizerFlags().Left() );
 	m_pSTCurrentIPAddress = new wxStaticText(pControlsPanel, wxID_ANY, wxT("-"));
 	pCurrentIPElementsGridSizer->Add( m_pSTCurrentIPAddress, wxSizerFlags(2).Align( wxGROW | wxALIGN_CENTER_VERTICAL ) );
 	// row 2
@@ -312,6 +319,13 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 	pCurrentIPElementsGridSizer->Add( new wxStaticText(pControlsPanel, wxID_ANY, wxT("Connected Adapter Link Speed(MBps): ")), wxSizerFlags().Left() );
 	m_pSTConnectedToLinkSpeed = new wxStaticText(pControlsPanel, wxID_ANY, wxT("-"));
 	pCurrentIPElementsGridSizer->Add( m_pSTConnectedToLinkSpeed, wxSizerFlags(2).Align( wxGROW | wxALIGN_CENTER_VERTICAL ) );
+	// row 9
+	pCurrentIPElementsGridSizer->Add( new wxStaticText(pControlsPanel, wxID_ANY, wxT("More Information: ")), wxSizerFlags().Left() );
+	wxBoxSizer* pCurrentIPElementsHelpSizer = new wxBoxSizer(wxHORIZONTAL);
+	pCurrentIPElementsHelpSizer->Add( new wxHyperlinkCtrl(pControlsPanel, wxID_ANY, wxT("IPv4"), wxT("http://en.wikipedia.org/wiki/Ipv4")) );
+	pCurrentIPElementsHelpSizer->Add( new wxStaticText(pControlsPanel, wxID_ANY, wxT(", ")) );
+	pCurrentIPElementsHelpSizer->Add( new wxHyperlinkCtrl(pControlsPanel, wxID_ANY, wxT("MTU"), wxT("http://en.wikipedia.org/wiki/Maximum_transmission_unit")) );
+	pCurrentIPElementsGridSizer->Add( pCurrentIPElementsHelpSizer, wxSizerFlags(2).Align( wxGROW | wxALIGN_CENTER_VERTICAL ) );
 
 	pCurrentIPSizer->Add( pCurrentIPElementsGridSizer, wxSizerFlags().Align( wxGROW ) );
 
@@ -423,7 +437,11 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 		m_pTLIMV_IFGetDeviceInterfaceInfo = ResolveSymbol<PTLIMV_IFGetDeviceInterfaceInfo>( m_TLILib, wxT("TLIMV_IFGetDeviceInterfaceInfo") );
 		m_pTLIMV_DevSetInterfaceParam = ResolveSymbol<PTLIMV_DevSetInterfaceParam>( m_TLILib, wxT("TLIMV_DevSetInterfaceParam") );
 		m_pTLIMV_DevSetParam = ResolveSymbol<PTLIMV_DevSetParam>( m_TLILib, wxT("TLIMV_DevSetParam") );
+		m_pDevGetNumDataStreams = ResolveSymbol<PDevGetNumDataStreams>( m_TLILib, wxT("DevGetNumDataStreams") );
+		m_pDevGetDataStreamID = ResolveSymbol<PDevGetDataStreamID>( m_TLILib, wxT("DevGetDataStreamID") );
+		m_pDevOpenDataStream = ResolveSymbol<PDevOpenDataStream>( m_TLILib, wxT("DevOpenDataStream") );
 		m_pDevClose = ResolveSymbol<PDevClose>( m_TLILib, wxT("DevClose") );
+		m_pDSGetInfo = ResolveSymbol<PDSGetInfo>( m_TLILib, wxT("DSGetInfo") );
 		m_pTLIMV_MACFromSerial = ResolveSymbol<PTLIMV_MACFromSerial>( m_TLILib, wxT("TLIMV_MACFromSerial") );
 		m_pTLIMV_IsValidIPv4Address = ResolveSymbol<PTLIMV_IsValidIPv4Address>( m_TLILib, wxT("TLIMV_IsValidIPv4Address") );
 		m_pTLIMV_DoAdressesMatch = ResolveSymbol<PTLIMV_DoAdressesMatch>( m_TLILib, wxT("TLIMV_DoAdressesMatch") );
@@ -460,7 +478,7 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 	wxString deviceToConfigure;
 	wxString userDefinedName;
 	bool boMustQuit = false;
-	InterfaceInfo interfaceInfo[DetecedDeviceInfo::MAX_INTERFACE_COUNT];
+	InterfaceInfo interfaceInfo[DetectedDeviceInfo::MAX_INTERFACE_COUNT];
 	for( int i=1; i<argc; i++ )
 	{
 		wxString key, value;
@@ -477,7 +495,7 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 			{
 				if( !deviceToConfigure.IsEmpty() )
 				{
-					for( size_t j=0; j<DetecedDeviceInfo::MAX_INTERFACE_COUNT; j++ )
+					for( size_t j=0; j<DetectedDeviceInfo::MAX_INTERFACE_COUNT; j++ )
 					{
 						m_interfaceInfo[j] = interfaceInfo[j];
 					}
@@ -487,7 +505,7 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 				if( SelectDevice( value ) )
 				{
 					deviceToConfigure = value;
-					for( size_t j=0; j<DetecedDeviceInfo::MAX_INTERFACE_COUNT; j++ )
+					for( size_t j=0; j<DetectedDeviceInfo::MAX_INTERFACE_COUNT; j++ )
 					{
 						interfaceInfo[j] = m_interfaceInfo[j];
 					}
@@ -537,7 +555,7 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 
 	if( !deviceToConfigure.IsEmpty() )
 	{
-		for( size_t j=0; j<DetecedDeviceInfo::MAX_INTERFACE_COUNT; j++ )
+		for( size_t j=0; j<DetectedDeviceInfo::MAX_INTERFACE_COUNT; j++ )
 		{
 			m_interfaceInfo[j] = interfaceInfo[j];
 		}
@@ -560,33 +578,6 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 		m_quitTimer.SetOwner( this, teQuit );
 		m_quitTimer.Start( 1000 );
 	}
-}
-
-//-----------------------------------------------------------------------------
-bool IPConfigureFrame::SelectDevice( const wxString& deviceToConfigure )
-//-----------------------------------------------------------------------------
-{
-	if( !deviceToConfigure.IsEmpty() )
-	{
-		const int cnt = m_pDevListCtrl->GetItemCount();
-		for( int i=0; i<cnt; i++ )
-		{
-			wxListItem info;
-			info.m_itemId = i;
-			info.m_col = lcSerial;
-			info.m_mask = wxLIST_MASK_TEXT;
-			if( m_pDevListCtrl->GetItem( info ) )
-			{
-				if( info.m_text == deviceToConfigure )
-				{
-					m_pDevListCtrl->SetCurrentItemIndex( i );
-					UpdateDlgControls( true );
-					return true;
-				}
-			}
-		}
-	}
-	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -615,49 +606,13 @@ IPConfigureFrame::~IPConfigureFrame()
 		++it;
 	}
 	LOGGED_TLI_CALL( TLClose, ( m_hTLI ), WriteLogMessage )
-	for_each( m_devices.begin(), m_devices.end(), ptr_fun(DeleteSecond<const string, DetecedDeviceInfo*>) );
+	for_each( m_devices.begin(), m_devices.end(), ptr_fun(DeleteSecond<const string, DetectedDeviceInfo*>) );
 	m_devices.clear();
 	// when we e.g. try to write config stuff on a read-only file system the result can
 	// be an annoying message box. Therefore we switch off logging now, as otherwise higher level
 	// clean up code might produce error messages
 	wxLog::EnableLogging( false );
 }
-
-//-----------------------------------------------------------------------------
-void IPConfigureFrame::Deinit( void )
-//-----------------------------------------------------------------------------
-{
-	if( m_quitTimer.IsRunning() )
-	{
-		m_quitTimer.Stop();
-	}
-}
-
-//-----------------------------------------------------------------------------
-void IPConfigureFrame::OnBtnApplyChanges( wxCommandEvent& )
-//-----------------------------------------------------------------------------
-{
-	int currentItem = m_pDevListCtrl->GetCurrentItemIndex();
-	if( currentItem < 0 )
-	{
-		WriteLogMessage( wxT("ERROR: No device selected.\n"), m_ERROR_STYLE );
-		return;
-	}
-
-	wxString itemText(m_pDevListCtrl->GetItemText( currentItem ));
-	wxListItem info;
-	info.m_itemId = currentItem;
-	info.m_col = lcSerial;
-	info.m_mask = wxLIST_MASK_TEXT;
-	if( !m_pDevListCtrl->GetItem( info ) )
-	{
-		WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain serial number for device %s.\n"), itemText.c_str() ), m_ERROR_STYLE );
-		return;
-	}
-
-	ApplyChanges( info.m_text, itemText, m_pCBConnectedToIPAddress->GetValue(), m_pTCUserDefinedName->GetValue() );
-}
-
 
 //-----------------------------------------------------------------------------
 void IPConfigureFrame::ApplyChanges( const wxString& serial, const wxString& product, const wxString& connectedToIPAddress, const wxString& userDefinedName )
@@ -808,6 +763,19 @@ void IPConfigureFrame::BuildList( void )
 		long index = m_pDevListCtrl->InsertItem( devCount, ConvertedString(it->second->modelName_), ( boNetmasksMatch && boAddressesMatch ) ? 1 : 0 );
 		m_pDevListCtrl->SetItem( index, lcSerial, ConvertedString(it->first) );
 		m_pDevListCtrl->SetItem( index, lcPrimaryInterfaceIPAddress, ConvertedString(it->second->interfaceInfo_[0].currentIPAddress_) );
+		m_pDevListCtrl->SetItem( index, lcPotentialPerformanceIssues, ConvertedString(DetectedDeviceInfo::PerformanceIssueStatusToString( it->second->potentialPerformanceIssueStatus_ )) );
+		switch( it->second->potentialPerformanceIssueStatus_ )
+		{
+		case DetectedDeviceInfo::pisNotChecked:
+		case DetectedDeviceInfo::pisCannotAccess:
+			m_pDevListCtrl->SetItemBackgroundColour( index, wxColour(255, 255, 0) );
+			break;
+		case DetectedDeviceInfo::pisIssuesDetected:
+			m_pDevListCtrl->SetItemBackgroundColour( index, wxColour(255, 0, 0) );
+			break;
+		case DetectedDeviceInfo::pisNone:
+			break;
+		}
 		m_pDevListCtrl->SetItemData( index, it->second->id_ );
 		++it;
 		++devCount;
@@ -816,34 +784,167 @@ void IPConfigureFrame::BuildList( void )
 	m_pDevListCtrl->SetColumnWidth( lcProduct, ( ( devCount == 0 ) ? wxLIST_AUTOSIZE_USEHEADER : wxLIST_AUTOSIZE ) );
 	m_pDevListCtrl->SetColumnWidth( lcSerial, ( ( devCount == 0 ) ? wxLIST_AUTOSIZE_USEHEADER : wxLIST_AUTOSIZE ) );
 	m_pDevListCtrl->SetColumnWidth( lcPrimaryInterfaceIPAddress, wxLIST_AUTOSIZE_USEHEADER );
+	m_pDevListCtrl->SetColumnWidth( lcPotentialPerformanceIssues, wxLIST_AUTOSIZE_USEHEADER );
 	UpdateDlgControls( false );
 }
 
 //-----------------------------------------------------------------------------
-std::string IPConfigureFrame::GetInterfaceStringInfo( MVTLI_INTERFACE_HANDLE hInterface, INTERFACE_INFO_CMD info )
+void IPConfigureFrame::CheckForPotentialPerformanceIssues( DetectedDeviceInfo* pDeviceInfo )
 //-----------------------------------------------------------------------------
 {
-	if( !m_pIFGetInfo )
+	if( !pDeviceInfo->pPerformanceIssuesDlg_ )
 	{
-		WriteLogMessage( wxT("IFGetInfo is not available.\n"), m_ERROR_STYLE );
-		return string("");
+		pDeviceInfo->pPerformanceIssuesDlg_ = new PerformanceIssuesDlg(this, wxID_ANY, wxT("Potential Performance Issues"), pDeviceInfo);
+	}
+	wxTreeCtrl* pTreeCtrl = pDeviceInfo->pPerformanceIssuesDlg_->GetTreeCtrl();
+	pTreeCtrl->DeleteAllItems();
+	wxTreeItemId rootId = pTreeCtrl->AddRoot( ConvertedString(pDeviceInfo->deviceName_) );
+
+	ostringstream oss;
+	const std::vector<std::pair<std::string, AdapterInfo> >::size_type adapterCnt = pDeviceInfo->adapters_.size();
+	for( std::vector<std::pair<std::string, AdapterInfo> >::size_type i=0; i<adapterCnt; i++ )
+	{
+		InterfaceContainer::const_iterator itInterface = m_TLIInterfaces.begin();
+		InterfaceContainer::const_iterator itInterfaceEND = m_TLIInterfaces.end();
+		string adapterIPAddress;
+		while( itInterface != itInterfaceEND )
+		{
+			adapterIPAddress = GetInterfaceStringInfo( itInterface->second, INTERFACE_INFO_IP_STRING );
+			if( adapterIPAddress == pDeviceInfo->adapters_[i].first )
+			{
+				break;
+			}
+			++itInterface;
+		}
+
+		if( itInterface == m_TLIInterfaces.end() )
+		{
+			WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain interface handle to adapter %s.\n"), pDeviceInfo->adapters_[i].first.c_str() ), m_ERROR_STYLE );
+			continue;
+		}
+
+		ostringstream adapterInfoMsg;
+		adapterInfoMsg << itInterface->first << " (IPv4 address: " << adapterIPAddress << ", MTU: "
+			<< pDeviceInfo->adapters_[i].second.MTU_ << "): ";
+		bool boMarkAdapterEntry = false;
+		if( pDeviceInfo->adapters_[i].second.MTU_ <= 1500 )
+		{
+			adapterInfoMsg << "This adapter reports an MTU of " << pDeviceInfo->adapters_[i].second.MTU_
+				<< " but it is recommended to enable Jumbo Frames for interfaces working with GEV devices. ";
+			pDeviceInfo->potentialPerformanceIssueStatus_ = DetectedDeviceInfo::pisIssuesDetected;
+			boMarkAdapterEntry = true;
+		}
+
+		if( pDeviceInfo->adapters_[i].second.linkSpeed_ < 1000 )
+		{
+			adapterInfoMsg << "This adapter reports a link speed of " << pDeviceInfo->adapters_[i].second.linkSpeed_
+				<< " while at least 1000 is recommended for interfaces working with GEV devices. ";
+			pDeviceInfo->potentialPerformanceIssueStatus_ = DetectedDeviceInfo::pisIssuesDetected;
+			boMarkAdapterEntry = true;
+		}
+
+		if( pDeviceInfo->potentialPerformanceIssueStatus_ == DetectedDeviceInfo::pisNotChecked )
+		{
+			pDeviceInfo->potentialPerformanceIssueStatus_ = DetectedDeviceInfo::pisNone;
+			adapterInfoMsg << "No issues deteced.";
+		}
+
+		wxTreeItemId adapterTreeItemId = pTreeCtrl->AppendItem( rootId, ConvertedString(adapterInfoMsg.str()) );
+		if( boMarkAdapterEntry )
+		{
+			pTreeCtrl->SetItemTextColour( adapterTreeItemId, wxColour(255, 0, 0) );
+		}
+		oss << adapterInfoMsg.str() << endl;
+
+		MVTLI_DEVICE_HANDLE hDev = 0;
+		// this will only work for devices not currently under control by someone else
+		if( m_pIFOpenDevice( itInterface->second, pDeviceInfo->deviceName_.c_str(), DEVICE_ACCESS_CONTROL, &hDev ) == 0 )
+		{
+			int status = 0;
+			unsigned int streamChannelCnt = 0;
+			LOGGED_TLI_CALL( DevGetNumDataStreams, ( hDev, &streamChannelCnt ), WriteLogMessage )
+			for( unsigned int streamChannelIndex=0; streamChannelIndex<streamChannelCnt; streamChannelIndex++ )
+			{
+				ostringstream datastreamInfoMsg;
+				bool boMark = true;
+				const string streamID(GetStreamID( hDev, streamChannelIndex ));
+				datastreamInfoMsg << " DataStream[" << streamChannelIndex << "]: ";
+				if( !streamID.empty() )
+				{
+					datastreamInfoMsg << "(ID: " << streamID << "): ";
+					MVTLI_DATASTREAM_HANDLE hDS = 0;
+					LOGGED_TLI_CALL( DevOpenDataStream, ( hDev, streamID.c_str(), &hDS ), WriteLogMessage )
+					if( status == 0 )
+					{
+						uint64_type SCPS = 0ULL;
+						size_t bufSize(sizeof(SCPS));
+						LOGGED_TLI_CALL( DSGetInfo, ( hDS, STREAM_INFO_SCPS, 0, &SCPS, &bufSize ), WriteLogMessage )
+						if( status == 0 )
+						{
+							datastreamInfoMsg << "Negotiated packet size: " << SCPS << ". ";
+							if( SCPS < 1500ULL )
+							{
+								datastreamInfoMsg << "This is too small an indicates that at least one network component (device, switch, network interface card) is not configured to use Jumbo Frames!";
+								pDeviceInfo->potentialPerformanceIssueStatus_ = DetectedDeviceInfo::pisIssuesDetected;
+							}
+							else
+							{
+								boMark = false;
+							}
+						}
+						else
+						{
+							datastreamInfoMsg << "ERROR: Could not obtain packet size.";
+						}
+					}
+					else
+					{
+						datastreamInfoMsg << "ERROR: Could not open data stream.";
+					}
+				}
+				else
+				{
+					datastreamInfoMsg << "ERROR: Could not obtain stream ID.";
+				}
+
+				wxTreeItemId dataStreamTreeItemId = pTreeCtrl->AppendItem( adapterTreeItemId, ConvertedString(datastreamInfoMsg.str()) );
+				if( boMark )
+				{
+					pTreeCtrl->SetItemTextColour( dataStreamTreeItemId, wxColour(255, 0, 0) );
+				}
+				oss << datastreamInfoMsg.str() << endl;
+			}
+			LOGGED_TLI_CALL( DevClose, ( hDev ), WriteLogMessage )
+		}
+		else
+		{
+			oss << " Cannot open device thus cannot check data stream parameters" << endl;
+			pDeviceInfo->potentialPerformanceIssueStatus_ = DetectedDeviceInfo::pisCannotAccess;
+			wxTreeItemId dataStreamTreeItemId = pTreeCtrl->AppendItem( adapterTreeItemId, wxT("Cannot open device thus cannot check data stream parameters") );
+			pTreeCtrl->SetItemTextColour( dataStreamTreeItemId, wxColour(255, 0, 0) );
+		}
 	}
 
-	size_t stringSize = 0;
-	int result = m_pIFGetInfo( hInterface, info, 0, 0, &stringSize );
-	if( result != 0 )
+	pDeviceInfo->potentialPerformanceIssuesMsg_ = oss.str();
+	pDeviceInfo->pPerformanceIssuesDlg_->Refresh();
+}
+
+//-----------------------------------------------------------------------------
+void IPConfigureFrame::Deinit( void )
+//-----------------------------------------------------------------------------
+{
+	if( m_quitTimer.IsRunning() )
 	{
-		WriteLogMessage( wxString::Format( wxT("ERROR during call to IFGetInfo( %p, %d, 0, 0, %p ): %d.\n"), hInterface, info, reinterpret_cast<void*>(&stringSize), result ), m_ERROR_STYLE );
-		return string("");
+		m_quitTimer.Stop();
 	}
-	auto_array_ptr<char> pStringBuffer(stringSize);
-	result = m_pIFGetInfo( hInterface, info, 0, pStringBuffer.get(), &stringSize );
-	if( result != 0 )
-	{
-		WriteLogMessage( wxString::Format( wxT("ERROR during call to IFGetInfo( %p, %d, 0, %p, %p ): %d.\n"), hInterface, info, pStringBuffer.get(), reinterpret_cast<void*>(&stringSize), result ), m_ERROR_STYLE );
-		return string("");
-	}
-	return string(pStringBuffer.get());
+}
+
+//-----------------------------------------------------------------------------
+int IPConfigureFrame::ForceIP( const char* pMACAddress, const char* pNewDeviceIPAddress, const char* pStaticSubnetMask, const char* pStaticDefaultGateway, const char* pAdapterIPAddress, unsigned int timeout_ms )
+//-----------------------------------------------------------------------------
+{
+	int status = 0;
+	CHECKED_TLI_CALL_WITH_RETURN( TLIMV_ForceIP, ( pMACAddress, pNewDeviceIPAddress, pStaticSubnetMask, pStaticDefaultGateway, pAdapterIPAddress, timeout_ms ), WriteLogMessage )
 }
 
 //-----------------------------------------------------------------------------
@@ -901,44 +1002,104 @@ string IPConfigureFrame::GetDeviceStringInfo( MVTLI_INTERFACE_HANDLE hInterface,
 }
 
 //-----------------------------------------------------------------------------
-void IPConfigureFrame::OnHelp_About( wxCommandEvent& )
+std::string IPConfigureFrame::GetInterfaceStringInfo( MVTLI_INTERFACE_HANDLE hInterface, INTERFACE_INFO_CMD info )
 //-----------------------------------------------------------------------------
 {
-	wxBoxSizer *pTopDownSizer;
-	wxDialog dlg(this, wxID_ANY, wxString(_("About mvIPConfigure")));
-	wxIcon icon(mvIcon_xpm);
-	dlg.SetIcon( icon );
+	if( !m_pIFGetInfo )
+	{
+		WriteLogMessage( wxT("IFGetInfo is not available.\n"), m_ERROR_STYLE );
+		return string("");
+	}
 
-	pTopDownSizer = new wxBoxSizer(wxVERTICAL);
-	wxStaticText* pText = new wxStaticText(&dlg, wxID_ANY, wxT("Configuration tool for GigE Vision (tm) devices"));
-	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
-	pText = new wxStaticText(&dlg, wxID_ANY, wxString::Format( wxT("(C) 2008 - %s by %s"), CURRENT_YEAR, COMPANY_NAME ));
-	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
-	pText = new wxStaticText(&dlg, wxID_ANY, wxString::Format( wxT("Version %s"), VERSION_STRING ));
-	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
-	AddSupportInfo( &dlg, pTopDownSizer );
-	AddwxWidgetsInfo( &dlg, pTopDownSizer );
-	AddSourceInfo( &dlg, pTopDownSizer );
-	wxButton *pBtnOK = new wxButton(&dlg, wxID_OK, wxT("OK"));
-	pBtnOK->SetDefault();
-	pTopDownSizer->Add( pBtnOK, 0, wxALL | wxALIGN_RIGHT, 15 );
-	dlg.SetSizer( pTopDownSizer );
-	pTopDownSizer->Fit( &dlg );
-	dlg.ShowModal();
+	size_t stringSize = 0;
+	int result = m_pIFGetInfo( hInterface, info, 0, 0, &stringSize );
+	if( result != 0 )
+	{
+		WriteLogMessage( wxString::Format( wxT("ERROR during call to IFGetInfo( %p, %d, 0, 0, %p ): %d.\n"), hInterface, info, reinterpret_cast<void*>(&stringSize), result ), m_ERROR_STYLE );
+		return string("");
+	}
+	auto_array_ptr<char> pStringBuffer(stringSize);
+	result = m_pIFGetInfo( hInterface, info, 0, pStringBuffer.get(), &stringSize );
+	if( result != 0 )
+	{
+		WriteLogMessage( wxString::Format( wxT("ERROR during call to IFGetInfo( %p, %d, 0, %p, %p ): %d.\n"), hInterface, info, pStringBuffer.get(), reinterpret_cast<void*>(&stringSize), result ), m_ERROR_STYLE );
+		return string("");
+	}
+	return string(pStringBuffer.get());
 }
 
 //-----------------------------------------------------------------------------
-void IPConfigureFrame::OnAssignTemporaryIP( wxCommandEvent& )
+std::string IPConfigureFrame::GetStreamID( MVTLI_DEVICE_HANDLE hDev, unsigned int streamChannelIndex ) const
+//-----------------------------------------------------------------------------
+{
+	size_t stringSize = 0;
+	int status = 0;
+	LOGGED_TLI_CALL( DevGetDataStreamID, ( hDev, streamChannelIndex, 0, &stringSize ), WriteLogMessage )
+	if( status == 0 )
+	{
+		auto_array_ptr<char> pStringBuffer(stringSize);
+		LOGGED_TLI_CALL( DevGetDataStreamID, ( hDev, streamChannelIndex, pStringBuffer.get(), &stringSize ), WriteLogMessage )
+		if( status == 0 )
+		{
+			return std::string(pStringBuffer.get());
+		}
+	}
+	return "";
+}
+
+//-----------------------------------------------------------------------------
+int IPConfigureFrame::IsValidIPv4Address( const char* pData ) const
+//-----------------------------------------------------------------------------
+{
+	int status = 0;
+	CHECKED_TLI_CALL_WITH_RETURN( TLIMV_IsValidIPv4Address, ( pData ), WriteLogMessage )
+}
+
+//-----------------------------------------------------------------------------
+int IPConfigureFrame::MACFromSerial( const char* pSerial, char* pBuf, size_t* pBufSize ) const
+//-----------------------------------------------------------------------------
+{
+	int status = 0;
+	CHECKED_TLI_CALL_WITH_RETURN( TLIMV_MACFromSerial, ( pSerial, pBuf, pBufSize ), WriteLogMessage )
+}
+
+//-----------------------------------------------------------------------------
+void IPConfigureFrame::OnAction_AssignTemporaryIP( wxCommandEvent& )
 //-----------------------------------------------------------------------------
 {
 	AssignTemporaryIP( m_pDevListCtrl->GetCurrentItemIndex() );
 }
 
 //-----------------------------------------------------------------------------
-void IPConfigureFrame::OnBtnConfigure( wxCommandEvent& )
+void IPConfigureFrame::OnAction_ViewPotentialPerformanceIssues( wxCommandEvent& )
 //-----------------------------------------------------------------------------
 {
-	UpdateDlgControls( true );
+	ViewPotentialPerformanceIssues( m_pDevListCtrl->GetCurrentItemIndex() );
+}
+
+//-----------------------------------------------------------------------------
+void IPConfigureFrame::OnBtnApplyChanges( wxCommandEvent& )
+//-----------------------------------------------------------------------------
+{
+	int currentItem = m_pDevListCtrl->GetCurrentItemIndex();
+	if( currentItem < 0 )
+	{
+		WriteLogMessage( wxT("ERROR: No device selected.\n"), m_ERROR_STYLE );
+		return;
+	}
+
+	wxString itemText(m_pDevListCtrl->GetItemText( currentItem ));
+	wxListItem info;
+	info.m_itemId = currentItem;
+	info.m_col = lcSerial;
+	info.m_mask = wxLIST_MASK_TEXT;
+	if( !m_pDevListCtrl->GetItem( info ) )
+	{
+		WriteLogMessage( wxString::Format( wxT("ERROR: Could not obtain serial number for device %s.\n"), itemText.c_str() ), m_ERROR_STYLE );
+		return;
+	}
+
+	ApplyChanges( info.m_text, itemText, m_pCBConnectedToIPAddress->GetValue(), m_pTCUserDefinedName->GetValue() );
 }
 
 //-----------------------------------------------------------------------------
@@ -967,21 +1128,6 @@ void IPConfigureFrame::OnClose( wxCloseEvent& )
 }
 
 //-----------------------------------------------------------------------------
-void IPConfigureFrame::OnListItemDeselected( int /*listItemIndex*/ )
-//-----------------------------------------------------------------------------
-{
-	UpdateDlgControls( false );
-}
-
-//-----------------------------------------------------------------------------
-void IPConfigureFrame::OnListItemSelected( int /*listItemIndex*/ )
-//-----------------------------------------------------------------------------
-{
-	m_pCBConnectedToIPAddress->Clear();
-	UpdateDlgControls( false );
-}
-
-//-----------------------------------------------------------------------------
 void IPConfigureFrame::OnConnectedToIPAddressTextChanged( wxCommandEvent& )
 //-----------------------------------------------------------------------------
 {
@@ -1001,11 +1147,56 @@ void IPConfigureFrame::OnConnectedToIPAddressTextChanged( wxCommandEvent& )
 }
 
 //-----------------------------------------------------------------------------
+void IPConfigureFrame::OnHelp_About( wxCommandEvent& )
+//-----------------------------------------------------------------------------
+{
+	wxBoxSizer *pTopDownSizer;
+	wxDialog dlg(this, wxID_ANY, wxString(_("About mvIPConfigure")));
+	wxIcon icon(mvIcon_xpm);
+	dlg.SetIcon( icon );
+
+	pTopDownSizer = new wxBoxSizer(wxVERTICAL);
+	wxStaticText* pText = new wxStaticText(&dlg, wxID_ANY, wxT("Configuration tool for GigE Vision (tm) devices"));
+	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
+	pText = new wxStaticText(&dlg, wxID_ANY, wxString::Format( wxT("(C) 2008 - %s by %s"), CURRENT_YEAR, COMPANY_NAME ));
+	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
+	pText = new wxStaticText(&dlg, wxID_ANY, wxString::Format( wxT("Version %s"), VERSION_STRING ));
+	pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
+	AddSupportInfo( &dlg, pTopDownSizer );
+	AddwxWidgetsInfo( &dlg, pTopDownSizer );
+	AddSourceInfo( &dlg, pTopDownSizer );
+	wxButton *pBtnOK = new wxButton(&dlg, wxID_OK, wxT("OK"));
+	pBtnOK->SetDefault();
+	pTopDownSizer->Add( pBtnOK, 0, wxALL | wxALIGN_RIGHT, 15 );
+	dlg.SetSizer( pTopDownSizer );
+	pTopDownSizer->Fit( &dlg );
+	dlg.ShowModal();
+}
+
+//-----------------------------------------------------------------------------
 void IPConfigureFrame::OnInterfaceSelectorTextChanged( wxCommandEvent& )
 //-----------------------------------------------------------------------------
 {
 	WriteLogMessage( wxString::Format(wxT("Interface %d selected\n"), m_pSCInterfaceSelector->GetValue() ) );
 	UpdateDlgControls( true );
+}
+
+//-----------------------------------------------------------------------------
+void IPConfigureFrame::OnListItemSelected( int /*listItemIndex*/ )
+//-----------------------------------------------------------------------------
+{
+	m_pCBConnectedToIPAddress->Clear();
+	UpdateDlgControls( false );
+}
+
+//-----------------------------------------------------------------------------
+void IPConfigureFrame::OnPersistentGatewayTextChanged( wxCommandEvent& )
+//-----------------------------------------------------------------------------
+{
+	if( m_pTCPersistentDefaultGateway )
+	{
+		m_interfaceInfo[m_pSCInterfaceSelector->GetValue()].persistentDefaultGateway_ = m_pTCPersistentDefaultGateway->GetValue().mb_str();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1029,24 +1220,6 @@ void IPConfigureFrame::OnPersistentNetmaskTextChanged( wxCommandEvent& )
 }
 
 //-----------------------------------------------------------------------------
-void IPConfigureFrame::OnPersistentGatewayTextChanged( wxCommandEvent& )
-//-----------------------------------------------------------------------------
-{
-	if( m_pTCPersistentDefaultGateway )
-	{
-		m_interfaceInfo[m_pSCInterfaceSelector->GetValue()].persistentDefaultGateway_ = m_pTCPersistentDefaultGateway->GetValue().mb_str();
-	}
-}
-
-//-----------------------------------------------------------------------------
-void IPConfigureFrame::OnQuit( wxCommandEvent& )
-//-----------------------------------------------------------------------------
-{
-	// true is to force the frame to close
-	Close( true );
-}
-
-//-----------------------------------------------------------------------------
 void IPConfigureFrame::OnTimer( wxTimerEvent& e )
 //-----------------------------------------------------------------------------
 {
@@ -1062,17 +1235,45 @@ void IPConfigureFrame::OnTimer( wxTimerEvent& e )
 }
 
 //-----------------------------------------------------------------------------
-void IPConfigureFrame::OnUpdateDeviceList( wxCommandEvent& )
+template<typename _Ty>
+_Ty IPConfigureFrame::ResolveSymbol( const wxDynamicLibrary& lib, const wxString& name )
 //-----------------------------------------------------------------------------
 {
-	UpdateDeviceList();
+	function_cast<_Ty> pFunc;
+	pFunc.pI = lib.GetSymbol( name );
+	if( !pFunc.pI )
+	{
+		string functionName(__FUNCTION__);
+		WriteLogMessage( wxString::Format( wxT("%s: Exported symbol '%s' could not be resolved/extracted from GenTL producer.\n"), ConvertedString(functionName).c_str(), name.c_str() ), wxColour(255, 0, 0) );
+	}
+	return pFunc.pO;
 }
 
 //-----------------------------------------------------------------------------
-void IPConfigureFrame::OnUseAdvancedDeviceDiscovery( wxCommandEvent& )
+bool IPConfigureFrame::SelectDevice( const wxString& deviceToConfigure )
 //-----------------------------------------------------------------------------
 {
-	UpdateDeviceList();
+	if( !deviceToConfigure.IsEmpty() )
+	{
+		const int cnt = m_pDevListCtrl->GetItemCount();
+		for( int i=0; i<cnt; i++ )
+		{
+			wxListItem info;
+			info.m_itemId = i;
+			info.m_col = lcSerial;
+			info.m_mask = wxLIST_MASK_TEXT;
+			if( m_pDevListCtrl->GetItem( info ) )
+			{
+				if( info.m_text == deviceToConfigure )
+				{
+					m_pDevListCtrl->SetCurrentItemIndex( i );
+					UpdateDlgControls( true );
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -1176,7 +1377,7 @@ void IPConfigureFrame::UpdateDeviceList( void )
 		}
 	}
 
-	for_each( m_devices.begin(), m_devices.end(), ptr_fun(DeleteSecond<const string, DetecedDeviceInfo*>) );
+	for_each( m_devices.begin(), m_devices.end(), ptr_fun(DeleteSecond<const string, DetectedDeviceInfo*>) );
 	m_devices.clear();
 	InterfaceContainer::iterator itInterfaces = m_TLIInterfaces.begin();
 	InterfaceContainer::iterator itInterfacesEnd = m_TLIInterfaces.end();
@@ -1252,15 +1453,15 @@ void IPConfigureFrame::UpdateDeviceList( void )
 								unsigned int interfaceCount = 1;
 								bufferSize = sizeof(interfaceCount);
 								LOGGED_TLI_CALL( IFGetDeviceInfo, ( itInterfaces->second, deviceName.c_str(), DEVICE_INFO_INTERFACE_COUNT, 0, &interfaceCount, &bufferSize ), WriteLogMessage )
-								if( interfaceCount > DetecedDeviceInfo::MAX_INTERFACE_COUNT )
+								if( interfaceCount > DetectedDeviceInfo::MAX_INTERFACE_COUNT )
 								{
-									WriteLogMessage( wxString::Format( wxT("ERROR!!! This device claims to support %u interfaces, while the current version of the standard only allows %lu interfaces.\n"), interfaceCount, (long unsigned int) DetecedDeviceInfo::MAX_INTERFACE_COUNT ), m_ERROR_STYLE );
+									WriteLogMessage( wxString::Format( wxT("ERROR!!! This device claims to support %u interfaces, while the current version of the standard only allows %lu interfaces.\n"), interfaceCount, (long unsigned int) DetectedDeviceInfo::MAX_INTERFACE_COUNT ), m_ERROR_STYLE );
 									interfaceCount = 4;
 								}
 								unsigned char supportsUserDefinedName = 0;
 								bufferSize = sizeof(supportsUserDefinedName);
 								LOGGED_TLI_CALL( IFGetDeviceInfo, ( itInterfaces->second, deviceName.c_str(), DEVICE_INFO_SUPPORTS_USER_DEFINED_NAME, 0, &supportsUserDefinedName, &bufferSize ), WriteLogMessage )
-								DetecedDeviceInfo* p = new DetecedDeviceInfo(deviceName, serial, model, manufacturer, userDefinedName, supportsUserDefinedName, adapterIPAddress, adapterNetmask, adapterMTU, adapterLinkSpeed, interfaceCount, static_cast<long>(m_devices.size()));
+								DetectedDeviceInfo* p = new DetectedDeviceInfo(deviceName, serial, model, manufacturer, userDefinedName, supportsUserDefinedName, adapterIPAddress, adapterNetmask, adapterMTU, adapterLinkSpeed, interfaceCount, static_cast<long>(m_devices.size()));
 								pair<DeviceMap::iterator, bool> insertPair = m_devices.insert( make_pair( serial, p ) );
 								if( !insertPair.second )
 								{
@@ -1359,46 +1560,15 @@ void IPConfigureFrame::UpdateDeviceList( void )
 		wxMessageBox(conflictMessage, wxT("Subnet Conflict(s) Detected"), wxOK | wxICON_EXCLAMATION, this);
 	}
 
-	BuildList();
-}
-
-//-----------------------------------------------------------------------------
-int IPConfigureFrame::IsValidIPv4Address( const char* pData )
-//-----------------------------------------------------------------------------
-{
-	int status = 0;
-	CHECKED_TLI_CALL_WITH_RETURN( TLIMV_IsValidIPv4Address, ( pData ), WriteLogMessage )
-}
-
-//-----------------------------------------------------------------------------
-int IPConfigureFrame::MACFromSerial( const char* pSerial, char* pBuf, size_t* pBufSize )
-//-----------------------------------------------------------------------------
-{
-	int status = 0;
-	CHECKED_TLI_CALL_WITH_RETURN( TLIMV_MACFromSerial, ( pSerial, pBuf, pBufSize ), WriteLogMessage )
-}
-
-//-----------------------------------------------------------------------------
-int IPConfigureFrame::ForceIP( const char* pMACAddress, const char* pNewDeviceIPAddress, const char* pStaticSubnetMask, const char* pStaticDefaultGateway, const char* pAdapterIPAddress, unsigned int timeout_ms )
-//-----------------------------------------------------------------------------
-{
-	int status = 0;
-	CHECKED_TLI_CALL_WITH_RETURN( TLIMV_ForceIP, ( pMACAddress, pNewDeviceIPAddress, pStaticSubnetMask, pStaticDefaultGateway, pAdapterIPAddress, timeout_ms ), WriteLogMessage )
-}
-
-//-----------------------------------------------------------------------------
-template<typename _Ty>
-_Ty IPConfigureFrame::ResolveSymbol( const wxDynamicLibrary& lib, const wxString& name )
-//-----------------------------------------------------------------------------
-{
-	function_cast<_Ty> pFunc;
-	pFunc.pI = lib.GetSymbol( name );
-	if( !pFunc.pI )
+	DeviceMap::iterator itDev = m_devices.begin();
+	const DeviceMap::iterator itDevEND = m_devices.end();
+	while( itDev != itDevEND )
 	{
-		string functionName(__FUNCTION__);
-		WriteLogMessage( wxString::Format( wxT("%s: Exported symbol '%s' could not be resolved/extracted from GenTL producer.\n"), ConvertedString(functionName).c_str(), name.c_str() ), wxColour(255, 0, 0) );
+		CheckForPotentialPerformanceIssues( itDev->second );
+		++itDev;
 	}
-	return pFunc.pO;
+
+	BuildList();
 }
 
 //-----------------------------------------------------------------------------
@@ -1422,7 +1592,7 @@ void IPConfigureFrame::UpdateDlgControls( bool boEdit )
 	bool boDeviceValid = ( it != m_devices.end() );
 	if( boDeviceValid )
 	{
-		for( unsigned int i=0; i<DetecedDeviceInfo::MAX_INTERFACE_COUNT; i++ )
+		for( unsigned int i=0; i<DetectedDeviceInfo::MAX_INTERFACE_COUNT; i++ )
 		{
 			m_interfaceInfo[0] = it->second->interfaceInfo_[0];
 		}
@@ -1431,6 +1601,8 @@ void IPConfigureFrame::UpdateDlgControls( bool boEdit )
 	{
 		boEdit = false;
 	}
+
+	m_pMIAction_ViewPotentialPerformanceIssues->Enable( boDeviceValid );
 
 	// device info controls
 	m_pSTManufacturer->SetLabel( ConvertedString(boDeviceValid ? it->second->manufacturer_.c_str() : "-") );
@@ -1494,7 +1666,36 @@ void IPConfigureFrame::UpdateDlgControls( bool boEdit )
 }
 
 //-----------------------------------------------------------------------------
-void IPConfigureFrame::WriteLogMessage( const wxString& msg, const wxTextAttr& style /* = wxTextAttr(wxColour(0, 0, 0)) */ )
+void IPConfigureFrame::ViewPotentialPerformanceIssues( int listItemIndex )
+//-----------------------------------------------------------------------------
+{
+	if( listItemIndex >= 0 )
+	{
+		wxString itemText(m_pDevListCtrl->GetItemText( listItemIndex ));
+		wxListItem info;
+		info.m_itemId = listItemIndex;
+		info.m_col = lcSerial;
+		info.m_mask = wxLIST_MASK_TEXT;
+		if( !m_pDevListCtrl->GetItem( info ) )
+		{
+			wxMessageBox( wxString::Format( wxT("Could not obtain serial number for selected device %s.\n"), itemText.c_str() ), wxT("ERROR"), wxOK | wxICON_EXCLAMATION, this );
+			return;
+		}
+
+		DeviceMap::const_iterator itDev = m_devices.find( string(m_pSTSerialNumber->GetLabel().mb_str()) );
+		if( itDev == m_devices.end() )
+		{
+			wxMessageBox( wxString::Format( wxT("ERROR: Could not obtain device name for selected device %s on adapter %s.\n"), m_pSTSerialNumber->GetLabel().c_str(), m_pCBConnectedToIPAddress->GetValue().c_str() ), wxT("ERROR"), wxOK | wxICON_EXCLAMATION, this );
+			return;
+		}
+
+		itDev->second->pPerformanceIssuesDlg_->ShowModal();
+		//wxMessageBox( ConvertedString(itDev->second->potentialPerformanceIssuesMsg_), wxString::Format( wxT("Potential Perfomance Issues For Device '%s'"), m_pSTSerialNumber->GetLabel().c_str() ), wxOK | wxICON_EXCLAMATION, this );
+	}
+}
+
+//-----------------------------------------------------------------------------
+void IPConfigureFrame::WriteLogMessage( const wxString& msg, const wxTextAttr& style /* = wxTextAttr(wxColour(0, 0, 0)) */ ) const
 //-----------------------------------------------------------------------------
 {
 	if( m_pLogWindow )

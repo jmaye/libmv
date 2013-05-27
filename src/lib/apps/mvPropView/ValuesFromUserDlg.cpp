@@ -356,9 +356,7 @@ DriverInformationDlg::DriverInformationDlg( wxWindow* pParent, const wxString& t
 
 	wxBoxSizer* pTopDownSizer = new wxBoxSizer(wxVERTICAL);
 	pTopDownSizer->AddSpacer( 10 );
-
 	wxPanel* pPanel = new wxPanel(this);
-
 	wxTreeCtrl* pTreeCtrl = new wxTreeCtrl(pPanel, wxID_ANY);
 	PopulateTreeCtrl( pTreeCtrl, itDrivers, devMgr );
 	ExpandAll( pTreeCtrl );
@@ -629,6 +627,7 @@ DetailedFeatureInfoDlg::DetailedFeatureInfoDlg( wxWindow* pParent, Component com
 	AddFeatureInfo( wxT("Component Type: "), ConvertedString(comp.typeAsString()) );
 	AddFeatureInfo( wxT("Component Visibility: "), ConvertedString(comp.visibilityAsString()) );
 	AddFeatureInfo( wxT("Component Flags: "), ConvertedString(comp.flagsAsString()) );
+	AddFeatureInfo( wxT("Component Default State: "), comp.isDefault() ? wxT("Yes") : wxT("No") );
 	{
 		vector<mvIMPACT::acquire::Component> selectingFeatures;
 		comp.selectingFeatures( selectingFeatures );

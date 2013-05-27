@@ -2,6 +2,7 @@
 #ifndef DeviceHandlerBlueDeviceH
 #define DeviceHandlerBlueDeviceH DeviceHandlerBlueDeviceH
 //-----------------------------------------------------------------------------
+#include <common/auto_array_ptr.h>
 #include "DeviceHandler.h"
 #include "PackageDescriptionParser.h"
 
