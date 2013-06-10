@@ -1,3 +1,9 @@
+libmv (2.5.10-26) precise; urgency=low
+
+  * version fixed in changelog
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Mon, 10 Jun 2013 10:33:07 +0000
+
 libmv (2.5.10.25) precise; urgency=low
 
   * version fixed in CmakeLists
