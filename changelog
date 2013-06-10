@@ -1,3 +1,9 @@
+libmv (2.5.10.24) precise; urgency=low
+
+  * version 2.5.10 
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Mon, 10 Jun 2013 10:26:30 +0000
+
 libmv (2.5.8-23) precise; urgency=low
 
   * bug fixed 

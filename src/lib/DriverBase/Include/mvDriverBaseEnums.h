@@ -304,11 +304,16 @@ enum TBayerConversionMode // uint_type
 	 *  This mode automatically sets the Bayer conversion algorithm according to the format property of the camera description.
 	 */
 	bcmAuto,
-#if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY) && !defined(WRAP_DOTNET)
-	bcmLAST,
-	bcmCustom = 0x80000000,
-	MV_ADDITONAL_CUSTOM_BAYER_CONVERSION_MODE
-#endif // #if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY) && !defined(WRAP_DOTNET)
+	/// \brief Packed.
+	/**
+	 *  This mode is useful for line scan cameras only.
+	 */
+	bcmPacked,
+	/// \brief Linear Packed.
+	/**
+	 *  This mode is useful for line scan cameras only.
+	 */
+	bcmLinearPacked
 };
 
 //-----------------------------------------------------------------------------
@@ -1556,7 +1561,10 @@ enum TDarkCurrentFilterMode
 	/// \brief This filter is switched on.
 	dcfmOn,
 	/// \brief The next frame will be taken for dark current adjustment.
-	dcfmCalibrateDarkCurrent
+	dcfmCalibrateDarkCurrent,
+	/// \brief In this mode whenever reaching this filter, the captured image will be replaced by the
+	/// last correction image, that has been created as a result of the filter being calibrated.
+	dcfmTransmitCorrectionImage
 };
 
 //-----------------------------------------------------------------------------
@@ -1822,8 +1830,9 @@ enum TDeviceEventType // flags_attribute, uint_type
 /// \brief Defines valid interface layouts for the device.
 /**
  *  The device interface layout defines what kind of features will be available
- *  after the device driver has been opened and where these features will be 
- *  located.
+ *  after the device driver has been opened and where these features will be
+ *  located. Apart from that the interface layout also has impact at what time
+ *  property values will be buffered for buffer captures.
  */
 /// \ingroup CommonInterface
 enum TDeviceInterfaceLayout
@@ -1840,7 +1849,11 @@ enum TDeviceInterfaceLayout
 	 *  As an example a device might be GenICam compliant and the device driver also
 	 *  implements access to a GenICam&trade; layer via a certain transport layer protocol
 	 *  driver (e.g. GigE Vision&trade;). In that case any third party device that
-	 *  is compliant with these standards can be operated using the generic interface layout.
+	 *  is compliant with one of these standards can be operated using the generic interface layout.
+	 * 
+	 *  In this interface layout property value changes will always have immediate effect, thus when
+	 *  changing the exposure time directly \b after requesting a buffer this buffer might be captured
+	 *  with the new exposure time already depending on the time the buffer request is actually be processed.
 	 * 
 	 *  \deprecated
 	 *  This interface layout has been declared deprecated. Please use <b>mvIMPACT::acquire::dilGenICam</b>
@@ -1851,13 +1864,19 @@ enum TDeviceInterfaceLayout
 	dilGeneric,
 	/// \brief A device specific interface shall be used.
 	/**
-	 *  For most devices supported by this user API this will be the only layout
+	 *  For most devices supported by this SDK this will be the only interface layout
 	 *  available. In this interface layout also most of the features will have
 	 *  the same name and location for every device even if a device is operated
 	 *  using another device driver. However this interface layout requires the
 	 *  driver to have detailed information about the underlying hardware, thus
-	 *  it will not be available for third party hardware, that can be used with
-	 *  this device driver.
+	 *  it will not be available for any third party hardware which might be useable with
+	 *  a certain device driver.
+	 * 
+	 *  In contrast to the other interface layouts, this layout will use a \a buffered \a property
+	 *  \a approach. This means it allows to request consecutive buffers each using defined but
+	 *  different settings. At the time of requesting a buffer, the driver will internally store the
+	 *  current property settings and will re-program the hardware later at the time of processing
+	 *  this request if the current settings differ from the settings that shall be used for this request.
 	 */
 	dilDeviceSpecific,
 	/// \brief A GenICam&trade; like interface layout shall be used.
@@ -1867,7 +1886,11 @@ enum TDeviceInterfaceLayout
 	 *  compliant XML interface description. This also applies for third party devices, which can
 	 *  be used with the GenICam GenTL Producer of mvIMPACT Acquire.
 	 * 
-	 *  This interface layout will allow to access third party devices as well.
+	 *  In this interface layout property value changes will always have immediate effect, thus when
+	 *  changing the exposure time directly \b after requesting a buffer this buffer might be captured
+	 *  with the new exposure time already depending on the time the buffer request is actually be processed.
+	 * 
+	 *  \note This interface layout will allow to access third party devices as well.
 	 * 
 	 *  \sa \ref ImageAcquisition_section_genicam
 	 */
@@ -2525,7 +2548,10 @@ enum TFlatFieldFilterMode
 	/// \brief The filter is switched on.
 	fffmOn,
 	/// \brief The next frame will be taken as flat field.
-	fffmCalibrateFlatField
+	fffmCalibrateFlatField,
+	/// \brief In this mode whenever reaching this filter, the captured image will be replaced by the
+	/// last correction image, that has been created as a result of the filter being calibrated.
+	fffmTransmitCorrectionImage
 };
 
 //-----------------------------------------------------------------------------

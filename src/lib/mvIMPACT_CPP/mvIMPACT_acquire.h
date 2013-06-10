@@ -10096,6 +10096,7 @@ class ImageProcessing : public ComponentCollection
 			locator.bindComponent( defectivePixelsFilterMode, "Mode");
 			locator.bindComponent( defectivePixelsFilterLeakyPixelDeviation_ADCLimit, "LeakyPixelDeviation_ADCLimit" );
 			locator.bindComponent( defectivePixelsFilterColdPixelDeviation_pc, "ColdPixelDeviation_pc" );
+			locator.bindComponent( defectivePixelsFound, "DefectivePixelsFound" );
 		}
 		locator.bindSearchBase( m_hRoot );
 		if( locator.findComponent( "FlatFieldFilter" ) != INVALID_ID )
@@ -10190,8 +10191,8 @@ public:
 								  colorProcessing(), bayerConversionMode(), whiteBalance(), whiteBalanceCalibration(), filter(),
 								  mirrorOperationMode(), mirrorModeGlobal(),
 								  defectivePixelsFilterMode(), defectivePixelsFilterLeakyPixelDeviation_ADCLimit(),
-								  defectivePixelsFilterColdPixelDeviation_pc(), flatFieldFilterMode(),
-								  flatFieldFilterCalibrationImageCount(), darkCurrentFilterMode(),
+								  defectivePixelsFilterColdPixelDeviation_pc(), defectivePixelsFound(),
+								  flatFieldFilterMode(), flatFieldFilterCalibrationImageCount(), darkCurrentFilterMode(),
 								  darkCurrentFilterCalibrationImageCount(),
 								  gainOffsetKneeEnable(), gainOffsetKneeMasterOffset_pc(),
 								  LUTEnable(), LUTMode(), LUTInterpolationMode(),
@@ -10287,6 +10288,7 @@ public:
 								  mirrorModeGlobal(src.mirrorModeGlobal), defectivePixelsFilterMode(src.defectivePixelsFilterMode),
 								  defectivePixelsFilterLeakyPixelDeviation_ADCLimit(src.defectivePixelsFilterLeakyPixelDeviation_ADCLimit),
 								  defectivePixelsFilterColdPixelDeviation_pc(src.defectivePixelsFilterColdPixelDeviation_pc),
+								  defectivePixelsFound(src.defectivePixelsFound),
 								  flatFieldFilterMode(src.flatFieldFilterMode),
 								  flatFieldFilterCalibrationImageCount(src.flatFieldFilterCalibrationImageCount),
 								  darkCurrentFilterMode(src.darkCurrentFilterMode),
@@ -10410,6 +10412,16 @@ PYTHON_ONLY(%immutable;)
 	 *  mode of the filter.
 	 */
 	PropertyI defectivePixelsFilterColdPixelDeviation_pc;
+	/// \brief An integer property \b (read-only) containing the number of pixels considered as being defective with respect to the
+	/// last calibration run.
+	/**
+	 *  \note
+	 *  In order to collect \b ALL defective pixels the list of detected pixels in not emptied each time a new calibration
+	 *  is started. In order to get rid of currently detected pixels an application must set the property
+	 *  <b>mvIMPACT::acquire::ImageProcessing::defectivePixelsFilterMode</b> to <b>mvIMPACT::acquire::dpfmResetCalibration</b>
+	 *  and then capture a fresh image. Only then all currently detected pixels will be discarded.
+	 */
+	PropertyI defectivePixelsFound;
 	/// \brief An enumerated integer property defining the operation mode of the flat field correction filter.
 	/**
 	 *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TFlatFieldFilterMode.
@@ -10643,6 +10655,7 @@ PYTHON_ONLY(%mutable;)
 	PropertyIDefectivePixelsFilterMode getDefectivePixelsFilterMode( void ) const { return defectivePixelsFilterMode; }
 	PropertyI getDefectivePixelsFilterLeakyPixelDeviation_ADCLimit( void ) const { return defectivePixelsFilterLeakyPixelDeviation_ADCLimit; }
 	PropertyI getDectivePixelsFilterColdPixelDeviation_pc( void ) const { return defectivePixelsFilterColdPixelDeviation_pc; }
+	PropertyI getDefectivePixelsFound( void ) const { return defectivePixelsFound; }
 	PropertyIFlatFieldFilterMode getFlatFieldFilterMode( void ) const { return flatFieldFilterMode;	}
 	PropertyI getFlatFieldFilterCalibrationImageCount( void ) const { return flatFieldFilterCalibrationImageCount; }
 	PropertyIDarkCurrentFilterMode getDarkCurrentFilterMode( void ) const { return darkCurrentFilterMode; }
@@ -10842,7 +10855,7 @@ PYTHON_ONLY(%immutable;)
 	/// \brief An integer property \b (read-only) containing the overall count of image requests which have timed out since the
 	/// \b mvIMPACT::acquire::Device has been opened OR since the last call to \b mvIMPACT::acquire::StatisticsBase::reset().
 	PropertyI timedOutRequestsCount;
-	/// \brief A float property \b (read-only) containing the current number of frames captures per second.
+	/// \brief A float property \b (read-only) containing the current number of frames captured per second.
 	PropertyF framesPerSecond;
 	/// \brief An integer property \b (read-only) containing the overall count of images captured since the
 	/// \b mvIMPACT::acquire::Device has been opened OR since the last call to \b mvIMPACT::acquire::StatisticsBase::reset().

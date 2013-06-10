@@ -83,6 +83,7 @@ void DevicePropertyHandler::CheckForWizards( mvIMPACT::acquire::Device* pDev, De
 			s.insert( fac.fileOperationResult.hObj() );
 			s.insert( fac.fileOperationSelector.hObj() );
 			s.insert( fac.fileOperationStatus.hObj() );
+			s.insert( fac.fileSelector.hObj() );
 			s.insert( fac.fileSize.hObj() );
 			pDevData->supportedWizards.insert( make_pair( wFileAccessControl, s ) );
 		}

@@ -3,7 +3,6 @@
 #define minmaxH minmaxH
 //-----------------------------------------------------------------------------
 #include <cassert>
-#define detectedOperatingSystem linux
 #include <limits>
 #include <stdexcept>
 
@@ -109,14 +108,10 @@ bool isInRange( const _Ty& lowerLimit, const _Ty& upperLimit, const _Ty& start, 
 
 //-----------------------------------------------------------------------------
 template<typename T>
-#ifdef detectedOperatingSystem
-#	if(detectedOperatingSystem == osMSWin64)
-		inline const T& saveAssign( const __unaligned T& val, const __unaligned T& min, const __unaligned T& max )
-#	else
-		inline const T& saveAssign( const T& val, const T& min, const T& max )
-#	endif
+#if (defined(_WIN32) || defined(WIN32) || defined(__WIN32__)) && (defined(_WIN64) || defined(WIN64) || defined(__WIN64__))
+	inline const T& saveAssign( const __unaligned T& val, const __unaligned T& min, const __unaligned T& max )
 #else
-#	error Nothing known about target platform
+	inline const T& saveAssign( const T& val, const T& min, const T& max )
 #endif
 //-----------------------------------------------------------------------------
 {

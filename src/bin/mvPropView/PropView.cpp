@@ -5056,7 +5056,7 @@ void PropViewFrame::Wizard_FileAccessControl( bool boUpload )
 					const wxFileOffset fileOperationBlockSize = 4096;
 					if( boUpload )
 					{
-						wxFileDialog fileDlg( this, wxString::Format( wxT("Select a file to upload into file '%s' of device '%s'"), ConvertedString(pDev->serial.read()).c_str(), fileNameDevice.c_str() ), wxT(""), wxT(""), wxT("All types (*.*)|*.*"), wxOPEN | wxFILE_MUST_EXIST );
+						wxFileDialog fileDlg(this, wxString::Format( wxT("Select a file to upload into file '%s' of device '%s'"), ConvertedString(pDev->serial.read()).c_str(), fileNameDevice.c_str() ), wxT(""), wxT(""), wxT("All types (*.*)|*.*"), wxOPEN | wxFILE_MUST_EXIST);
 						if( fileDlg.ShowModal() == wxID_OK )
 						{
 							wxFile fileLocal(fileDlg.GetPath().c_str(), wxFile::read);
