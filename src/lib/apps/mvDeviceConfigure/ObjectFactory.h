@@ -3,6 +3,7 @@
 #define ObjectFactoryH ObjectFactoryH
 //-----------------------------------------------------------------------------
 #include <map>
+#include <utility>
 
 //-----------------------------------------------------------------------------
 template<class _PRODUCT, typename _IDENTIFIER, typename _CREATOR, typename _PARAM>

@@ -39,11 +39,16 @@ BEGIN_EVENT_TABLE(ImageCanvas, DrawingCanvas)
   EVT_MOUSEWHEEL(ImageCanvas::OnMouseWheel)
   EVT_RIGHT_DOWN(ImageCanvas::OnRightDown)
   EVT_RIGHT_UP(ImageCanvas::OnRightUp)
-  EVT_MENU(miPopupFitToScreen, ImageCanvas::OnPopUpFitToScreen)
-  EVT_MENU(miPopupFullScreen, ImageCanvas::OnPopUpFullScreen)
-  EVT_MENU(miPopupShowPerformanceWarnings, ImageCanvas::OnPopUpShowPerformanceWarnings)
-  EVT_MENU(miPopupShowRequestInfoOverlay, ImageCanvas::OnPopUpShowRequestInfoOverlay)
-  EVT_MENU(miPopupSetShiftValue, ImageCanvas::OnPopUpSetShiftValue)
+  EVT_MENU(miPopUpFitToScreen, ImageCanvas::OnPopUpFitToScreen)
+  EVT_MENU(miPopUpFullScreen, ImageCanvas::OnPopUpFullScreen)
+  EVT_MENU(miPopUpScalerMode_NearestNeighbour, ImageCanvas::OnPopUp_ScalingMode_Changed)
+  EVT_MENU(miPopUpScalerMode_Linear, ImageCanvas::OnPopUp_ScalingMode_Changed)
+  EVT_MENU(miPopUpScalerMode_Cubic, ImageCanvas::OnPopUp_ScalingMode_Changed)
+  EVT_MENU(miPopUpSetShiftValue, ImageCanvas::OnPopUpSetShiftValue)
+  EVT_MENU(miPopUpShowRequestInfoOverlay, ImageCanvas::OnPopUpShowRequestInfoOverlay)
+  EVT_MENU(miPopUpShowPerformanceWarnings, ImageCanvas::OnPopUpShowPerformanceWarnings)
+  EVT_MENU(miPopUpShowImageModificationsWarning, ImageCanvas::OnPopUpShowImageModificationsWarning)
+
 END_EVENT_TABLE()
 
 //-----------------------------------------------------------------------------
@@ -370,13 +375,13 @@ void ImageCanvas::BlitPerformanceMessages( wxPaintDC& dc, int bmpXOff, int bmpYO
 {
 	if( m_boShowPerformanceWarnings )
 	{
-		bool boFormatWarning = ( pixelFormat != ibpfMono8 ) && ( pixelFormat != ibpfRGBx888Packed );
+		const bool boFormatWarning = ( pixelFormat != ibpfMono8 ) && ( pixelFormat != ibpfRGBx888Packed );
 		dc.SetTextForeground( *wxRED );
-		wxString msg(wxT("Performance loss because of"));
+		wxString msg(wxT(" Performance loss because of"));
 		bool boMustShow = false;
 		if( boFormatWarning )
 		{
-			msg.Append( wxString::Format( wxT(" pixel format conversion for display (shift value(>>): Applied: %d, selected: %d)"), GetAppliedShiftValue(), GetShiftValue() ) );
+			msg.Append( wxT(" pixel format conversion for display") );
 			boMustShow = true;
 		}
 
@@ -415,6 +420,29 @@ void ImageCanvas::BlitPerformanceMessages( wxPaintDC& dc, int bmpXOff, int bmpYO
 						 bmpXOff,
 						 bmpYOff + SKIPPED_IMAGE_MESSAGE_Y_OFFSET );
 		}
+	}
+
+	const int appliedShift = GetAppliedShiftValue();
+	const int shiftValue = GetShiftValue();
+	const int bitsPerChannel = GetChannelBitDepth( pixelFormat );
+	const int neededShiftForProperDisplay = bitsPerChannel - 8;
+	if( m_boShowImageModificationWarning &&
+		( neededShiftForProperDisplay != 0 ) &&
+		( neededShiftForProperDisplay != appliedShift ) )
+	{
+		wxString maskedMSBs;
+		for( int i=0; i<appliedShift; i++ )
+		{
+			maskedMSBs.Append( wxT("x") );
+		}
+		wxString maskedLSBs;
+		for( int i=0; i<bitsPerChannel-8-appliedShift; i++ )
+		{
+			maskedLSBs.Append( wxT("x") );
+		}
+		dc.SetTextForeground( *wxRED );
+		wxString msg(wxString::Format( wxT(" Displayed bits: %sDDDDDDDD%s (shift value(>>): Applied: %d, selected: %d)"), maskedMSBs.c_str(), maskedLSBs.c_str(), appliedShift, shiftValue ) );
+		dc.DrawText( msg, bmpXOff, bmpYOff + IMAGE_MODIFICATIONS_Y_OFFSET );
 	}
 }
 
@@ -484,6 +512,56 @@ void ImageCanvas::DragImageDisplay( void )
 	Scroll( saveAssign( m_lastViewStart.x - moved.x, 0, scrollUnitsX - clientWidth ),
 		saveAssign( m_lastViewStart.y - moved.y, 0, scrollUnitsY - clientHeight ));
 	GetViewStart( &m_lastViewStart.x, &m_lastViewStart.y );
+}
+
+//-----------------------------------------------------------------------------
+int ImageCanvas::GetChannelBitDepth( TImageBufferPixelFormat format )
+//-----------------------------------------------------------------------------
+{
+	switch( format )
+	{
+	case ibpfMono8:
+	case ibpfBGR888Packed:
+	case ibpfRGB888Packed:
+	case ibpfRGBx888Packed:
+	case ibpfRGBx888Planar:
+	case ibpfYUV422Packed:
+	case ibpfYUV422_UYVYPacked:
+	case ibpfYUV444Packed:
+	case ibpfYUV444_UYVPacked:
+	case ibpfYUV422Planar:
+	case ibpfYUV444Planar:
+		return 8;
+	case ibpfMono10:
+	case ibpfBGR101010Packed_V2:
+	case ibpfRGB101010Packed:
+	case ibpfYUV422_10Packed:
+	case ibpfYUV422_UYVY_10Packed:
+	case ibpfYUV444_UYV_10Packed:
+	case ibpfYUV444_10Packed:
+		return 10;
+	case ibpfMono12:
+	case ibpfMono12Packed_V1:
+	case ibpfMono12Packed_V2:
+	case ibpfRGB121212Packed:
+		return 12;
+	case ibpfMono14:
+	case ibpfRGB141414Packed:
+		return 14;
+	case ibpfMono16:
+	case ibpfRGB161616Packed:
+		return 16;
+	case ibpfMono32:
+		return 32;
+	case ibpfAuto:
+	case ibpfRaw:
+		break;
+	// do NOT add a default here! Whenever the compiler complains it is
+	// missing not every format is handled here, which means that at least
+	// one has been forgotten and that should be fixed!
+	}
+	assert( !"Unhandled pixel format detected!" );
+	return 8;
 }
 
 //-----------------------------------------------------------------------------
@@ -652,6 +730,7 @@ void ImageCanvas::Init( const wxWindow* const pApp )
 	m_boAOIDragInProgress = false;
 	m_boHandleMouseAndKeyboardEvents = true;
 	m_boScaleToClientSize = false;
+	m_boShowImageModificationWarning = true;
 	m_boShowPerformanceWarnings = false;
 	m_pApp = const_cast<wxWindow* const>(pApp);
 	m_pIB = 0;
@@ -661,6 +740,7 @@ void ImageCanvas::Init( const wxWindow* const pApp )
 	m_skippedPaintEvents = 0;
 	m_pMonitorDisplay = 0;
 	m_pVisiblePartOfImage = 0;
+	m_scalingMode = smNearestNeighbour;
 	m_userData = -1;
 	SetScrollRate( 1, 1 );
 }
@@ -846,6 +926,25 @@ void ImageCanvas::OnPopUpFitToScreen( wxCommandEvent& e )
 }
 
 //-----------------------------------------------------------------------------
+void ImageCanvas::OnPopUp_ScalingMode_Changed( wxCommandEvent& e )
+//-----------------------------------------------------------------------------
+{
+	switch( e.GetId() )
+	{
+	case miPopUpScalerMode_NearestNeighbour:
+		SetScalingMode( smNearestNeighbour );
+		break;
+	case miPopUpScalerMode_Linear:
+		SetScalingMode( smLinear );
+		break;
+	case miPopUpScalerMode_Cubic:
+		SetScalingMode( smCubic );
+		break;
+	}
+	Refresh( true );
+}
+
+//-----------------------------------------------------------------------------
 void ImageCanvas::OnPopUpSetShiftValue( wxCommandEvent& )
 //-----------------------------------------------------------------------------
 {
@@ -861,6 +960,13 @@ void ImageCanvas::OnPopUpSetShiftValue( wxCommandEvent& )
 			DecreaseShiftValue();
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+void ImageCanvas::OnPopUpShowImageModificationsWarning( wxCommandEvent& e )
+//-----------------------------------------------------------------------------
+{
+	SetImageModificationWarningOutput( e.IsChecked() );
 }
 
 //-----------------------------------------------------------------------------
@@ -914,14 +1020,36 @@ void ImageCanvas::OnRightUp( wxMouseEvent& e )
 		if( m_lastRightMouseDownPosRaw == wxPoint(e.GetX(), e.GetY()) )
 		{
 			wxMenu menu(wxT(""));
-			menu.Append( miPopupFitToScreen, wxT("Fit To Screen"), wxT("If active the captured image will be scaled to fit into the main display area(slower)"), wxITEM_CHECK )->Check( IsScaled() );
+			menu.Append( miPopUpFitToScreen, wxT("Fit To Screen"), wxT("If active the captured image will be scaled to fit into the main display area(slower)"), wxITEM_CHECK )->Check( IsScaled() );
 			if( SupportsFullScreenMode() )
 			{
-				menu.Append( miPopupFullScreen, wxT("Full Screen(Press 'ESC' to exit full screen mode afterwards)"), wxT(""), wxITEM_CHECK );
+				menu.Append( miPopUpFullScreen, wxT("Full Screen (Press 'ESC' to exit full screen mode afterwards)"), wxT(""), wxITEM_CHECK );
 			}
-			menu.Append( miPopupShowPerformanceWarnings, wxT("Performance Warning Overlay"), wxT("If active the various information will be blitted on top of the image in the main display area to inform e.g. about possible performance losses"), wxITEM_CHECK )->Check( GetPerformanceWarningOutput() );
-			menu.Append( miPopupShowRequestInfoOverlay, wxT("Request Info Overlay"), wxT("If active the various information returned together with the image will be displayed as an overlay in the main display area(This will cost some additional CPU time)"), wxITEM_CHECK )->Check( InfoOverlayActive() );
-			menu.Append( miPopupSetShiftValue, wxT("Set Bit Shift Value"), wxT("Allows to define a custom shift value for the display of multibyte pixel data. This defines which 8 bits from a multibyte pixel will be displayed") );
+			if( SupportsDifferentScalingModes() )
+			{
+				wxMenu* pMenuScalingModes = new wxMenu;
+				wxMenuItem* pMI = pMenuScalingModes->Append( miPopUpScalerMode_NearestNeighbour, wxT("Nearest Neighbour"), wxT(""), wxITEM_RADIO );
+				if( m_scalingMode == smNearestNeighbour )
+				{
+					pMI->Check();
+				}
+				pMI = pMenuScalingModes->Append( miPopUpScalerMode_Linear, wxT("Linear"), wxT(""), wxITEM_RADIO );
+				if( m_scalingMode == smLinear )
+				{
+					pMI->Check();
+				}
+				pMI = pMenuScalingModes->Append( miPopUpScalerMode_Cubic, wxT("Cubic"), wxT(""), wxITEM_RADIO );
+				if( m_scalingMode == smCubic )
+				{
+					pMI->Check();
+				}
+				menu.Append( wxID_ANY, wxT("Scaling Mode"), pMenuScalingModes );
+			}
+			menu.Append( miPopUpSetShiftValue, wxT("Set Bit Shift Value"), wxT("Allows to define a custom shift value for the display of multibyte pixel data. This defines which 8 bits from a multibyte pixel will be displayed") );
+			menu.AppendSeparator();
+			menu.Append( miPopUpShowRequestInfoOverlay, wxT("Request Info Overlay"), wxT("If active the various information returned together with the image will be displayed as an overlay in the main display area(This will cost some additional CPU time)"), wxITEM_CHECK )->Check( InfoOverlayActive() );
+			menu.Append( miPopUpShowPerformanceWarnings, wxT("Performance Warning Overlay"), wxT("If active various information will be blitted on top of the image in the main display area to inform e.g. about possible performance losses"), wxITEM_CHECK )->Check( GetPerformanceWarningOutput() );
+			menu.Append( miPopUpShowImageModificationsWarning, wxT("Warn On Modifictions Applied To The Image By The Display (By An Overlay)"), wxT("If active a message will be blitted on top of the image in the main display area to inform e.g. about data modifications applied to the image by the display module"), wxITEM_CHECK )->Check( GetImageModificationWarningOutput() );
 			PopupMenu( &menu );
 		}
 	}
@@ -1037,38 +1165,12 @@ bool ImageCanvas::SetAOI( const PlotCanvasImageAnalysis* pPlot, int x, int y, in
 }
 
 //-----------------------------------------------------------------------------
-void ImageCanvas::SetMaxZoomFactor( const mvIMPACT::acquire::ImageBuffer* pIB, int oldMaxDim )
+void ImageCanvas::SetImageModificationWarningOutput( bool boOn )
 //-----------------------------------------------------------------------------
 {
-	if( !pIB )
+	if( m_boShowImageModificationWarning != boOn )
 	{
-		m_zoomFactor_Max = 1.0;
-		return;
-	}
-
-	int newMaxDim = std::max( pIB->iWidth, pIB->iHeight );
-	if( oldMaxDim != newMaxDim )
-	{
-		m_zoomFactor_Max = 1.0;
-		while( ( ( newMaxDim = newMaxDim >> 1 ) != 0 ) && ( m_currentZoomFactor <= 512.0 ) )
-		{
-			m_zoomFactor_Max *= 2;
-		}
-		if( m_currentZoomFactor > m_zoomFactor_Max )
-		{
-			m_currentZoomFactor = m_zoomFactor_Max;
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-void ImageCanvas::SetScaling( bool boOn )
-//-----------------------------------------------------------------------------
-{
-	if( m_boScaleToClientSize != boOn )
-	{
-		m_boScaleToClientSize = boOn;
-		RefreshScrollbars();
+		m_boShowImageModificationWarning = boOn;
 		Refresh( true );
 	}
 }
@@ -1095,12 +1197,49 @@ void ImageCanvas::SetInfoOverlayMode( bool boOn )
 }
 
 //-----------------------------------------------------------------------------
+void ImageCanvas::SetMaxZoomFactor( const mvIMPACT::acquire::ImageBuffer* pIB, int oldMaxDim )
+//-----------------------------------------------------------------------------
+{
+	if( !pIB )
+	{
+		m_zoomFactor_Max = 1.0;
+		return;
+	}
+
+	int newMaxDim = std::max( pIB->iWidth, pIB->iHeight );
+	if( oldMaxDim != newMaxDim )
+	{
+		m_zoomFactor_Max = 1.0;
+		while( ( ( newMaxDim = newMaxDim >> 1 ) != 0 ) && ( m_currentZoomFactor <= 512.0 ) )
+		{
+			m_zoomFactor_Max *= 2;
+		}
+		if( m_currentZoomFactor > m_zoomFactor_Max )
+		{
+			m_currentZoomFactor = m_zoomFactor_Max;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
 void ImageCanvas::SetPerformanceWarningOutput( bool boOn )
 //-----------------------------------------------------------------------------
 {
 	if( m_boShowPerformanceWarnings != boOn )
 	{
 		m_boShowPerformanceWarnings = boOn;
+		Refresh( true );
+	}
+}
+
+//-----------------------------------------------------------------------------
+void ImageCanvas::SetScaling( bool boOn )
+//-----------------------------------------------------------------------------
+{
+	if( m_boScaleToClientSize != boOn )
+	{
+		m_boScaleToClientSize = boOn;
+		RefreshScrollbars();
 		Refresh( true );
 	}
 }

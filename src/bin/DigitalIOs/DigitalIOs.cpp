@@ -235,8 +235,8 @@ void mvGenICamIOAccess( Device* pDev )
 			// display information about each individual DigitalIO
 			vector<int64_type> validLineSelectorValues;
 			dioc.lineSelector.getTranslationDictValues( validLineSelectorValues );
-			const vector<int64_type>::value_type cnt = validLineSelectorValues.size();
-			for( vector<int64_type>::value_type i=0; i<cnt; i++ )
+			const vector<int64_type>::size_type cnt = validLineSelectorValues.size();
+			for( vector<int64_type>::size_type i=0; i<cnt; i++ )
 			{
 				dioc.lineSelector.write( validLineSelectorValues[i] );
 				cout << " IO " << validLineSelectorValues[i] << ": \t Type: " << dioc.lineMode.readS() << " \t Current state: " << ( dioc.lineStatus.read() ? "ON" : "OFF" ) << endl;

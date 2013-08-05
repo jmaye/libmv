@@ -409,9 +409,6 @@ private:
 #endif // #ifdef BUILD_WITH_PLUGIN_SUPPORT
 	wxMenuItem*							m_pMIAction_AutomaticallyReconnectToUnusedDevices;
 	wxMenuItem*							m_pMIAction_Use;
-	wxMenuItem*							m_pMIAction_DefaultDeviceInterface_DeviceSpecific;
-	wxMenuItem*							m_pMIAction_DefaultDeviceInterface_Generic;
-	wxMenuItem*							m_pMIAction_DefaultDeviceInterface_GenICam;
 	wxMenuItem*							m_pMIAction_DisplayConnectedDevicesOnly;
 	wxMenuItem*							m_pMIAction_CaptureSettings_Save_ToDefault;
 	wxMenuItem*							m_pMIAction_CaptureSettings_Save_CurrentProduct;
@@ -463,6 +460,7 @@ private:
 	wxMenuItem*							m_pMISettings_ShowStatusBar;
 	wxMenuItem*							m_pMISettings_WarnOnOutdatedFirmware;
 	wxMenuItem*							m_pMISettings_WarnOnReducedDriverPerformance;
+	wxMenuItem*							m_pMISettings_WarnOnUnreachableDevices;
 	wxMenuItem*							m_pMISettings_ToggleFullScreenMode;
 	wxMenuItem*							m_pMIWizards_FileAccessControl_UploadFile;
 	wxMenuItem*							m_pMIWizards_FileAccessControl_DownloadFile;
@@ -494,6 +492,7 @@ private:
 	template<typename _Ty, typename _Tx>
 	size_t								BuildStringArrayFromPropertyDict( wxArrayString& choices, _Tx prop ) const;
 	void								CheckForDriverPerformanceIssues( Device* pDev );
+	void								CheckUnreachableDevices( void );
 	void								ClearDisplayInProgressStates( void );
 	void								CloneAllRequests( void );
 	void								ConfigureAnalysisPlot( const wxRect* pAOI = 0 );

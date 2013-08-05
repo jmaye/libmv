@@ -83,7 +83,7 @@ DataGridWithClipboardFeature::DataGridWithClipboardFeature( wxWindow* parent, wx
 												   const wxString& name /* = wxPanelNameStr */ ) : wxGrid(parent, id, pos, size, style, name), pDataProvider_(0)
 //-----------------------------------------------------------------------------
 {
-
+	SetRowLabelSize( 0 );
 }
 
 //-----------------------------------------------------------------------------

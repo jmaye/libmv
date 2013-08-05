@@ -40,17 +40,21 @@ void LineProfileCanvas::DeallocateProfileBuffer( void )
 wxString LineProfileCanvas::GetGridValue( int row, int col ) const
 //-----------------------------------------------------------------------------
 {
-	if( m_ppData && ( col >= 0 ) && ( row >= 0 ) )
+	if( col == 0 )
 	{
-		if( col < m_ChannelCount )
+		return ( row == 0 ) ? wxT("Data Point") : wxString::Format( wxT("%d"), row - 1 );
+	}
+	else if( m_ppData && ( col > 0 ) && ( row >= 0 ) )
+	{
+		if( col - 1 < m_ChannelCount )
 		{
 			if( row == 0 )
 			{
-				return m_Pens[col].description_ ;
+				return m_Pens[col-1].description_ ;
 			}
 			else if( row <= GetDataCount() )
 			{
-				return wxString::Format( GetGridValueFormatString().c_str(), m_ppData[col][row-1] );
+				return wxString::Format( GetGridValueFormatString().c_str(), m_ppData[col-1][row-1] );
 			}
 		}
 	}
@@ -131,8 +135,8 @@ void LineProfileCanvas::RefreshData( const RequestData& data, int x /* = -1 */, 
 
 		if( m_pNumericalDisplay )
 		{
-			int columnCount = m_pNumericalDisplay->GetTable()->GetNumberCols();
-			int columnsNeeded = channelCount;
+			const int columnCount = m_pNumericalDisplay->GetTable()->GetNumberCols();
+			const int columnsNeeded = channelCount + 1;
 			if( columnCount < columnsNeeded )
 			{
 				m_pNumericalDisplay->AppendCols( columnsNeeded - columnCount );
@@ -152,10 +156,11 @@ void LineProfileCanvas::RefreshData( const RequestData& data, int x /* = -1 */, 
 			{
 				m_pNumericalDisplay->DeleteRows( rowsNeeded - 1, rowCount - rowsNeeded );
 			}
+			m_pNumericalDisplay->SetCellValue( 0, 0, wxT("Data Point") );
 			for( int i=0; i<channelCount; i++ )
 			{
-				m_pNumericalDisplay->SetCellBackgroundColour( 0, i, *m_Pens[i].pColour_ );
-				m_pNumericalDisplay->SetCellTextColour( 0, i, *wxWHITE );
+				m_pNumericalDisplay->SetCellBackgroundColour( 0, i + 1, *m_Pens[i].pColour_ );
+				m_pNumericalDisplay->SetCellTextColour( 0, i + 1, *wxWHITE );
 			}
 		}
 	}

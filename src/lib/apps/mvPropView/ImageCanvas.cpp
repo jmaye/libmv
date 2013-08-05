@@ -345,7 +345,7 @@ inline void YUV2RGB8( int& r, int& g, int& b, _Ty y, _Ty u, _Ty v )
 //-----------------------------------------------------------------------------
 ImageCanvas::ImageCanvas( wxWindow* pApp, wxWindow* parent, wxWindowID id /* = -1 */, const wxPoint& pos /* = wxDefaultPosition */,
 	const wxSize& size /* = wxDefaultSize */, long style /* = wxSUNKEN_BORDER */, const wxString& name /* = "ImageCanvas" */, bool boActive /* = true */ )
-	: DrawingCanvas( parent, id, pos, size, style, name, boActive ), m_boSupportsFullScreenMode(false)
+	: DrawingCanvas( parent, id, pos, size, style, name, boActive ), m_boSupportsFullScreenMode(false), m_boSupportsDifferentScalingModes(false)
 //-----------------------------------------------------------------------------
 {
 	Init( pApp );
@@ -976,4 +976,11 @@ bool ImageCanvas::SetImage( const ImageBuffer* pIB, bool boMustRefresh /* = true
 	m_boRefreshInProgress = true;
 	Refresh( boImageSizeChanged );
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+void ImageCanvas::SetScalingMode( TScalingMode /*mode*/ )
+//-----------------------------------------------------------------------------
+{
+
 }

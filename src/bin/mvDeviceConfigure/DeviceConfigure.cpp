@@ -525,8 +525,9 @@ void DeviceConfigureFrame::BuildList( void )
 		m_pDevListCtrl->SetItem( index, lcFWVersion, wxString::Format( wxT("%s%s"), ConvertedString(pDev->firmwareVersion.readS()).c_str(), updateNotification.c_str() ) );
 		if( boUpdateAvailable )
 		{
-			WriteErrorMessage( wxString::Format( wxT("WARNING: The device in row %ld(%s) uses an outdated firmware version.\n"), index, ConvertedString(pDev->serial.read()).c_str() ) );
-			m_pDevListCtrl->SetItemBackgroundColour( index, wxColour(255, 0, 0) );
+			wxTextAttr blueStyle(wxColour(0, 128, 255));
+			WriteLogMessage( wxString::Format( wxT("NOTE: The device in row %ld(%s) uses an outdated firmware version.\n"), index, ConvertedString(pDev->serial.read()).c_str() ), blueStyle );
+			m_pDevListCtrl->SetItemBackgroundColour( index, wxColour(0, 128, 255) );
 		}
 
 		string kernelDriverName;

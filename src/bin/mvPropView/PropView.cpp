@@ -474,9 +474,9 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
 {
 	// sub menu 'Action -> Default Device Interface'
 	wxMenu* pMenuActionDefaultDeviceInterface = new wxMenu;
-	m_pMIAction_DefaultDeviceInterface_DeviceSpecific = pMenuActionDefaultDeviceInterface->Append( miAction_DefaultDeviceInterface_DeviceSpecific, wxT("Device Specific\tF2"), wxT(""), wxITEM_RADIO );
-	m_pMIAction_DefaultDeviceInterface_Generic = pMenuActionDefaultDeviceInterface->Append( miAction_DefaultDeviceInterface_Generic, wxT("Generic\tF3"), wxT(""), wxITEM_RADIO );
-	m_pMIAction_DefaultDeviceInterface_GenICam = pMenuActionDefaultDeviceInterface->Append( miAction_DefaultDeviceInterface_GenICam, wxT("GenICam\tF4"), wxT(""), wxITEM_RADIO );
+	wxMenuItem* pMIAction_DefaultDeviceInterface_DeviceSpecific = pMenuActionDefaultDeviceInterface->Append( miAction_DefaultDeviceInterface_DeviceSpecific, wxT("Device Specific\tF2"), wxT(""), wxITEM_RADIO );
+	wxMenuItem* pMIAction_DefaultDeviceInterface_Generic = pMenuActionDefaultDeviceInterface->Append( miAction_DefaultDeviceInterface_Generic, wxT("Generic\tF3"), wxT(""), wxITEM_RADIO );
+	wxMenuItem* pMIAction_DefaultDeviceInterface_GenICam = pMenuActionDefaultDeviceInterface->Append( miAction_DefaultDeviceInterface_GenICam, wxT("GenICam\tF4"), wxT(""), wxITEM_RADIO );
 
 	// sub menu 'Action -> Settings -> Save'
 	wxMenu* pMenuActionCaptureSettingsSave = new wxMenu;
@@ -589,8 +589,10 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
 	m_pMISettings_ShowLeftToolBar = pMenuSettings->Append( miSettings_ShowLeftToolBar, wxT("Show L&eft Tool Bar\tCTRL+E"), wxT(""), wxITEM_CHECK );
 	m_pMISettings_ShowUpperToolBar = pMenuSettings->Append( miSettings_ShowUpperToolBar, wxT("Show Upper &Tool Bar\tCTRL+T"), wxT(""), wxITEM_CHECK );
 	m_pMISettings_ShowStatusBar = pMenuSettings->Append( miSettings_ShowStatusBar, wxT("Show S&tatus Bar\tALT+CTRL+T"), wxT(""), wxITEM_CHECK );
+	pMenuSettings->AppendSeparator();
 	m_pMISettings_WarnOnOutdatedFirmware = pMenuSettings->Append( wxID_ANY, wxT("Warn On Outdated Firmware"), wxT(""), wxITEM_CHECK );
 	m_pMISettings_WarnOnReducedDriverPerformance = pMenuSettings->Append( wxID_ANY, wxT("Warn On Reduced Driver Performance"), wxT(""), wxITEM_CHECK );
+	m_pMISettings_WarnOnUnreachableDevices = pMenuSettings->Append( wxID_ANY, wxT("Warn On Unreachable Devices"), wxT(""), wxITEM_CHECK );
 	pMenuSettings->AppendSeparator();
 	m_pMISettings_ToggleFullScreenMode = pMenuSettings->Append( miSettings_ToggleFullScreenMode, wxT("Full Screen Mode\tF11"), wxT(""), wxITEM_CHECK );
 
@@ -941,13 +943,13 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
 	switch( m_defaultDeviceInterfaceLayout )
 	{
 	case dilGeneric:
-		m_pMIAction_DefaultDeviceInterface_Generic->Check();
+		pMIAction_DefaultDeviceInterface_Generic->Check();
 		break;
 	case dilGenICam:
-		m_pMIAction_DefaultDeviceInterface_GenICam->Check();
+		pMIAction_DefaultDeviceInterface_GenICam->Check();
 		break;
 	default:
-		m_pMIAction_DefaultDeviceInterface_DeviceSpecific->Check();
+		pMIAction_DefaultDeviceInterface_DeviceSpecific->Check();
 		break;
 	}
 
@@ -1033,6 +1035,7 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
 	}
 
 	m_pPropViewCallback->attachApplication( this );
+	CheckUnreachableDevices();
 }
 
 //-----------------------------------------------------------------------------
@@ -1060,7 +1063,12 @@ PropViewFrame::~PropViewFrame()
 		{
 			wxString displayToken(wxString::Format( wxT("/MainFrame/Settings/Display/%d/"), i ));
 			pConfig->Write( displayToken + wxString(wxT("FitToScreen")), m_pDisplayAreas[i]->IsScaled() );
+			if( m_pDisplayAreas[i]->SupportsDifferentScalingModes() )
+			{
+				pConfig->Write( displayToken + wxString(wxT("ScalingMode")), static_cast<int>(m_pDisplayAreas[i]->GetScalingMode()) );
+			}
 			pConfig->Write( displayToken + wxString(wxT("ShowPerformanceWarnings")), m_pDisplayAreas[i]->GetPerformanceWarningOutput() );
+			pConfig->Write( displayToken + wxString(wxT("ShowImageModificationWarning")), m_pDisplayAreas[i]->GetImageModificationWarningOutput() );
 			pConfig->Write( displayToken + wxString(wxT("ShowRequestInfos")), m_pDisplayAreas[i]->InfoOverlayActive() );
 		}
 
@@ -1081,6 +1089,7 @@ PropViewFrame::~PropViewFrame()
 		pConfig->Write( wxT("/MainFrame/Settings/showStatusBar"), m_pMISettings_ShowStatusBar->IsChecked() );
 		pConfig->Write( wxT("/MainFrame/Settings/warnOnOutdatedFirmware"), m_pMISettings_WarnOnOutdatedFirmware->IsChecked() );
 		pConfig->Write( wxT("/MainFrame/Settings/warnOnReducedDriverPerformance"), m_pMISettings_WarnOnReducedDriverPerformance->IsChecked() );
+		pConfig->Write( wxT("/MainFrame/Settings/warnOnUnreachableDevices"), m_pMISettings_WarnOnUnreachableDevices->IsChecked() );
 		pConfig->Write( wxT("/MainFrame/Settings/propgrid_showMethodExecutionErrors"), m_pMISettings_PropGrid_ShowMethodExecutionErrors->IsChecked() );
 		pConfig->Write( wxT("/MainFrame/Settings/automaticallyReconnectToUnusedDevices"), m_pMIAction_AutomaticallyReconnectToUnusedDevices->IsChecked() );
 		pConfig->Write( wxT("/MainFrame/Settings/displayPropsWithHexIndices"), m_pMISettings_PropGrid_DisplayPropIndicesAsHex->IsChecked() );
@@ -1395,6 +1404,47 @@ void PropViewFrame::CheckForDriverPerformanceIssues( Device* pDev )
 			}
 		}
 #endif // #if wxCHECK_VERSION(2, 7, 1)
+	}
+}
+
+//-----------------------------------------------------------------------------
+void PropViewFrame::CheckUnreachableDevices( void )
+//-----------------------------------------------------------------------------
+{
+	if( m_pMISettings_WarnOnUnreachableDevices->IsChecked() )
+	{
+		const DeviceManager& devMgr(m_pDevPropHandler->GetDevMgr());
+		const unsigned int devCnt = devMgr.deviceCount();
+		vector<Device*> unreachableDevices;
+		for( unsigned int i=0; i<devCnt; i++ )
+		{
+			Device* pDev(devMgr.getDevice( i ));
+			if( pDev && ( pDev->state.read() == dsUnreachable ) )
+			{
+				unreachableDevices.push_back( pDev );
+			}
+		}
+
+		if( !unreachableDevices.empty() )
+		{
+			const vector<Device*>::size_type unreachableDevCnt(unreachableDevices.size());
+			wxString msg(wxString::Format( wxT("WARNING: %u device%s are currently reported as 'unreachable'. This indicates a compliant device has been detected but for some reasons cannot be used at the moment. For GEV devices this might be a result of an incorrect network configuration (run 'mvIPConfigure' to get more information on this). For U3V devices this might be a result of the device being bound to a different (third party) U3V device driver. Refer to the documentation in section 'Change to a different U3V capture driver for a device' for additional information regarding this issue.\n\nThe following devices are currently not reachable:\n"), unreachableDevCnt, ( unreachableDevCnt > 1 ) ? wxT("s") : wxT("") ));
+			for( vector<Device*>::size_type j=0; j<unreachableDevCnt; j++ )
+			{
+				msg.Append( wxString::Format( wxT("%s(%s)\n"), ConvertedString(unreachableDevices[j]->serial.read()).c_str(), ConvertedString(unreachableDevices[j]->product.read()).c_str() ) );
+			}
+
+			WriteErrorMessage( msg );
+			switch( wxMessageBox( wxString::Format( wxT("%s\n\nPress 'Yes' to continue anyway.\n\nPress 'No' to end this application and resolve the issue.\n\nPress 'Cancel' to continue anyway and never see this message again. You can later re-enable this message box under 'Settings -> Warn On Unreachable Devices'."), msg.c_str() ), wxT("Unreachable Device(s) Detected"), wxYES_NO | wxCANCEL | wxICON_EXCLAMATION, this) )
+			{
+			case wxNO:
+				Close( true );
+				break;
+			case wxCANCEL:
+				m_pMISettings_WarnOnUnreachableDevices->Check( false );
+				break;
+			}
+		}
 	}
 }
 
@@ -2492,6 +2542,13 @@ void PropViewFrame::OnHelp_About(wxCommandEvent& )
 	WriteToTextCtrl( pUsageHints, wxT("Devices' option is enabled the application will try to open a device as usual and in case of a failure will try to reconnect to the device by updating "), style );
 	WriteToTextCtrl( pUsageHints, wxT("the internal device list and will then try to open the device a second time. This might take slightly longer then but may be useful when e.g."), style );
 	WriteToTextCtrl( pUsageHints, wxT("playing around with different power supplies etc..\n"), style );
+	WriteToTextCtrl( pUsageHints, wxT("\n") );
+	WriteToTextCtrl( pUsageHints, wxT("'Allow Fast Single Frame Acquisition' option:\n"), m_boldTextStyle );
+	WriteToTextCtrl( pUsageHints, wxT("With this option disable (default) the acquisition button will be disabled while the request image has not been delivered. When enabling this option "), style );
+	WriteToTextCtrl( pUsageHints, wxT("multiple single frame acquisition commands can be sent to the device (depending on the speed the user clicks the button). This can result in one or "), style );
+	WriteToTextCtrl( pUsageHints, wxT("more single frame requests can reach the device while it is still busy dealing with the current request for a frame. Not every device does support "), style );
+	WriteToTextCtrl( pUsageHints, wxT("'queing' of requests, thus some devices might simply silently discard these requests, which will result on the request returning with a 'rrTimeout' "), style );
+	WriteToTextCtrl( pUsageHints, wxT("error on the host side. This option is mainly there for testing purposes.\n"), style );
 	pUsageHints->ScrollLines( -(256*256) ); // make sure the text control always shows the beginning of the help text
 
 	vector<pair<wxString, wxString> > v;
@@ -3726,7 +3783,12 @@ wxRect PropViewFrame::RestoreConfiguration( const unsigned int displayCount, dou
 	{
 		wxString displayToken(wxString::Format( wxT("/MainFrame/Settings/Display/%d/"), i ));
 		m_pDisplayAreas[i]->SetScaling( pConfig->Read( displayToken + wxString(wxT("FitToScreen")), 0l ) != 0 );
+		if( m_pDisplayAreas[i]->SupportsDifferentScalingModes() )
+		{
+			m_pDisplayAreas[i]->SetScalingMode( static_cast<ImageCanvas::TScalingMode>(pConfig->Read( displayToken + wxString(wxT("ScalingMode")), 0l )) );
+		}
 		m_pDisplayAreas[i]->SetPerformanceWarningOutput( pConfig->Read( displayToken + wxString(wxT("ShowPerformanceWarnings")), 0l ) != 0 );
+		m_pDisplayAreas[i]->SetImageModificationWarningOutput( pConfig->Read( displayToken + wxString(wxT("ShowImageModificationWarning")), 1l ) != 0 );
 		m_pDisplayAreas[i]->SetInfoOverlayMode( pConfig->Read( displayToken + wxString(wxT("ShowRequestInfos")), 0l ) != 0 );
 	}
 	bool boActive = pConfig->Read( wxT("/MainFrame/Settings/monitorDisplay"), 0l ) != 0;
@@ -3778,6 +3840,8 @@ wxRect PropViewFrame::RestoreConfiguration( const unsigned int displayCount, dou
 	m_pMISettings_WarnOnOutdatedFirmware->Check( boActive );
 	boActive = pConfig->Read( wxT("/MainFrame/Settings/warnOnReducedDriverPerformance"), 1l ) != 0;
 	m_pMISettings_WarnOnReducedDriverPerformance->Check( boActive );
+	boActive = pConfig->Read( wxT("/MainFrame/Settings/warnOnUnreachableDevices"), 1l ) != 0;
+	m_pMISettings_WarnOnUnreachableDevices->Check( boActive );
 	boActive = pConfig->Read( wxT("/MainFrame/Settings/propgrid_showMethodExecutionErrors"), 1l ) != 0;
 	m_pMISettings_PropGrid_ShowMethodExecutionErrors->Check( boActive );
 	boActive = pConfig->Read( wxT("/MainFrame/Settings/automaticallyReconnectToUnusedDevices"), 1l ) != 0;
@@ -4268,7 +4332,7 @@ void PropViewFrame::ToggleCurrentDevice( void )
 	if( pDev )
 	{
 		wxBusyCursor busyCursorScope;
-		bool isOpen = pDev->isOpen();
+		const bool isOpen = pDev->isOpen();
 		WriteLogMessage( wxString::Format( wxT("Trying to %s device %d (%s)...\n"), ( isOpen ? wxT("close"): wxT("open") ), devIndex, ConvertedString(pDev->serial.read()).c_str() ) );
 		try
 		{
@@ -4390,7 +4454,7 @@ void PropViewFrame::ToggleCurrentDevice( void )
 			WriteErrorMessage( wxString::Format( wxT("Error origin: %s.\n"), ConvertedString(e.getErrorOrigin()).c_str() ) );
 		}
 		SetupDlgControls();
-		if( !isOpen )
+		if( pDev->isOpen() )
 		{
 			CheckForDriverPerformanceIssues( pDev );
 		}
@@ -4795,6 +4859,7 @@ void PropViewFrame::UpdateDeviceList( void )
 	wxStopWatch stopWatch;
 	m_pDevPropHandler->GetDevMgr().updateDeviceList();
 	WriteLogMessage( wxString::Format( wxT("Updating device list took %ld ms.\n"), stopWatch.Time() ) );
+	CheckUnreachableDevices();
 }
 
 //-----------------------------------------------------------------------------

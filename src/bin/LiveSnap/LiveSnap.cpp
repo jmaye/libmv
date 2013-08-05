@@ -9,6 +9,7 @@
 #include <iostream>
 #include <apps/Common/exampleHelper.h>
 #include <mvIMPACT_CPP/mvIMPACT_acquire.h>
+#include <mvIMPACT_CPP/mvIMPACT_acquire_GenICam.h>
 
 #ifdef MALLOC_TRACE
 #	include <mcheck.h>
@@ -312,11 +313,6 @@ int main( int argc, char* argv[] )
 	{
 		pDev = getDeviceFromUserInput( devMgr );
 	}
-	if( pDev == 0 )
-	{
-		cout << "Unable to continue!";
-		PRESS_A_KEY_AND_RETURN
-	}
 
 	// create an interface to the first MATRIX VISION device with the serial number sDevSerial
 	if( pDev )
@@ -335,49 +331,40 @@ int main( int argc, char* argv[] )
 			{
 			case dilGenICam:
 				{
-					DeviceComponentLocator locator(pDev, dltSetting, "Base");
-					locator.bindSearchBase( locator.searchbase_id(), "Camera/GenICam" );
-					PropertyI64 w, h, pf, am;
-					locator.bindComponent( w, "Width" );
-					locator.bindComponent( h, "Height" );
-					locator.bindComponent( pf, "PixelFormat" );
-					locator.bindComponent( am, "AcquisitionMode" );
+					mvIMPACT::acquire::GenICam::ImageFormatControl ifc(pDev);
+					mvIMPACT::acquire::GenICam::AcquisitionControl ac(pDev);
 					if( width > 0 )
 					{
-						w.write( width );
+						ifc.width.write( width );
 					}
 					if( height > 0 )
 					{
-						h.write( height );
+						ifc.height.write( height );
 					}
 					if( !pixelFormat.empty() )
 					{
-						pf.writeS( pixelFormat );
+						ifc.pixelFormat.writeS( pixelFormat );
 					}
 					if( !acquisitionMode.empty() )
 					{
-						am.writeS( acquisitionMode );
+						ac.acquisitionMode.writeS( acquisitionMode );
 					}
-					acquisitionMode = am.readS();
-					cout << "Device set up to " << pf.readS() << " " << w.read() << "x" << h.read() << endl;
+					acquisitionMode = ac.acquisitionMode.readS();
+					cout << "Device set up to " << ifc.pixelFormat.readS() << " " << ifc.width.read() << "x" << ifc.height.read() << endl;
 				}
 				break;
 			case dilDeviceSpecific:
 				{
-					DeviceComponentLocator locator(pDev, dltSetting, "Base");
-					locator.bindSearchBase( locator.searchbase_id(), "Camera/Aoi" );
-					PropertyI w, h;
-					locator.bindComponent( w, "W" );
-					locator.bindComponent( h, "H" );
+					CameraSettingsBase cs(pDev);
 					if( width > 0 )
 					{
-						w.write( width );
+						cs.aoiWidth.write( width );
 					}
 					if( height > 0 )
 					{
-						h.write( height );
+						cs.aoiHeight.write( height );
 					}
-					cout << "Device set up to " << w.read() << "x" << h.read() << endl;
+					cout << "Device set up to " << cs.aoiWidth.read() << "x" << cs.aoiHeight.read() << endl;
 				}
 				break;
 			default:
@@ -399,6 +386,10 @@ int main( int argc, char* argv[] )
 		// do NOT delete pDev here! It will be destroyed automatically when the device manager (devMgr) is destroyed.
 		// There is also no real need to close the device for the same reasons. Once the last instance of 'DeviceManager'
 		// objects moves out of scope all devices open in the current process context will be closed automatically.
+	}
+	else
+	{
+		cout << "Unable to continue!";
 	}
 	cout << " -- ending application...." << endl;
 

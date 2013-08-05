@@ -20,6 +20,7 @@ PlotCanvasIntensity::PlotCanvasIntensity( wxWindow* parent, wxWindowID id /* = -
 	m_PlotNames.resize( psLAST );
 	m_PlotNames[psAverageIntensity] = wxString(wxT("Average Intensity"));
 	m_PlotNames[psMostFrequentValue] = wxString(wxT("Most Frequent Value"));
+	SetGridValueFormatString( wxT("%.3f") );
 }
 
 //-----------------------------------------------------------------------------
@@ -94,9 +95,13 @@ bool PlotCanvasIntensity::CustomRefreshData( const RequestData& /*data*/, int /*
 wxString PlotCanvasIntensity::GetGridValue( int row, int col ) const
 //-----------------------------------------------------------------------------
 {
-	if( m_ppPlotValues && ( col >= 0 ) && ( row >= 0 ) && ( col < m_ChannelCount ) && ( static_cast<std::deque<plot_datatype>::size_type>(row) <= m_ppPlotValues[col]->size() ) )
+	if( col == 0 )
 	{
-		return ( row == 0 ) ? m_Pens[col].description_ : wxString::Format( GetGridValueFormatString().c_str(), (*m_ppPlotValues[col])[row-1] );
+		return ( row == 0 ) ? wxT("Timeline Steps") : wxString::Format( wxT("%d"), row - 1 );
+	}
+	else if( m_ppPlotValues && ( col > 0 ) && ( row >= 0 ) && ( col <= m_ChannelCount ) && ( static_cast<std::deque<plot_datatype>::size_type>(row) <= m_ppPlotValues[col-1]->size() ) )
+	{
+		return ( row == 0 ) ? m_Pens[col-1].description_ : wxString::Format( GetGridValueFormatString().c_str(), (*m_ppPlotValues[col-1])[row-1] );
 	}
 	return wxEmptyString;
 }

@@ -41,6 +41,14 @@ public:
 		srNoImage,
 		srFailedToSave
 	};
+	//-----------------------------------------------------------------------------
+	enum TScalingMode
+	//-----------------------------------------------------------------------------
+	{
+		smNearestNeighbour,
+		smLinear,
+		smCubic
+	};
 	void									IncreaseSkippedCounter( size_t count );
 	void									HandleMouseAndKeyboardEvents( bool boHandle );
 	TSaveResult								SaveCurrentImage( const wxString& filenameAndPath, const wxString& extension ) const;
@@ -53,18 +61,24 @@ public:
 	void									SetInfoOverlay( const std::vector<wxString>& infoStrings );
 	void									SetInfoOverlayMode( bool boOn );
 	void									ResetRequestInProgressFlag( void );
+	void									SetImageModificationWarningOutput( bool boOn );
+	bool									GetImageModificationWarningOutput( void ) const { return m_boShowImageModificationWarning; }
 	void									SetPerformanceWarningOutput( bool boOn );
 	bool									GetPerformanceWarningOutput( void ) const { return m_boShowPerformanceWarnings; }
 	void									SetUserData( int userData ) { m_userData = userData; }
 	int										GetUserData( void ) const { return m_userData; }
+	void									SetScalingMode( TScalingMode mode );
+	TScalingMode							GetScalingMode( void ) const { return m_scalingMode; }
+	bool									SupportsDifferentScalingModes( void ) const { return m_boSupportsDifferentScalingModes; }
 private:
 	//-----------------------------------------------------------------------------
 	enum
 	//-----------------------------------------------------------------------------
 	{
-		PERFORMANCE_WARNINGS_Y_OFFSET = 20,
-		SKIPPED_IMAGE_MESSAGE_Y_OFFSET = 40,
-		INFO_Y_OFFSET = 60
+		IMAGE_MODIFICATIONS_Y_OFFSET = 20,
+		PERFORMANCE_WARNINGS_Y_OFFSET = 40,
+		SKIPPED_IMAGE_MESSAGE_Y_OFFSET = 60,
+		INFO_Y_OFFSET = 80
 	};
 	//-----------------------------------------------------------------------------
 	enum TZoomIncrementMode
@@ -78,23 +92,30 @@ private:
 	enum TMenuItem
 	//-----------------------------------------------------------------------------
 	{
-		miPopupFitToScreen = 1,
-		miPopupShowPerformanceWarnings,
-		miPopupShowRequestInfoOverlay,
-		miPopupFullScreen,
-		miPopupSetShiftValue
+		miPopUpFitToScreen = 1,
+		miPopUpFullScreen,
+		miPopUpScalerMode_NearestNeighbour,
+		miPopUpScalerMode_Linear,
+		miPopUpScalerMode_Cubic,
+		miPopUpSetShiftValue,
+		miPopUpShowRequestInfoOverlay,
+		miPopUpShowPerformanceWarnings,
+		miPopUpShowImageModificationsWarning
 	};
 	ImageCanvasImpl*						m_pImpl;
 	AOIContainer							m_aoiContainer;
 	bool									m_boHandleMouseAndKeyboardEvents;
 	bool 									m_boRefreshInProgress;
 	bool									m_boSupportsFullScreenMode;
+	bool									m_boSupportsDifferentScalingModes;
 	const PlotCanvasImageAnalysis*			m_pActiveAnalysisPlot;
 	bool									m_boScaleToClientSize;
 	bool									m_boShowInfoOverlay;
 	std::vector<wxString>					m_infoStringsOverlay;
+	bool									m_boShowImageModificationWarning;
 	bool									m_boShowPerformanceWarnings;
 	wxWindow*								m_pApp;
+	TScalingMode							m_scalingMode;
 	size_t									m_skippedImages;
 	size_t									m_skippedPaintEvents;
 	const mvIMPACT::acquire::ImageBuffer*	m_pIB;
@@ -123,6 +144,7 @@ private:
 	void									ClipAOI( wxRect& rect, bool boForDragging ) const;
 	void									DeleteAOIs( void );
 	void									DragImageDisplay( void );
+	static int								GetChannelBitDepth( TImageBufferPixelFormat format );
 	wxPoint									GetScaledMousePos( int mouseXPos, int mouseYPos ) const;
 	void									Init( const wxWindow* const pApp );
 	void									SetMaxZoomFactor( const mvIMPACT::acquire::ImageBuffer* pIB, int oldMaxDim );
@@ -140,9 +162,11 @@ private:
 	void									OnMotion( wxMouseEvent& );
 	void									OnMouseWheel( wxMouseEvent& );
 	void									OnPaint( wxPaintEvent& e );
+	void									OnPopUp_ScalingMode_Changed( wxCommandEvent& e );
 	void									OnPopUpFitToScreen( wxCommandEvent& e );
 	void									OnPopUpFullScreen( wxCommandEvent& e );
 	void									OnPopUpSetShiftValue( wxCommandEvent& e );
+	void									OnPopUpShowImageModificationsWarning( wxCommandEvent& e );
 	void									OnPopUpShowPerformanceWarnings( wxCommandEvent& e );
 	void									OnPopUpShowRequestInfoOverlay( wxCommandEvent& e );
 	void									OnRightDown( wxMouseEvent& );

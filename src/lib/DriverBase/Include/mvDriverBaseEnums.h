@@ -1373,7 +1373,31 @@ enum TChannelSplitMode
  *  </table>
  * 
  *  Third column of values:
- *  A unique constant for each image sensor or custom selection.
+ *  A unique constant for each image sensor or custom selection. The following values have been
+ *  assigned so far:
+ *  - 0x0001: Aptina MT9V034 sensor
+ *  - 0x0002: Aptina MT9M021 sensor
+ *  - 0x0003: Aptina MT9M023 sensor
+ *  - 0x0004: ev2 EV76C560 sensor
+ *  - 0x0005: CMOSIS CMV4000 sensor
+ *  - 0x0006: Aptina MT9P031 sensor
+ *  - 0x0007: Sony ICX424 sensor
+ *  - 0x0008: Sony ICX414 sensor
+ *  - 0x0009: Sony ICX415 sensor
+ *  - 0x000a: Sony ICX445 sensor
+ *  - 0x000b: Sony ICX267 sensor
+ *  - 0x000c: Sony ICX274 sensor
+ *  - 0x000d: Sony ICX645 sensor
+ *  - 0x000e: Sony ICX674 sensor
+ *  - 0x000f: Sony ICX694 sensor
+ *  - 0x0010: Sony ICX814 sensor
+ *  - 0x0011: Aptina MT9J003 sensor
+ *  - 0x0012: CMOSIS CMV4000 sensor
+ *  - 0x0013: CMOSIS CMV4000 sensor
+ *  - 0x0014: ev2 EV76C570 sensor
+ *  - ...
+ *  - 0x1000: User defined correction matrix
+ *  - 0x2000: Driver automatically selects the matching sensor matrix if available
  */
 /// \ingroup CommonInterface
 enum TColorTwistInputCorrectionMatrixMode
@@ -1417,6 +1441,8 @@ enum TColorTwistInputCorrectionMatrixMode
 	cticmmBlueCOUGAR_Xx04C_WPPLS    = 0x00020000 | 0x10000000 | 0x0012,
 	/// \brief The WPPLS correction matrix for mvBlueCOUGAR-Xx04aC and mvBlueCOUGAR-XDx04aC devices.
 	cticmmBlueCOUGAR_Xx04aC_WPPLS   = 0x00020000 | 0x10000000 | 0x0013,
+	/// \brief The WPPLS correction matrix for mvBlueCOUGAR-Xx04eC devices.
+	cticmmBlueCOUGAR_Xx04eC_WPPLS   = 0x00020000 | 0x10000000 | 0x0014,
 	/// \brief The WPPLS correction matrix for mvBlueCOUGAR-XDx24aC and mvBlueCOUGAR-XDx24bC devices.
 	cticmmBlueCOUGAR_XDx24aC_WPPLS  = 0x00030000 | 0x10000000 | 0x000e,
 	/// \brief The WPPLS correction matrix for mvBlueCOUGAR-XDx26C and mvBlueCOUGAR-XDx26aC devices.
@@ -1438,7 +1464,9 @@ enum TColorTwistInputCorrectionMatrixMode
 	/// \brief The WPPLS correction matrix for mvBlueFOX-x24C devices.
 	cticmmBlueFOX_x24C_WPPLS        = 0x00040000 | 0x10000000 | 0x000c,
 	/// \brief The WPPLS correction matrix for mvBlueFOX3-x100C devices.
-	cticmmBlueFOX3_x100C_WPPLS      = 0x00050000 | 0x10000000 | 0x0011
+	cticmmBlueFOX3_x100C_WPPLS      = 0x00050000 | 0x10000000 | 0x0011,
+	/// \brief The WPPLS correction matrix for mvBlueFOX3-x020C devices.
+	cticmmBlueFOX3_x020C_WPPLS      = 0x00050000 | 0x10000000 | 0x0014
 };
 
 //-----------------------------------------------------------------------------
@@ -1556,11 +1584,15 @@ enum TColorProcessingMode
 enum TDarkCurrentFilterMode
 //-----------------------------------------------------------------------------
 {
-	/// \brief This filter is switched off.
+	/// \brief The filter is switched off.
 	dcfmOff = 0,
-	/// \brief This filter is switched on.
+	/// \brief The filter is switched on.
 	dcfmOn,
-	/// \brief The next frame will be taken for dark current adjustment.
+	/// \brief The next selected number of images will be taken for calculating the dark current correction image.
+	/**
+	*  In this mode after the correction image has been calculated the mode will automatically switch back to
+	*  <b>mvIMPACT::acquire::dcfmOff</b>
+	*/
 	dcfmCalibrateDarkCurrent,
 	/// \brief In this mode whenever reaching this filter, the captured image will be replaced by the
 	/// last correction image, that has been created as a result of the filter being calibrated.
@@ -1633,6 +1665,11 @@ enum TDeviceAdvancedOptions // flags_attribute, uint_type
 	/// \brief No advanced option selected.
 	daoOff = 0,
 	/// \brief Put camera in low light mode.
+	/**
+	 *  This is a special feature offered by some sensors. Typically this will enable an additional analogue
+	 *  gain that will increase both the luminance and the noise of the resulting image. This feature can not
+	 *  be configured any further and there also is no additional information available on this topic.
+	 */
 	daoLowLight = 0x1,
 	/// \brief Embed sensor specific info into the image readout buffer.
 	daoEmbeddedImageInfo = 0x2,
@@ -2547,7 +2584,11 @@ enum TFlatFieldFilterMode
 	fffmOff = 0,
 	/// \brief The filter is switched on.
 	fffmOn,
-	/// \brief The next frame will be taken as flat field.
+	/// \brief The next selected number of images will be taken for calculating the flat field correction image.
+	/**
+	 *  In this mode after the correction image has been calculated the mode will automatically switch back to
+	 *  <b>mvIMPACT::acquire::fffmOff</b>
+	 */
 	fffmCalibrateFlatField,
 	/// \brief In this mode whenever reaching this filter, the captured image will be replaced by the
 	/// last correction image, that has been created as a result of the filter being calibrated.

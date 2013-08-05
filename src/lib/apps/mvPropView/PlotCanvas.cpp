@@ -58,13 +58,15 @@ void PlotCanvas::DrawMarkerLines( wxPaintDC& dc, const wxCoord w, const wxCoord 
 	unsigned int from = 0, to = 0;
 	const unsigned int XMarkerStepWidth = GetXMarkerParameters( from, to );
 	wxCoord textWidth;
-	for( unsigned int i=from; i<to; i+=XMarkerStepWidth )
+	for( unsigned int i=to; i>from; )
+	//for( unsigned int i=from; i<to; i+=XMarkerStepWidth )
 	{
-		const int xVal = i - from;
-		dc.DrawLine( static_cast<int>( borderWidth + ( xVal * scaleX )), markerStartHeight, static_cast<int>( borderWidth + ( xVal * scaleX )), markerEndHeight );
+		const int xPos = static_cast<int>( borderWidth + ( ( i - from ) * scaleX ));
+		dc.DrawLine( xPos, markerStartHeight, xPos, markerEndHeight );
 		const wxString XMarkerString(wxString::Format( wxT("%d"), i ));
 		dc.GetTextExtent( XMarkerString, &textWidth, 0 );
-		dc.DrawText( XMarkerString, static_cast<int>(borderWidth + ( xVal * scaleX ) - ( textWidth / 2 )), h - borderWidth + 3 );
+		dc.DrawText( XMarkerString, static_cast<int>(xPos - ( textWidth / 2 )), h - borderWidth + 3 );
+		i = ( i > XMarkerStepWidth ) ? i - XMarkerStepWidth : 0;
 	}
 
 	// markers for y-axis

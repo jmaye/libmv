@@ -1,3 +1,9 @@
+libmv (2.5.12-28) precise; urgency=low
+
+  * upstream version 2.5.12
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Mon, 05 Aug 2013 06:56:30 +0000
+
 libmv (2.5.10-27) lucid; urgency=low
 
   * getting rid of this shitty rosdep.yaml file 

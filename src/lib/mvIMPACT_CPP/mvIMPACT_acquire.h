@@ -1874,11 +1874,18 @@ public:
 	 */
 	bool bindComponent(	/// [in,out] The access object to bind to the driver object.
 						Component& access,
-						/// [in] The name of the driver object to locate.
+						/// [in] The path and/or name of the object to be located.
 						const std::string& name,
-						/// [in] Flags defining how to search for the component.
+						/// [in] Specifies how and what to search for. Valid flags(these flags can be combined using the '|' operator) for this parameter
+						/// are:
+						/// - smIgnoreLists
+						/// - smIgnoreMethods
+						/// - smIgnoreProperties
 						int searchMode = 0,
-						/// [in] The maximum number of sub list levels to search for the component.
+						/// [in] The maxium depth (in lists) where to search for the component.
+						/// By e.g. setting this value to 2, the current list and all
+						/// its sub lists will be searched for the object, but no sublists
+						/// of sub lists. -1 will search in ALL sub lists.
 						int maxSearchDepth = INT_MAX ) const
 	{
 		access.m_hObj = findComponent( name, searchMode, maxSearchDepth );
@@ -1917,11 +1924,18 @@ public:
 	 *  \return A unique identifier to the component if found or \b mvIMPACT::acquire::INVALID_ID if the component couldn't
 	 *  be found.
 	 */
-	HOBJ findComponent(	/// [in] The name of the component to search for.
+	HOBJ findComponent(	/// [in] The path and/or name of the object to be located.
 						const std::string& name,
-						/// [in] Flags defining how to search for the component.
+						/// [in] Specifies how and what to search for. Valid flags(these flags can be combined using the '|' operator) for this parameter
+						/// are:
+						/// - smIgnoreLists
+						/// - smIgnoreMethods
+						/// - smIgnoreProperties
 						int searchMode = 0,
-						/// [in] The maximum number of sub list levels to search for the component.
+						/// [in] The maxium depth (in lists) where to search for the component.
+						/// By e.g. setting this value to 2, the current list and all
+						/// its sub lists will be searched for the object, but no sublists
+						/// of sub lists. -1 will search in ALL sub lists.
 						int maxSearchDepth = INT_MAX ) const
 	{
 		TPROPHANDLING_ERROR result;
@@ -6291,8 +6305,17 @@ public:
 	 * 
 	 *  If new devices have been detected a subsequent call to \b mvIMPACT::acquire::DeviceManager::deviceCount
 	 *  will result in a higher value when compared to a previous call and \b mvIMPACT::acquire::DeviceManager::changedCount
-	 *  will contain a different value as well then(however this could also happen because a certain device related property did change
+	 *  will contain a different value as well then (however this could also happen because a certain device related property did change
 	 *  its state).
+	 *
+	 *  \note
+	 *  As long as a certain instance of a device manager is active, the devices once detected will \b NOT
+	 *  disappear from the list of devices even if they have been unplugged from the system. So the list
+	 *  of devices can only grow, but never gets shorter again until either the process terminates or the
+	 *  last instance of this class went out of scope. If a device has been unplugged, its <b>mvIMPACT::acquire::Device::state</b>
+	 *  property will change. If the application is interested in getting an instant notification when a
+	 *  device has been disconnected a callback can be registered on this property. How to do this is explained
+	 *  here: \ref Callback.cpp
 	 */
 	void updateDeviceList( void ) const
 	{

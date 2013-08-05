@@ -31,7 +31,7 @@ VectorScopeCanvas::~VectorScopeCanvas()
 void VectorScopeCanvas::CreateGridCustom( void )
 //-----------------------------------------------------------------------------
 {
-	m_pNumericalDisplay->SetTable( new DataGridTable(this, m_valCount, 2), true );
+	m_pNumericalDisplay->SetTable( new DataGridTable(this, m_valCount, 3), true );
 	m_pNumericalDisplay->SetCellBackgroundColour( 0, pCb, *wxBLUE );
 	m_pNumericalDisplay->SetCellTextColour( 0, pCb, *wxWHITE );
 	m_pNumericalDisplay->SetCellBackgroundColour( 0, pCr, *wxRED );
@@ -50,11 +50,15 @@ void VectorScopeCanvas::DeallocateDataBuffer( void )
 wxString VectorScopeCanvas::GetGridValue( int row, int col ) const
 //-----------------------------------------------------------------------------
 {
-	if( ( row >= 0 ) && ( col >= 0 ) )
+	if( col == 0 )
+	{
+		return ( row == 0 ) ? wxT("Data Point in AOI") : wxString::Format( wxT("%d"), row - 1 );
+	}
+	else if( ( row >= 0 ) && ( col > 0 ) )
 	{
 		if( row == 0 )
 		{
-			switch( col )
+			switch( col - 1 )
 			{
 			case 0:
 				return wxString( wxT("Cb") );
@@ -67,7 +71,7 @@ wxString VectorScopeCanvas::GetGridValue( int row, int col ) const
 		}
 		else if( m_pDataBuffer && ( static_cast<unsigned int>( row - 1 ) < m_valCount ) )
 		{
-			switch( col )
+			switch( col - 1 )
 			{
 			case 0:
 				return wxString::Format( GetGridValueFormatString().c_str(), m_pDataBuffer[row-1].Cb_ );

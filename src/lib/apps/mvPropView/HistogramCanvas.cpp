@@ -1074,9 +1074,13 @@ void HistogramCanvas::DrawHistogramLine( wxPaintDC& dc, int h, double scaleX, do
 wxString HistogramCanvas::GetGridValue( int row, int col ) const
 //-----------------------------------------------------------------------------
 {
-	if( m_ppHistogramBuffer && ( col >= 0 ) && ( row >= 0 ) && ( col < m_ChannelCount ) && ( static_cast<unsigned int>(row) <= m_valCount ) )
+	if( col == 0 )
 	{
-		return ( row == 0 ) ? m_Pens[col].description_ : wxString::Format( GetGridValueFormatString().c_str(), m_ppHistogramBuffer[col][row-1] );
+		return ( row == 0 ) ? wxT("Pixel Value") : wxString::Format( wxT("%d"), row - 1 );
+	}
+	else if( m_ppHistogramBuffer && ( col > 0 ) && ( row >= 0 ) && ( col <= m_ChannelCount ) && ( static_cast<unsigned int>(row) <= m_valCount ) )
+	{
+		return ( row == 0 ) ? m_Pens[col-1].description_ : wxString::Format( GetGridValueFormatString().c_str(), m_ppHistogramBuffer[col-1][row-1] );
 	}
 	return wxEmptyString;
 }
@@ -1226,20 +1230,23 @@ void HistogramCanvas::SetupNumericalDisplay( int channelCount, int rowCountNeede
 {
 	if( m_pNumericalDisplay )
 	{
-		int columnCount = m_pNumericalDisplay->GetTable()->GetNumberCols();
-		if( columnCount < channelCount )
+		const int columnCount = m_pNumericalDisplay->GetTable()->GetNumberCols();
+		const int columnsNeeded = channelCount + 1;
+		if( columnCount < columnsNeeded )
 		{
-			m_pNumericalDisplay->AppendCols( channelCount - columnCount );
+			m_pNumericalDisplay->AppendCols( columnsNeeded - columnCount );
 		}
-		else if( columnCount > channelCount )
+		else if( columnCount > columnsNeeded )
 		{
-			m_pNumericalDisplay->DeleteCols( columnCount - 1, columnCount - channelCount );
+			m_pNumericalDisplay->DeleteCols( columnCount - 1, columnCount - columnsNeeded );
 		}
+
+		m_pNumericalDisplay->SetCellValue( 0, 0, wxT("Pixel Value:") );
 		for( int i=0; i<channelCount; i++ )
 		{
-			m_pNumericalDisplay->SetCellBackgroundColour( 0, i, *m_Pens[i].pColour_ );
-			m_pNumericalDisplay->SetCellTextColour( 0, i, *wxWHITE );
-			m_pNumericalDisplay->SetCellValue( 0, i, m_Pens[i].description_ );
+			m_pNumericalDisplay->SetCellBackgroundColour( 0, i + 1, *m_Pens[i].pColour_ );
+			m_pNumericalDisplay->SetCellTextColour( 0, i + 1, *wxWHITE );
+			m_pNumericalDisplay->SetCellValue( 0, i + 1, m_Pens[i].description_ );
 		}
 
 		int rowCount = m_pNumericalDisplay->GetTable()->GetNumberRows();

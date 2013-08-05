@@ -127,7 +127,7 @@ int DeviceHandlerHYPERION::UpdateFirmware( bool boSilentMode )
 			return urFileIOError;
 		}
 		unsigned char *spiData = new unsigned char [file.Length() + 0x1000];
-		int bytesread = static_cast<int>(file.Read( spiData, file.Length() ));
+		int bytesRead = static_cast<int>(file.Read( spiData, file.Length() ));
 		file.Close();
 		//SelectFlashAccess( eFSSetI2CSwitchToDefaultFlash );
 		//SelectFlashAccess( eFSSetI2CSwitchOffAndForceUserFlashSelect );
@@ -143,28 +143,28 @@ int DeviceHandlerHYPERION::UpdateFirmware( bool boSilentMode )
 			return urDeviceAccessError;
 		}
 		epcs.BulkErase();
-		int writeResult = epcs.Write( spiData, 0, bytesread, false );
+		int writeResult = epcs.Write( spiData, 0, bytesRead, false );
 		if( writeResult == 0 )
 		{
 			if( pParent_ )
 			{
 				pParent_->WriteLogMessage( wxT("Programming completed successfully.\n" ) );
-				pParent_->WriteLogMessage( wxT("Please note, that the new software will only be activated after the system has been shutdown, switched off and swichted back on again. A simple reboot will NOT be sufficient.\n"), wxTextAttr(wxColour(255, 0, 0)) );
+				pParent_->WriteLogMessage( wxT("Please note, that the new software will not be activated after the system has been shutdown, switched off completely and switched back on again. A simple reboot will NOT be sufficient.\n"), wxTextAttr(wxColour(255, 0, 0)) );
 			}
 			if( MessageToUser( wxT("Information"), wxT("The update task has now finished. It's recommended to verify the firmware now. Verify firmware?"), boSilentMode, wxOK | wxCANCEL | wxICON_INFORMATION ) )
 			{
-				int verifyResult = epcs.Verify( spiData, 0, bytesread );
+				int verifyResult = epcs.Verify( spiData, 0, bytesRead );
 				if( verifyResult != 0 )
 				{
 					if( pParent_ )
 					{
-						pParent_->WriteErrorMessage( wxString::Format( wxT("ERROR! Verify failed (result: %d).\n"), writeResult ) );
+						pParent_->WriteErrorMessage( wxString::Format( wxT("ERROR! The new firmware could not be verified(result: %d).\n"), writeResult ) );
 					}
 					result =  urDeviceAccessError;
 				}
 				else if( pParent_ )
 				{
-					pParent_->WriteLogMessage( wxString::Format( wxT("Verify the firmware finished successfully.\n") ) );
+					pParent_->WriteLogMessage( wxString::Format( wxT("Verification of the firmware successful.\n") ) );
 				}
 			}
 		}
