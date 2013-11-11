@@ -240,7 +240,7 @@ struct ImageBuffer
 		 *  The timestamp is independent from the FPGA and has a resolution of 1 us.
 		 * 
 		 *  \b mvBlueFOX \b specific:
-		 *  The counter of the timestamp starts, when the camera gets initialized. It is measured in us.
+		 *  The counter of the timestamp starts when the camera gets initialized. It is measured in us.
 		 */
 		int timeStamp_us;
 		/// \brief Currently unsupported.
@@ -394,7 +394,7 @@ enum TImpactBufferFlag
 	 *  \else
 	 *  <b>::TImpactBufferFlag</b>
 	 *  \endif
-	 *  it migth free the
+	 *  it might free the
 	 *  existing buffer and create a new one.
 	 * 
 	 *  If this flag is specified and the new buffer doesn't match the existing one in terms of
@@ -769,7 +769,7 @@ typedef int HOBJ;
 	MVDMR_API TDMR_ERROR DMR_CALL DMR_SetDeviceID( HDEV hDev, int newID );
 	MVDMR_API TDMR_ERROR DMR_CALL DMR_UpdateFirmware( HDEV hDev );
 	MVDMR_API TDMR_ERROR DMR_CALL DMR_UpdateDigitalInputs( HDRV hDrv );
-	MVDMR_API TDMR_ERROR DMR_CALL DMR_UpgradeDeviceFeatures( HDEV hDev, const char* pLicenceFilename, int reserved, int reserved2 );
+	MVIMPACT_DEPRECATED_C( MVDMR_API TDMR_ERROR DMR_CALL DMR_UpgradeDeviceFeatures( HDEV hDev, const char* pLicenceFilename, int reserved, int reserved2 ) );
 	MVDMR_API TDMR_ERROR DMR_CALL DMR_CreateUserDataEntry( HDEV hDev, HLIST* pEntry );
 	MVDMR_API TDMR_ERROR DMR_CALL DMR_DeleteUserDataEntry( HDEV hDev, HLIST hEntry );
 	MVDMR_API TDMR_ERROR DMR_CALL DMR_WriteUserDataToHardware( HDEV hDev );

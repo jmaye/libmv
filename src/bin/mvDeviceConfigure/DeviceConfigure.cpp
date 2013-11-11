@@ -404,7 +404,7 @@ DeviceConfigureFrame::~DeviceConfigureFrame()
 }
 
 //-----------------------------------------------------------------------------
-void DeviceConfigureFrame::ActivateDeviceInPropView( int deviceIndex )
+void DeviceConfigureFrame::ActivateDeviceIn_wxPropView( int deviceIndex )
 //-----------------------------------------------------------------------------
 {
 	wxString commandString(wxT("wxPropView device="));

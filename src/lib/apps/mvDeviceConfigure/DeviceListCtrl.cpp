@@ -59,7 +59,7 @@ void DeviceListCtrl::OnActivated( wxListEvent& )
 {
 	if( m_pParentFrame )
 	{
-		m_pParentFrame->ActivateDeviceInPropView( m_selectedItemID );
+		m_pParentFrame->ActivateDeviceIn_wxPropView( m_selectedItemID );
 	}
 }
 

@@ -557,7 +557,7 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
 	m_pMISettings_PropGrid_Show = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_Show, wxT("Show &Property Grid\tALT+CTRL+P"), wxT(""), wxITEM_CHECK );
 	pMenuSettingsPropertyGrid->AppendSeparator();
 	m_pMISettings_PropGrid_DisplayPropIndicesAsHex = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_DisplayPropIndicesAsHex, wxT("Display Property Indices As &Hex\tALT+CTRL+H"), wxT(""), wxITEM_CHECK );
-	m_pMISettings_PropGrid_UseDisplayNameIfAvailable = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_UseDisplayNameIfAvailable, wxT("Use Dis&play Names If Available\tCTRL+P"), wxT(""), wxITEM_CHECK );
+	m_pMISettings_PropGrid_UseDisplayNameIfAvailable = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_UseDisplayNameIfAvailable, wxT("Use Dis&play Names In Favour Of Feature Names\tCTRL+P"), wxT(""), wxITEM_CHECK );
 	m_pMISettings_PropGrid_UseSelectorGrouping = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_UseSelectorGrouping, wxT("Use Selector Grouping\tCTRL+G"), wxT(""), wxITEM_CHECK );
 	m_pMISettings_PropGrid_CreateEditorsWithSlider = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_CreateEditorsWithSlider, wxT("Create Editors With Slider\tALT+CTRL+R"), wxT(""), wxITEM_CHECK );
 	m_pMISettings_PropGrid_ShowMethodExecutionErrors = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_ShowMethodExecutionErrors, wxT("Show Method Execution Errors\tALT+CTRL+E"), wxT(""), wxITEM_CHECK );
@@ -2574,7 +2574,7 @@ void PropViewFrame::OnHelp_About(wxCommandEvent& )
 	v.push_back( make_pair( wxT("CTRL+M"), wxT("Show Monitor Image") ) );
 	v.push_back( make_pair( wxT("CTRL+O"), wxT("Load device settings from default location") ) );
 	v.push_back( make_pair( wxT("ALT+CTRL+O"), wxT("Load device settings from file") ) );
-	v.push_back( make_pair( wxT("CTRL+P"), wxT("Use Display names for grid features if available") ) );
+	v.push_back( make_pair( wxT("CTRL+P"), wxT("Use Display names for grid features if available (More user friendly strings)") ) );
 	v.push_back( make_pair( wxT("ALT+CTRL+P"), wxT("Property grid on/off") ) );
 	v.push_back( make_pair( wxT("CTRL+R"), wxT("Record mode on/off") ) );
 	v.push_back( make_pair( wxT("ALT+CTRL+R"), wxT("Create editors with slider") ) );

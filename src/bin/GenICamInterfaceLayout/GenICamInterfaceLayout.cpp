@@ -34,25 +34,6 @@ struct ThreadParameter
 #endif // #ifdef __linux__
 };
 
-#ifdef __linux__
-//-----------------------------------------------------------------------------
-// returns 0 if timeout, else 1
-unsigned waitForInput( int maxwait_sec, int fd )
-//-----------------------------------------------------------------------------
-{
-	fd_set rfds;
-	struct timeval tv;
-
-	FD_ZERO(&rfds);
-	FD_SET(fd, &rfds);
-
-	tv.tv_sec = maxwait_sec ;
-	tv.tv_usec = 0;
-
-	return select( fd+1, &rfds, NULL, NULL, &tv );
-}
-#endif // #ifdef __linux__
-
 //-----------------------------------------------------------------------------
 unsigned int DMR_CALL liveThread( void* pData )
 //-----------------------------------------------------------------------------

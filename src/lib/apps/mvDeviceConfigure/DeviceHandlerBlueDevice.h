@@ -28,10 +28,11 @@ class DeviceHandlerBlueDevice : public DeviceHandler
 	TUpdateResult DoFirmwareUpdate_BlueCOUGAR_X( bool boSilentMode, const wxString& serial, const char* pBuf, const size_t bufSize );
 	TUpdateResult DoFirmwareUpdate_BlueFOX3( bool boSilentMode, const wxString& serial, const char* pBuf, const size_t bufSize );
 	bool ExtractFileVersion( const wxString& fileName, Version& fileVersion ) const;
-	bool GetFileFromArchive( const wxString& firmwareFileAndPath, const char* pArchive, size_t archiveSize, const wxString& filename, auto_array_ptr<char>& data ) const;
+	static bool GetFileFromArchive( const wxString& firmwareFileAndPath, const char* pArchive, size_t archiveSize, const wxString& filename, auto_array_ptr<char>& data, DeviceConfigureFrame* pParent );
 	int GetLatestFirmwareVersionCOUGAR_XAndFOX3Device( Version& latestFirmwareVersion ) const;
 	bool IsBlueCOUGAR_X( mvIMPACT::acquire::Device* pDev );
 	bool IsBlueFOX3( mvIMPACT::acquire::Device* pDev );
+	static TUpdateResult ParseUpdatePackageCOUGAR_XAndFOX3Device( PackageDescriptionFileParser& fileParser, const wxString& firmwareFileAndPath, DeviceConfigureFrame* pParent, auto_array_ptr<char>& pBuffer );
 	int UpdateCOUGAR_SDevice( bool boSilentMode );
 	int UpdateCOUGAR_XAndFOX3Device( bool boSilentMode );
 	int UpdateLYNX_M7AndCOUGAR_PDevice( const wxString& updateFileName, const wxString& fileExtension, bool boSilentMode );

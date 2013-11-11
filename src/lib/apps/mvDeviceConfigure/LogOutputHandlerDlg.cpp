@@ -1,9 +1,10 @@
 //-----------------------------------------------------------------------------
+#include <apps/Common/wxAbstraction.h>
+#include <common/expat/expatHelper.h>
 #include "LogOutputHandlerDlg.h"
 #include "LogOutputConfigurationDlg.h"
 #include "wx/ffile.h"
 #include "wx/splitter.h"
-#include <apps/Common/wxAbstraction.h>
 
 using namespace std;
 using namespace mvIMPACT::acquire;
@@ -300,31 +301,16 @@ void LogOutputHandlerDlg::OnBtnLoad( wxCommandEvent& )
 			return;
 		}
 		
-		const int MAX_BUF_SIZE = 1024;
-		LogConfigurationFileParser fileParser;
-		fileParser.Create();
-		bool fSuccess = true;
-		while( !file.Eof() && fSuccess )
+		LogConfigurationFileParser parser;
+		parser.Create();
+		ParseXMLFromFile( parser, file.fp(), 1024 );
+		if( parser.GetErrorCode() != XML_ERROR_NONE )
 		{
-			char* pszBuffer = static_cast<char*>(fileParser.GetBuffer(MAX_BUF_SIZE));
-			if( !pszBuffer )
-			{
-				fSuccess = false;
-			}
-			else
-			{
-				int nLength = static_cast<int>(file.Read( pszBuffer, MAX_BUF_SIZE ));
-				fSuccess = fileParser.ParseBuffer( nLength, nLength == 0 );
-			}
-			if( fileParser.GetErrorCode() != XML_ERROR_NONE )
-			{
-				WriteErrorMessage( wxString::Format( wxT("LogOutputHandlerDlg::OnBtnLoad: ERROR!!! XML error: %d(%s).\n"), fileParser.GetErrorCode(), fileParser.GetErrorString(fileParser.GetErrorCode()) ) );
-				WriteErrorMessage( wxT("LogOutputHandlerDlg::OnBtnLoad: Stopping file processing.\n") );
-				return;
-			}
+			WriteErrorMessage( wxString::Format( wxT("LogOutputHandlerDlg::OnBtnLoad: ERROR!!! XML error: %d(%s).\n"), parser.GetErrorCode(), parser.GetErrorString(parser.GetErrorCode()) ) );
+			WriteErrorMessage( wxT("LogOutputHandlerDlg::OnBtnLoad: Stopping file processing.\n") );
+			return;
 		}
-		// have valid data here
-		m_debugData = fileParser.GetResults();
+		m_debugData = parser.GetResults();
 		BuildList();
 		UpdateMissingConfigsList( true );
 	}

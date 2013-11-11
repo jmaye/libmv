@@ -263,7 +263,7 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 	m_pSTSerialNumber = new wxStaticText(pControlsPanel, widDeviceSerial, wxT("-"));
 	pDeviceInfoElementsGridSizer->Add( m_pSTSerialNumber, wxSizerFlags(2).Align( wxGROW | wxALIGN_CENTER_VERTICAL ) );
 	// row 3
-	pDeviceInfoElementsGridSizer->Add( new wxStaticText(pControlsPanel, wxID_ANY, wxT("User Defined Name: ")), wxSizerFlags().Left() );
+	pDeviceInfoElementsGridSizer->Add( new wxStaticText(pControlsPanel, wxID_ANY, wxT("User Defined Name (DeviceUserID): ")), wxSizerFlags().Left() );
 	m_pTCUserDefinedName = new wxTextCtrl(pControlsPanel, wxID_ANY);
 	pDeviceInfoElementsGridSizer->Add( m_pTCUserDefinedName, wxSizerFlags(2).Align( wxGROW | wxALIGN_CENTER_VERTICAL ) );
 	// row 4

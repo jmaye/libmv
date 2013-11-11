@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
-#ifndef PropViewFrameBaseH
-#define PropViewFrameBaseH PropViewFrameBaseH
+#ifndef PropGridFrameBaseH
+#define PropGridFrameBaseH PropGridFrameBaseH
 //-----------------------------------------------------------------------------
 #include <map>
 #include <mvIMPACT_CPP/mvIMPACT_acquire.h>
@@ -110,4 +110,4 @@ public:
 };
 
 
-#endif // PropViewFrameBaseH
+#endif // PropGridFrameBaseH

@@ -1,6 +1,3 @@
-//-----------------------------------------------------------------------------
-// NOTE: Sample only for linux side cause of the used select!
-//-----------------------------------------------------------------------------
 #ifndef linux
 #	error Sample only for linux side!!
 #endif	// linux
@@ -22,23 +19,6 @@
 
 using namespace std;
 using namespace mvIMPACT::acquire;
-
-//-----------------------------------------------------------------------------
-// returns 0 if timeout, else 1
-static unsigned waitForInput( int maxwait_sec, int fd )
-//-----------------------------------------------------------------------------
-{
-	fd_set rfds;
-	struct timeval tv;
-
-	FD_ZERO(&rfds);
-	FD_SET(fd, &rfds);
-
-	tv.tv_sec = maxwait_sec ;
-	tv.tv_usec = 0;
-
-	return select( fd+1, &rfds, NULL, NULL, &tv );
-}
 
 //-----------------------------------------------------------------------------
 static unsigned int liveLoop( Device* pDev, bool boStoreFrames, const string& settingName, bool boSingleShotMode )

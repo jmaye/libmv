@@ -1,7 +1,5 @@
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
 #ifndef linux
-    #error This sample is only for LINUX!
+#	error This sample is only for LINUX!
 #endif
 
 #include <stdio.h>
@@ -30,24 +28,8 @@
 using namespace std;
 using namespace mvIMPACT::acquire;
 
-//-----------------------------------------------------------------------------
 static bool g_boTerminated = false;
 static bool g_boGreySensor = false;
-
-unsigned waitForInput( int maxwait_sec, int fd )
-//-----------------------------------------------------------------------------
-{
-	fd_set rfds;
-	struct timeval tv;
-
-	FD_ZERO(&rfds);
-	FD_SET(fd, &rfds);
-
-	tv.tv_sec = maxwait_sec ;
-	tv.tv_usec = 0;
-
-	return select( fd+1, &rfds, NULL, NULL, &tv );
-}
 
 //-----------------------------------------------------------------------------
 class MyWindow : public Fl_Overlay_Window
@@ -60,9 +42,9 @@ class MyWindow : public Fl_Overlay_Window
 		if( pRequest_ )
 		{
 			fl_draw_image((unsigned char *) pRequest_->imageData.read(), 0, 0,
-					pRequest_->imageWidth.read(), pRequest_->imageHeight.read(),
-					pRequest_->imageBytesPerPixel.read(),
-					pRequest_->imageLinePitch.read() );
+				pRequest_->imageWidth.read(), pRequest_->imageHeight.read(),
+				pRequest_->imageBytesPerPixel.read(),
+				pRequest_->imageLinePitch.read() );
 		}
 	}
 	virtual void draw_overlay()
@@ -88,7 +70,6 @@ MyWindow* createWindow( int width, int height )
 	return pWindow;
 }
 
-
 //-----------------------------------------------------------------------------
 void windowCallback( Fl_Widget*, void* )
 //-----------------------------------------------------------------------------
@@ -101,18 +82,18 @@ void windowCallback( Fl_Widget*, void* )
 void GenICamDeviceSetColorPixelFormat( Device *pDev )
 //-----------------------------------------------------------------------------
 {
-    mvIMPACT::acquire::GenICam::ImageFormatControl ifc(pDev);
-    
-    std::string fmt_ = ifc.pixelColorFilter.readS();
-    
-    if( !fmt_.compare("BayerRG") )
-        ifc.pixelFormat.writeS("BayerRG8");
-    else if( !fmt_.compare("BayerGB") )
-        ifc.pixelFormat.writeS("BayerGB8");
-    else if( !fmt_.compare("BayerGR") )
-        ifc.pixelFormat.writeS("BayerGR8");
-    else if( !fmt_.compare("BayerBG") )
-        ifc.pixelFormat.writeS("BayerBG8");
+	mvIMPACT::acquire::GenICam::ImageFormatControl ifc(pDev);
+
+	std::string fmt_ = ifc.pixelColorFilter.readS();
+
+	if( !fmt_.compare("BayerRG") )
+		ifc.pixelFormat.writeS("BayerRG8");
+	else if( !fmt_.compare("BayerGB") )
+		ifc.pixelFormat.writeS("BayerGB8");
+	else if( !fmt_.compare("BayerGR") )
+		ifc.pixelFormat.writeS("BayerGR8");
+	else if( !fmt_.compare("BayerBG") )
+		ifc.pixelFormat.writeS("BayerBG8");
 }
 
 //-----------------------------------------------------------------------------
@@ -135,7 +116,7 @@ unsigned int liveLoop( Device* pDev, bool boStoreFrames, const string& settingNa
 			cout << "loadSetting( \"" << settingName << "\" ); call failed: " << ImpactAcquireException::getErrorCodeAsString( result ) << endl;
 		}
 	}
-	
+
 	// depending on the device and its sensor, we set an appropriate output format for displaying
 	mvIMPACT::acquire::ImageDestination id(pDev);
 
@@ -400,16 +381,16 @@ int main( int argc, char* argv[] )
 		cout << "Unable to continue!";
 		PRESS_A_KEY_AND_RETURN
 	}
-	
+
 	cout << "InterfaceLayout=" << pDev->interfaceLayout.readS() << endl;
-	
+
 	// if it's a GenICam device, we switch to appropriate Interfacelayout
 	try
 	{
 		pDev->interfaceLayout.write(dilGenICam);
 	}
 	catch( const ImpactAcquireException& ) {}
-	
+
 	if( width <= 0 )
 		width = AOI_WIDTH;
 
@@ -435,11 +416,11 @@ int main( int argc, char* argv[] )
 				{
 					mvIMPACT::acquire::GenICam::AcquisitionControl ac(pDev);
 					mvIMPACT::acquire::GenICam::ImageFormatControl ifc(pDev);
-					
+
 					// calculations to crop to VGA size in the center of the sensor image
 					int maxw = ifc.widthMax.read();
 					int maxh = ifc.heightMax.read();
-					
+
 					int xoff = (maxw - width) / 2;
 					int yoff = (maxh - height) / 2;
 
@@ -470,7 +451,7 @@ int main( int argc, char* argv[] )
 			case dilDeviceSpecific:
 				{
 					mvIMPACT::acquire::CameraSettingsBase cs(pDev);
-					
+
 					// calculations to crop to VGA size in the center of the sensor image
 					int maxw = cs.aoiWidth.getMaxValue();
 					int maxh = cs.aoiHeight.getMaxValue();
@@ -482,12 +463,12 @@ int main( int argc, char* argv[] )
 						xoff = 0;
 					if( yoff < 0 )
 						yoff = 0;
- 
+
 					cs.aoiWidth.write(width);
 					cs.aoiHeight.write(height);
 					cs.aoiStartX.write(xoff);
 					cs.aoiStartY.write(yoff);
-					
+
 					cout << "Device set up to " << cs.aoiWidth.read() << "x" << cs.aoiHeight.read() << endl;
 				}
 				break;
@@ -520,4 +501,3 @@ int main( int argc, char* argv[] )
 
 	return 0;
 }
-

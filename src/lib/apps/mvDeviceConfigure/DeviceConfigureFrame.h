@@ -26,7 +26,7 @@ public:
 	   ~DeviceConfigureFrame();
 	typedef DeviceHandler* (*CreateDeviceHandler)(mvIMPACT::acquire::Device*);
 	typedef ObjectFactory<DeviceHandler, wxString, CreateDeviceHandler, mvIMPACT::acquire::Device*> DeviceHandlerFactory;
-	void ActivateDeviceInPropView( int deviceIndex );
+	void ActivateDeviceIn_wxPropView( int deviceIndex );
 	int SetID( int deviceIndex );
 	int UpdateFirmware( int deviceIndex );
 	int UpdateKernelDriver( int deviceIndex );

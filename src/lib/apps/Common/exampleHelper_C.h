@@ -9,6 +9,10 @@
 	getchar();												\
 	return 0;												\
 
+#ifdef linux
+    unsigned   waitForInput( int maxWait_sec, int fd );
+#endif // #ifdef linux
+
 int        getIntValFromSTDIn( void );
 int        getPropI( HOBJ hProp, int index );
 void       setPropI( HOBJ hProp, int value, int index );

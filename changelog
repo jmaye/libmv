@@ -1,3 +1,9 @@
+libmv (2.5.16-29) lucid; urgency=low
+
+  * upstream version 2.5.16
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Mon, 11 Nov 2013 12:41:05 +0100
+
 libmv (2.5.12-28) precise; urgency=low
 
   * upstream version 2.5.12

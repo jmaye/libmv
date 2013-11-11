@@ -118,6 +118,7 @@ public:
 			deviceScanType(),
 			timestamp(),
 			timestampReset(),
+			timestampLatch(),
 			mvDeviceTemperatureUpperLimit(),
 			mvDeviceTemperatureLowerLimit(),
 			mvDeviceTemperatureLimitHysteresis(),
@@ -163,6 +164,7 @@ public:
 		locator.bindComponent( deviceScanType, "DeviceScanType" );
 		locator.bindComponent( timestamp, "Timestamp" );
 		locator.bindComponent( timestampReset, "TimestampReset@i" );
+		locator.bindComponent( timestampLatch, "TimestampLatch@i" );
 		locator.bindComponent( mvDeviceTemperatureUpperLimit, "mvDeviceTemperatureUpperLimit" );
 		locator.bindComponent( mvDeviceTemperatureLowerLimit, "mvDeviceTemperatureLowerLimit" );
 		locator.bindComponent( mvDeviceTemperatureLimitHysteresis, "mvDeviceTemperatureLimitHysteresis" );
@@ -340,6 +342,11 @@ public:
 	 *  Resets the current value of the device timestamp counter.
 	 */
 	Method timestampReset;
+	/// \brief Latches the current timestamp counter into the 'Timestamp' property.
+	/**
+	 *  Latches the current timestamp counter into the 'Timestamp' property.
+	 */
+	Method timestampLatch;
 	/// \brief Upper limit in degrees Celsius(C) for the TemperatureOutOfRange signal.
 	/**
 	 *  Upper limit in degrees Celsius(C) for the TemperatureOutOfRange signal.
@@ -420,6 +427,7 @@ public:
 	PropertyI64 getDeviceScanType( void ) const { return deviceScanType; }
 	PropertyI64 getTimestamp( void ) const { return timestamp; }
 	Method getTimestampReset( void ) const { return timestampReset; }
+	Method getTimestampLatch( void ) const { return timestampLatch; }
 	PropertyI64 getmvDeviceTemperatureUpperLimit( void ) const { return mvDeviceTemperatureUpperLimit; }
 	PropertyI64 getmvDeviceTemperatureLowerLimit( void ) const { return mvDeviceTemperatureLowerLimit; }
 	PropertyI64 getmvDeviceTemperatureLimitHysteresis( void ) const { return mvDeviceTemperatureLimitHysteresis; }

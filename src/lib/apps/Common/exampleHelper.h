@@ -364,4 +364,25 @@ inline std::vector<mvIMPACT::acquire::Device*>::size_type getValidDevices( const
 	return v.size();
 }
 
+#ifdef linux
+#	include <sys/types.h>
+#	include <unistd.h>
+	//-----------------------------------------------------------------------------
+	// returns 0 if timeout, else 1
+	inline unsigned waitForInput( int maxWait_sec, int fd )
+	//-----------------------------------------------------------------------------
+	{
+		fd_set rfds;
+		struct timeval tv;
+
+		FD_ZERO(&rfds);
+		FD_SET(fd, &rfds);
+
+		tv.tv_sec = maxWait_sec ;
+		tv.tv_usec = 0;
+
+		return select( fd+1, &rfds, NULL, NULL, &tv );
+	}
+#endif // #ifdef linux
+
 #endif // exampleHelperH

@@ -1,5 +1,6 @@
 //-----------------------------------------------------------------------------
 #include <apps/Common/wxAbstraction.h>
+#include <common/expat/expatHelper.h>
 #include "DeviceConfigureFrame.h"
 #include "DeviceHandlerBlueDevice.h"
 #include <memory>
@@ -488,7 +489,7 @@ bool DeviceHandlerBlueDevice::ExtractFileVersion( const wxString& fileName, Vers
 }
 
 //-----------------------------------------------------------------------------
-bool DeviceHandlerBlueDevice::GetFileFromArchive( const wxString& firmwareFileAndPath, const char* pArchive, size_t archiveSize, const wxString& filename, auto_array_ptr<char>& data ) const
+bool DeviceHandlerBlueDevice::GetFileFromArchive( const wxString& firmwareFileAndPath, const char* pArchive, size_t archiveSize, const wxString& filename, auto_array_ptr<char>& data, DeviceConfigureFrame* pParent )
 //-----------------------------------------------------------------------------
 {
 	wxMemoryInputStream zipData(pArchive, archiveSize);
@@ -500,9 +501,9 @@ bool DeviceHandlerBlueDevice::GetFileFromArchive( const wxString& firmwareFileAn
 		std::auto_ptr<wxZipEntry> ptrGuard(pZipEntry);
 		if( !zipStream.OpenEntry( *pZipEntry ) )
 		{
-			if( pParent_ )
+			if( pParent )
 			{
-				pParent_->WriteErrorMessage( wxString::Format( wxT("Failed to open zip entry of archive %s\n"), firmwareFileAndPath.c_str() ) );
+				pParent->WriteErrorMessage( wxString::Format( wxT("Failed to open zip entry of archive %s\n"), firmwareFileAndPath.c_str() ) );
 			}
 			continue;
 		}
@@ -598,59 +599,15 @@ int DeviceHandlerBlueDevice::GetLatestFirmwareVersionCOUGAR_XAndFOX3Device( Vers
 		}
 	}
 
-	wxFFile archive(firmwareFileAndPath.c_str(), wxT("rb"));
-	if( !archive.IsOpened() )
+	PackageDescriptionFileParser parser;
+	auto_array_ptr<char> pBuffer(0);
+	const TUpdateResult result = ParseUpdatePackageCOUGAR_XAndFOX3Device( parser, firmwareFileAndPath, 0, pBuffer );
+	if( result != urOperationSuccessful )
 	{
-		return urFileIOError;
+		return result;
 	}
 
-	auto_array_ptr<char> pBuffer(archive.Length());
-	size_t bytesRead = archive.Read( pBuffer.get(), pBuffer.parCnt() );
-	if( bytesRead != static_cast<size_t>(archive.Length()) )
-	{
-		return urFileIOError;
-	}
-
-	wxMemoryInputStream zipData(pBuffer.get(), pBuffer.parCnt());
-	wxZipInputStream zipStream(zipData);
-	int fileCount = zipStream.GetTotalEntries();
-	if( fileCount < 2 )
-	{
-		return urInvalidFileSelection;
-	}
-
-	auto_array_ptr<char> pPackageDescription;
-	if( !GetFileFromArchive( firmwareFileAndPath, pBuffer.get(), pBuffer.parCnt(), wxString(wxT("packageDescription.xml")), pPackageDescription ) )
-	{
-		return urFileIOError;
-	}
-
-	PackageDescriptionFileParser fileParser;
-	fileParser.Create();
-	bool fSuccess = true;
-	char* pszBuffer = static_cast<char*>(fileParser.GetBuffer( static_cast<int>(pPackageDescription.parCnt()) + 1 ));
-	if( !pszBuffer )
-	{
-		fSuccess = false;
-	}
-	else
-	{
-		memcpy( pszBuffer, pPackageDescription.get(), pPackageDescription.parCnt() );
-		pszBuffer[pPackageDescription.parCnt()] = '\0';
-		fSuccess = fileParser.ParseBuffer( static_cast<int>(pPackageDescription.parCnt()), true );
-	}
-
-	if( !fSuccess || ( fileParser.GetErrorCode() != XML_ERROR_NONE ) )
-	{
-		return urFileIOError;
-	}
-
-	if( !fileParser.GetLastError().empty() )
-	{
-		return urFileIOError;
-	}
-
-	const FileEntryContainer& fileEntries = fileParser.GetResults();
+	const FileEntryContainer& fileEntries = parser.GetResults();
 	const FileEntryContainer::size_type cnt = fileEntries.size();
 	wxString product(ConvertedString(pDev_->product.read()));
 	wxString deviceVersionAsString(pDev_->deviceVersion.isValid() ? ConvertedString(pDev_->deviceVersion.read()) : wxString(wxT("1.0")));
@@ -736,6 +693,78 @@ bool DeviceHandlerBlueDevice::IsBlueFOX3( mvIMPACT::acquire::Device* pDev )
 	}
 
 	return false;
+}
+
+//-----------------------------------------------------------------------------
+DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::ParseUpdatePackageCOUGAR_XAndFOX3Device( PackageDescriptionFileParser& parser, const wxString& firmwareFileAndPath, DeviceConfigureFrame* pParent, auto_array_ptr<char>& pBuffer )
+//-----------------------------------------------------------------------------
+{
+	wxFFile archive(firmwareFileAndPath.c_str(), wxT("rb"));
+	if( !archive.IsOpened() )
+	{
+		if( pParent )
+		{
+			pParent->WriteErrorMessage( wxString::Format( wxT("Could not open update archive %s.\n"), firmwareFileAndPath.c_str() ) );
+		}
+		return urFileIOError;
+	}
+
+	pBuffer.realloc( archive.Length() );
+	size_t bytesRead = archive.Read( pBuffer.get(), pBuffer.parCnt() );
+	if( bytesRead != static_cast<size_t>(archive.Length()) )
+	{
+		if( pParent )
+		{
+			wxString lengthS;
+			lengthS << archive.Length();
+			pParent->WriteErrorMessage( wxString::Format( wxT("Could not read full content of archive '%s'(wanted: %s, bytes, got %d bytes).\n"), firmwareFileAndPath.c_str(), lengthS.c_str(), bytesRead ) );
+		}
+		return urFileIOError;
+	}
+
+	wxMemoryInputStream zipData(pBuffer.get(), pBuffer.parCnt());
+	wxZipInputStream zipStream(zipData);
+	int fileCount = zipStream.GetTotalEntries();
+	if( fileCount < 2 )
+	{
+		if( pParent )
+		{
+			pParent->WriteErrorMessage( wxString::Format( wxT("The archive %s claims to contain %d file(s) while at least 2 are needed\n"), firmwareFileAndPath.c_str(), fileCount) );
+		}
+		return urInvalidFileSelection;
+	}
+
+	auto_array_ptr<char> pPackageDescription;
+	if( !GetFileFromArchive( firmwareFileAndPath, pBuffer.get(), pBuffer.parCnt(), wxString(wxT("packageDescription.xml")), pPackageDescription, pParent ) )
+	{
+		if( pParent )
+		{
+			pParent->WriteErrorMessage( wxString::Format( wxT("Could not extract package description from archive %s.\n"), firmwareFileAndPath.c_str() ) );
+		}
+		return urFileIOError;
+	}
+
+	parser.Create();
+	const bool fSuccess = ParseXMLFromBuffer( parser, pPackageDescription.get(), pPackageDescription.parCnt() );
+	if( !fSuccess || ( parser.GetErrorCode() != XML_ERROR_NONE ) )
+	{
+		if( pParent )
+		{
+			pParent->WriteErrorMessage( wxString::Format( wxT("Package description file parser error(fSuccess: %d, XML error: %d(%s)).\n"), fSuccess, parser.GetErrorCode(), parser.GetErrorString(parser.GetErrorCode()) ) );
+		}
+		return urFileIOError;
+	}
+
+	if( !parser.GetLastError().empty() )
+	{
+		if( pParent )
+		{
+			pParent->WriteErrorMessage( wxString::Format( wxT("Package description file parser error(last error: %s).\n"), parser.GetLastError().c_str() ) );
+		}
+		return urFileIOError;
+	}
+
+	return urOperationSuccessful;
 }
 
 //-----------------------------------------------------------------------------
@@ -883,85 +912,15 @@ int DeviceHandlerBlueDevice::UpdateCOUGAR_XAndFOX3Device( bool boSilentMode )
 		firmwareFileAndPath = fileDlg.GetPath();
 	}
 
-	wxFFile archive(firmwareFileAndPath.c_str(), wxT("rb"));
-	if( !archive.IsOpened() )
+	PackageDescriptionFileParser parser;
+	auto_array_ptr<char> pBuffer(0);
+	TUpdateResult result = ParseUpdatePackageCOUGAR_XAndFOX3Device( parser, firmwareFileAndPath, pParent_, pBuffer );
+	if( result != urOperationSuccessful )
 	{
-		if( pParent_ )
-		{
-			pParent_->WriteErrorMessage( wxString::Format( wxT("Could not open update archive %s.\n"), firmwareFileAndPath.c_str() ) );
-		}
-		return urFileIOError;
+		return result;
 	}
 
-	auto_array_ptr<char> pBuffer(archive.Length());
-	size_t bytesRead = archive.Read( pBuffer.get(), pBuffer.parCnt() );
-	if( bytesRead != static_cast<size_t>(archive.Length()) )
-	{
-		if( pParent_ )
-		{
-			wxString lengthS;
-			lengthS << archive.Length();
-			pParent_->WriteErrorMessage( wxString::Format( wxT("Could not read full content of archive '%s'(wanted: %s, bytes, got %d bytes).\n"), firmwareFileAndPath.c_str(), lengthS.c_str(), bytesRead ) );
-		}
-		return urFileIOError;
-	}
-
-	wxMemoryInputStream zipData(pBuffer.get(), pBuffer.parCnt());
-	wxZipInputStream zipStream(zipData);
-	int fileCount = zipStream.GetTotalEntries();
-	if( fileCount < 2 )
-	{
-		if( pParent_ )
-		{
-			pParent_->WriteErrorMessage( wxString::Format( wxT("The archive %s claims to contain %d file(s) while at least 2 are needed\n"), firmwareFileAndPath.c_str(), fileCount) );
-		}
-		return urInvalidFileSelection;
-	}
-
-	auto_array_ptr<char> pPackageDescription;
-	if( !GetFileFromArchive( firmwareFileAndPath, pBuffer.get(), pBuffer.parCnt(), wxString(wxT("packageDescription.xml")), pPackageDescription ) )
-	{
-		if( pParent_ )
-		{
-			pParent_->WriteErrorMessage( wxString::Format( wxT("Could not extract package description from archive %s.\n"), firmwareFileAndPath.c_str() ) );
-		}
-		return urFileIOError;
-	}
-
-	PackageDescriptionFileParser fileParser;
-	fileParser.Create();
-	bool fSuccess = true;
-	char* pszBuffer = static_cast<char*>(fileParser.GetBuffer( static_cast<int>(pPackageDescription.parCnt()) + 1 ));
-	if( !pszBuffer )
-	{
-		fSuccess = false;
-	}
-	else
-	{
-		memcpy( pszBuffer, pPackageDescription.get(), pPackageDescription.parCnt() );
-		pszBuffer[pPackageDescription.parCnt()] = '\0';
-		fSuccess = fileParser.ParseBuffer( static_cast<int>(pPackageDescription.parCnt()), true );
-	}
-
-	if( !fSuccess || ( fileParser.GetErrorCode() != XML_ERROR_NONE ) )
-	{
-		if( pParent_ )
-		{
-			pParent_->WriteErrorMessage( wxString::Format( wxT("Package description file parser error(fSuccess: %d, XML error: %d(%s)).\n"), fSuccess, fileParser.GetErrorCode(), fileParser.GetErrorString(fileParser.GetErrorCode()) ) );
-		}
-		return urFileIOError;
-	}
-
-	if( !fileParser.GetLastError().empty() )
-	{
-		if( pParent_ )
-		{
-			pParent_->WriteErrorMessage( wxString::Format( wxT("Package description file parser error(last error: %s).\n"), fileParser.GetLastError().c_str() ) );
-		}
-		return urFileIOError;
-	}
-
-	const FileEntryContainer& fileEntries = fileParser.GetResults();
+	const FileEntryContainer& fileEntries = parser.GetResults();
 	const FileEntryContainer::size_type cnt = fileEntries.size();
 	wxString product(ConvertedString(pDev_->product.read()));
 	wxString deviceVersionAsString(pDev_->deviceVersion.isValid() ? ConvertedString(pDev_->deviceVersion.read()) : wxString(wxT("1.0")));
@@ -1065,7 +1024,7 @@ int DeviceHandlerBlueDevice::UpdateCOUGAR_XAndFOX3Device( bool boSilentMode )
 	}
 
 	auto_array_ptr<char> pUploadFileBuffer;
-	if( !GetFileFromArchive( firmwareFileAndPath, pBuffer.get(), pBuffer.parCnt(), selection, pUploadFileBuffer ) )
+	if( !GetFileFromArchive( firmwareFileAndPath, pBuffer.get(), pBuffer.parCnt(), selection, pUploadFileBuffer, pParent_ ) )
 	{
 		if( pParent_ )
 		{
@@ -1083,8 +1042,6 @@ int DeviceHandlerBlueDevice::UpdateCOUGAR_XAndFOX3Device( bool boSilentMode )
 		return urOperationCanceled;
 	}
 
-
-	TUpdateResult result = urOperationSuccessful;
 	try
 	{
 		switch( product_ )

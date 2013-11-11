@@ -12,7 +12,6 @@
 #	define LIVE_LOOP_CALL __stdcall
 #elif defined(linux)
 #	include <string.h>
-#	include <sys/socket.h>
 #	include <unistd.h>
 #	define LIVE_LOOP_CALL
 #	if defined(__x86_64__) || defined(__powerpc64__) // -m64 makes GCC define __powerpc64__
@@ -39,25 +38,6 @@ typedef struct CaptureParameter
 	HDISP	hDisp;
 #endif // #ifdef USE_MV_DISPLAY_LIB
 } CaptureParameter;
-
-#ifdef linux
-	//-----------------------------------------------------------------------------
-	// returns 0 if timeout, else 1
-	unsigned waitForInput( int maxwait_sec, int fd )
-	//-----------------------------------------------------------------------------
-	{
-		fd_set rfds;
-		struct timeval tv;
-
-		FD_ZERO(&rfds);
-		FD_SET(fd, &rfds);
-
-		tv.tv_sec = maxwait_sec ;
-		tv.tv_usec = 0;
-
-		return select( fd+1, &rfds, NULL, NULL, &tv );
-	}
-#endif // #ifdef linux
 
 //-----------------------------------------------------------------------------
 void checkDigitalIO_common( HDRV hDrv )

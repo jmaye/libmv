@@ -47,9 +47,9 @@ public:
 		const int offset = (3*pixel)/2;
 		if( pixel % 2 )
 		{
-			return saveAssign( static_cast<unsigned short>(static_cast<unsigned short>(pBuffer[offset+1] << shift) | static_cast<unsigned short>(pBuffer[offset] & 0xF)), static_cast<unsigned short>(0), static_cast<unsigned short>(( 1 << ( 8 + shift ) ) -1) );
+			return saveAssign( static_cast<unsigned short>(static_cast<unsigned short>(pBuffer[offset+1] << shift) | static_cast<unsigned short>(pBuffer[offset] >> 4)), static_cast<unsigned short>(0), static_cast<unsigned short>(( 1 << ( 8 + shift ) ) -1) );
 		}
-		return saveAssign( static_cast<unsigned short>(static_cast<unsigned short>(pBuffer[offset] << shift) | static_cast<unsigned short>(pBuffer[offset+1] >> 4)), static_cast<unsigned short>(0), static_cast<unsigned short>(( 1 << ( 8 + shift ) ) -1) );
+		return saveAssign( static_cast<unsigned short>(static_cast<unsigned short>(pBuffer[offset] << shift) | static_cast<unsigned short>(pBuffer[offset+1] & 0xF)), static_cast<unsigned short>(0), static_cast<unsigned short>(( 1 << ( 8 + shift ) ) -1) );
 	}
 	//-----------------------------------------------------------------------------
 	static unsigned short GetMono12Packed_V2Pixel( const unsigned char* const pBuffer, int pixel )

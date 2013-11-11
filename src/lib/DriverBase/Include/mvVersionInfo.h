@@ -11,9 +11,9 @@
 
 #define MVIMPACT_ACQUIRE_MAJOR_VERSION   2
 #define MVIMPACT_ACQUIRE_MINOR_VERSION   5
-#define MVIMPACT_ACQUIRE_RELEASE_VERSION 12
-#define MVIMPACT_ACQUIRE_BUILD_VERSION   950
-#define MVIMPACT_ACQUIRE_VERSION_STRING  "2.5.12.950"
+#define MVIMPACT_ACQUIRE_RELEASE_VERSION 16
+#define MVIMPACT_ACQUIRE_BUILD_VERSION   1028
+#define MVIMPACT_ACQUIRE_VERSION_STRING  "2.5.16.1028"
 
 /// \brief This is a macro which evaluates to true if the current mvIMPACT Acquire version is at least major.minor.release.
 ///

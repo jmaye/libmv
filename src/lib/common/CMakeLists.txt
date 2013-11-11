@@ -1,1 +1,1 @@
-remake_add_headers(INSTALL common)
+remake_add_headers(RECURSE INSTALL common)

@@ -995,7 +995,7 @@ public:
  *  }
  * 
  *  //-----------------------------------------------------------------------------
- *  int main(int argc, char* argv[])
+ *  int main( int argc, char* argv[] )
  *  //-----------------------------------------------------------------------------
  *  {
  *    ComponentList baselist;
@@ -2066,7 +2066,7 @@ public:
  *  }
  * 
  *  //-----------------------------------------------------------------------------
- *  int main(int argc, char* argv[])
+ *  int main( int argc, char* argv[] )
  *  //-----------------------------------------------------------------------------
  *  {
  *    ComponentList baselist;
@@ -4998,11 +4998,11 @@ public:
  *  provide total security of cause, but the idea of the password only is to hinder
  *  the user from deleting an import entry by accident.
  * 
- *  The memory consumed by a single <b>mvIMPACT::acquire::UserDataEntry</b> can vary from device
+ *  The memory consumed by a single \b mvIMPACT::acquire::UserDataEntry can vary from device
  *  to device and depends on the way the data is stored internally. In any case when an entry
  *  is created it will consume more memory than the amount of bytes written to the
- *  <b>mvIMPACT::acquire::UserDataEntry::data</b>. After data has been written to an entry
- *  it is therefore important to check the <b>mvIMPACT::acquire::UserData::memoryAvailable_bytes</b>
+ *  \b mvIMPACT::acquire::UserDataEntry::data. After data has been written to an entry
+ *  it is therefore important to check the \b mvIMPACT::acquire::UserData::memoryAvailable_bytes
  *  property if there is still enough memory available.
  * 
  *  \note
@@ -5379,6 +5379,11 @@ PYTHON_ONLY(%mutable;)
  *  As a result from this fact pointers to instances of \b mvIMPACT::acquire::Device can be obtained
  *  via a \b mvIMPACT::acquire::DeviceManager object only.
  * 
+ * \attention
+ *  \b NEVER try to explicitly delete an instance of \b mvIMPACT::acquire::Device! You did not allocate it
+ *  and the result will be a crash! The \b mvIMPACT::acquire::DeviceManager will take care of all resources
+ *  for you.
+ * 
  *  A valid pointer to a \b mvIMPACT::acquire::Device object is needed to construct most of the
  *  other objects available in this interface.
  * 
@@ -5473,10 +5478,10 @@ class Device
 public:
 	/// \brief Copy constructor
 	/**
-	 *  Creates a new object from an existing device object. Keep in mind that this new object 
+	 *  Creates a new object from an existing device object. Keep in mind that this new object
 	 *  will provide access to the very same hardware and therefore you might as well use the original
 	 *  reference returned from the \b mvIMPACT::acquire::DeviceManager. This constructor
-	 *  is only provided for internal reference counting to guarantee correct operation of the 
+	 *  is only provided for internal reference counting to guarantee correct operation of the
 	 *  objects of this class under all platforms and languages.
 	 */
 	explicit Device( const Device& src ) : m_pRefData(src.m_pRefData), m_userData(src.m_pRefData->m_hDev),
@@ -5494,7 +5499,10 @@ public:
 	/**
 	 *  \note
 	 *  This destuctor must only be called for objects that have been created directly by
-	 *  the user on unmanaged heaps. Under most circumstances this means NEVER.
+	 *  the user on unmanaged heaps. Under most circumstances this means \b NEVER. E.g. for instances
+	 *  that have been obtained from a \b mvIMPACT::acquire::DeviceManager object do \b NOT call
+	 *  this destructor. The \b mvIMPACT::acquire::DeviceManager will take care of all the
+	 *  resources for you.
 	 */
 	~Device( void ) { dealloc(); }
 #ifndef WRAP_PYTHON
@@ -5894,6 +5902,15 @@ PYTHON_ONLY(%immutable;)
 	 * 
 	 *  \note This property is not supported by every device.
 	 *  Therefore always call the function \b mvIMPACT::acquire::Component::isValid to check if this property is available or not.
+	 *
+	 *  Not every device will offer the same options.
+	 *  Check for valid modes by reading the properties translation dictionary with
+	 *  the functions \b mvIMPACT::acquire::PropertyIAcquisitionStartStopBehaviour::getTranslationDictString and
+	 *  \b mvIMPACT::acquire::PropertyIAcquisitionStartStopBehaviour::getTranslationDictValue.
+	 *  \if DOXYGEN_CPP_DOCUMENTATION
+	 *  C++ offers the more efficient function \b mvIMPACT::acquire::PropertyIAcquisitionStartStopBehaviour::getTranslationDict
+	 *  in addition to the functions mentioned above.
+	 *  \endif
 	 */
 	PropertyIAcquisitionStartStopBehaviour acquisitionStartStopBehaviour;
 	/// \brief An enumerated integer property \b (read-only) defining user executed hardware update results.
@@ -5961,13 +5978,15 @@ PYTHON_ONLY(%mutable;)
  * 
  *  As a result of this every program written by the use of this interface
  *  will create an instance of \b mvIMPACT::acquire::DeviceManager before performing any other
- *  operations which uses object or functions from this interface.
+ *  operations which uses objects or functions from this interface.
  * 
  *  During the construction of a \b mvIMPACT::acquire::DeviceManager object the system will be scanned
- *  for supported devices and once the instance has been created the object will always
- *  provide an up to date list of devices whenever the user asks for it.
+ *  for supported devices and once the instance has been created the object will
+ *  provide an up to date list of devices whenever the user asks for it. Some devices when plugged into
+ *  the system after the device manager has been created might require an explicit update of the device
+ *  list. This can be triggered by an application by calling \b mvIMPACT::acquire::DeviceManager::updateDeviceList().
  * 
- *  This class also provides some functions to find a particular device in the system.
+ *  This class also provides various functions to find a particular device in the system.
  *  Devices can e.g. be found by family or by serial number.
  * 
  *  \note
@@ -5975,6 +5994,11 @@ PYTHON_ONLY(%mutable;)
  *  the user still works with \b Device objects, as when the last instance to
  *  this object is destroyed all remaining \b Device objects will be closed
  *  automatically!
+ * 
+ * \attention
+ *  \b NEVER try to explicitly delete an instance of \b mvIMPACT::acquire::Device! You did not allocate it
+ *  and the result will be a crash! The \b mvIMPACT::acquire::DeviceManager will take care of all resources
+ *  for you.
  * 
  *  \note
  *  A \b mvIMPACT::acquire::DeviceManager object will initially return pointers to \b mvIMPACT::acquire::Device objects,
@@ -5985,6 +6009,7 @@ PYTHON_ONLY(%mutable;)
  *  be handled by the user.
  * 
  *  \if DOXYGEN_CPP_DOCUMENTATION
+ *  \b EXAMPLE CODE:
  * \code
  *  //-----------------------------------------------------------------------------
  *  void obtainDevicePointers( void )
@@ -6312,7 +6337,7 @@ public:
 	 *  As long as a certain instance of a device manager is active, the devices once detected will \b NOT
 	 *  disappear from the list of devices even if they have been unplugged from the system. So the list
 	 *  of devices can only grow, but never gets shorter again until either the process terminates or the
-	 *  last instance of this class went out of scope. If a device has been unplugged, its <b>mvIMPACT::acquire::Device::state</b>
+	 *  last instance of this class went out of scope. If a device has been unplugged, its \b mvIMPACT::acquire::Device::state
 	 *  property will change. If the application is interested in getting an instant notification when a
 	 *  device has been disconnected a callback can be registered on this property. How to do this is explained
 	 *  here: \ref Callback.cpp
@@ -7033,6 +7058,7 @@ private:
 			chunkFeatureLocator.bindComponent( chunkPixelFormat, "ChunkPixelFormat" );
 			chunkFeatureLocator.bindComponent( chunkDynamicRangeMin, "ChunkDynamicRangeMin" );
 			chunkFeatureLocator.bindComponent( chunkDynamicRangeMax, "ChunkDynamicRangeMax" );
+			chunkFeatureLocator.bindComponent( chunkExposureTime, "ChunkExposureTime" );
 			chunkFeatureLocator.bindComponent( chunkTimestamp, "ChunkTimestamp" );
 			chunkFeatureLocator.bindComponent( chunkLineStatusAll, "ChunkLineStatusAll" );
 			m_pRefData->collectSelectedChunkFeatures( ComponentIterator(hList).firstChild() );
@@ -7077,8 +7103,8 @@ protected:
 						infoTimeStamp_us(), infoSettingUsed(), infoImageAverage(),
 						infoVideoChannel(), infoCameraOutputUsed(), infoLineCounter(),
 						infoMissingData_pc(), infoIOStatesAtExposureStart(), infoIOStatesAtExposureEnd(),
-						chunkOffsetX(), chunkOffsetY(), chunkWidth(), chunkHeight(), chunkPixelFormat(),
-						chunkDynamicRangeMin(), chunkDynamicRangeMax(), chunkTimestamp(), chunkLineStatusAll(),
+						chunkOffsetX(), chunkOffsetY(), chunkWidth(), chunkHeight(), chunkPixelFormat(), chunkDynamicRangeMin(),
+						chunkDynamicRangeMax(), chunkExposureTime(),  chunkTimestamp(), chunkLineStatusAll(),
 						imageMemoryMode(), imagePixelFormat(), imageData(), imageSize(), imageFooter(), imageFooterSize(),
 						imagePixelPitch(), imageChannelCount(), imageChannelOffset(), imageChannelBitDepth(), imageLinePitch(),
 						imageChannelDesc(), imageBytesPerPixel(), imageOffsetX(), imageOffsetY(), imageWidth(),
@@ -7099,7 +7125,7 @@ public:
 							infoIOStatesAtExposureEnd(src.infoIOStatesAtExposureEnd),
 							chunkOffsetX(src.chunkOffsetX), chunkOffsetY(src.chunkOffsetY), chunkWidth(src.chunkWidth), chunkHeight(src.chunkHeight),
 							chunkPixelFormat(src.chunkPixelFormat), chunkDynamicRangeMin(src.chunkDynamicRangeMin), chunkDynamicRangeMax(src.chunkDynamicRangeMax),
-							chunkTimestamp(src.chunkTimestamp), chunkLineStatusAll(src.chunkLineStatusAll),
+							chunkExposureTime(src.chunkExposureTime), chunkTimestamp(src.chunkTimestamp), chunkLineStatusAll(src.chunkLineStatusAll),
 							imageMemoryMode(src.imageMemoryMode), imagePixelFormat(src.imagePixelFormat),
 							imageData(src.imageData), imageSize(src.imageSize), imageFooter(src.imageFooter), imageFooterSize(src.imageFooterSize),
 							imagePixelPitch(src.imagePixelPitch), imageChannelCount(src.imageChannelCount), imageChannelOffset(src.imageChannelOffset),
@@ -7622,7 +7648,7 @@ PYTHON_ONLY(%immutable;)
 	/// (stored after the integration). The timestamp is independent from the FPGA and has a resolution of 1us.
 	///
 	/// \b mvBlueFOX specific:
-	/// The counter of the timestamp starts, when the camera gets initialized. It is measured in us.
+	/// The counter of the timestamp starts when the camera gets initialized. It is measured in us.
 	PropertyI64 infoTimeStamp_us;
 	/// \brief A enumerated integer property \b (read-only) containing the setting that was used for processing this request.
 	/**
@@ -7646,10 +7672,10 @@ PYTHON_ONLY(%immutable;)
 	 *  to check if this property is available or not.
 	 */
 	PropertyICameraOutput infoCameraOutputUsed;
-	/// \brief An integer property \b (read-only) containing the amount of lines since the last trigger event.
+	/// \brief An integer property \b (read-only) containing the number of lines since the last trigger event.
 	/**
 	 *  Will contain 
-	 *  - the amount of lines since last trigger event of the first line of the snap if line counting is enabled
+	 *  - the number of lines since last trigger event of the first line of the snap if line counting is enabled
 	 *  - -1 otherwise
 	 * 
 	 *  \note This property is not supported by every device. Therefore always call the function \b mvIMPACT::acquire::Component::isValid
@@ -7796,6 +7822,12 @@ PYTHON_ONLY(%immutable;)
 	 *  For additional information about the chunk data format please refer to \ref ImageAcquisition_section_chunk.
 	 */
 	PropertyI64 chunkDynamicRangeMax;
+	/// \brief A floating point property \b (read-only) containing the exposure time used to capture the image as returned in the chunk data attached to the image.
+	/**
+	 *  \note
+	 *  For additional information about the chunk data format please refer to \ref ImageAcquisition_section_chunk.
+	 */
+	PropertyF chunkExposureTime;
 	/// \brief A 64 bit integer property \b (read-only) containing the timestamp value of the internal frame start signal of the image as returned in the chunk data attached to the image.
 	/**
 	 *  \note
@@ -8029,6 +8061,7 @@ PYTHON_ONLY(%mutable;)
 	PropertyI64 getChunkPixelFormat( void ) const { return chunkPixelFormat; }
 	PropertyI64 getChunkDynamicRangeMin( void ) const { return chunkDynamicRangeMin; }
 	PropertyI64 getChunkDynamicRangeMax( void ) const { return chunkDynamicRangeMax; }
+	PropertyI64 getChunkExposureTime( void ) const { return chunkExposureTime; }
 	PropertyI64 getChunkTimestamp( void ) const { return chunkTimestamp; }
 	PropertyI64 getChunkLineStatusAll( void ) const { return chunkLineStatusAll; }
 	PropertyIRequestImageMemoryMode getImageMemoryMode( void ) const { return imageMemoryMode; }
@@ -9248,7 +9281,7 @@ public:
 	 * 
 	 *  To store a setting in a file the \b mvIMPACT::acquire::sfFile should be specified
 	 *  as part of \a storageflags. To store a setting in a platform specific location
-	 *  such as the Registry under Windows&copy; \b mvIMPACT::acquire::sfFile should be
+	 *  such as the Registry under Windows&copy; \b mvIMPACT::acquire::sfNative should be
 	 *  specified. Both flags can be combined. In that case the same setting will be stored in a
 	 *  file \b AND in a platform specific location if these location differ (platform dependent!).
 	 * 
@@ -10441,7 +10474,7 @@ PYTHON_ONLY(%immutable;)
 	 *  \note
 	 *  In order to collect \b ALL defective pixels the list of detected pixels in not emptied each time a new calibration
 	 *  is started. In order to get rid of currently detected pixels an application must set the property
-	 *  <b>mvIMPACT::acquire::ImageProcessing::defectivePixelsFilterMode</b> to <b>mvIMPACT::acquire::dpfmResetCalibration</b>
+	 *  \b mvIMPACT::acquire::ImageProcessing::defectivePixelsFilterMode to \b mvIMPACT::acquire::dpfmResetCalibration
 	 *  and then capture a fresh image. Only then all currently detected pixels will be discarded.
 	 */
 	PropertyI defectivePixelsFound;
@@ -11132,16 +11165,6 @@ PYTHON_ONLY(ENUM_PROPERTY(PropertyIAutoOffsetCalibration, EnumPropertyI, mvIMPAC
 	PYTHON_ONLY(ENUM_PROPERTY(PropertyIBlueFOXTransferSize, EnumPropertyI, mvIMPACT::acquire::TBlueFOXTransferSize))
 #endif // #ifndef IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION
 
-#ifndef IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
-	/// \brief Defines a \b mvBlueLYNX property for values defined by \b mvIMPACT::acquire::TBlueLYNXCameraDataClipMode
-	typedef EnumPropertyI<TBlueLYNXCameraDataClipMode> PropertyIBlueLYNXCameraDataClipMode;
-	PYTHON_ONLY( ENUM_PROPERTY( PropertyIBlueLYNXCameraDataClipMode, EnumPropertyI, mvIMPACT::acquire::TBlueLYNXCameraDataClipMode))
-
-	/// \brief Defines a \b mvBlueLYNX property for values defined by \b mvIMPACT::acquire::TBlueLYNXCameraFlashMode
-	typedef EnumPropertyI<TBlueLYNXCameraFlashMode> PropertyIBlueLYNXCameraFlashMode;
-	PYTHON_ONLY( ENUM_PROPERTY( PropertyIBlueLYNXCameraFlashMode, EnumPropertyI, mvIMPACT::acquire::TBlueLYNXCameraFlashMode))
-#endif // #ifndef IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
-
 /// \brief Defines a property for values defined by \b mvIMPACT::acquire::TCameraAoiMode
 typedef EnumPropertyI<TCameraAoiMode> PropertyICameraAoiMode;
 PYTHON_ONLY(ENUM_PROPERTY(PropertyICameraAoiMode, EnumPropertyI, mvIMPACT::acquire::TCameraAoiMode))
@@ -11486,7 +11509,7 @@ PYTHON_ONLY(ENUM_PROPERTY(PropertyITriggerMoment, EnumPropertyI, mvIMPACT::acqui
 		};
 #	endif // #ifndef IGNORE_MVGRABBER_SPECIFIC_DOCUMENTATION
 
-#	if !defined(IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION)
+#	if !defined(IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION)
 		//-----------------------------------------------------------------------------
 		/// \brief A more specific class to query information about a \b mvBlueDevice device and its driver(\b Device specific interface layout only).
 		/**
@@ -11553,7 +11576,7 @@ PYTHON_ONLY(ENUM_PROPERTY(PropertyITriggerMoment, EnumPropertyI, mvIMPACT::acqui
 			PropertyIInfoSensorType getSensorType( void ) const { return sensorType; }
 #		endif // #ifdef DOTNET_ONLY_CODE
 		};
-#	endif // #if !defined(IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION)
+#	endif // #if !defined(IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION)
 
 #	ifndef IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION
 		//-----------------------------------------------------------------------------
@@ -15430,7 +15453,7 @@ PYTHON_ONLY(ENUM_PROPERTY(PropertyITriggerMoment, EnumPropertyI, mvIMPACT::acqui
 		};
 #	endif // #ifndef IGNORE_MVV4L2_SPECIFIC_DOCUMENTATION
 
-#	if !defined(IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION)
+#	if !defined(IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION)
 		//-----------------------------------------------------------------------------
 		/// \brief A class to control the automatic control parameters of a device(\b Device specific interface layout only).
 		/**
@@ -15744,12 +15767,6 @@ PYTHON_ONLY(ENUM_PROPERTY(PropertyITriggerMoment, EnumPropertyI, mvIMPACT::acqui
 			 *  \b mvIMPACT::acquire::CameraSettingsBlueFOX::offset_pc can be used to modify this value.
 			 */
 #		endif // #ifndef IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION
-#		ifndef IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
-			/** \b mvBlueLYNX \b specific:
-			 *  Changing its value will have no effect if \b mvIMPACT::acquire::CameraSettingsBlueLYNX::offsetAutoCalibration is set to
-			 *  \b mvIMPACT::acquire::aocOn.
-			 */
-#		endif // #ifndef IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
 			/**
 			 *  \image html Offset_pc.png
 			 *  The valid range for this property lies between -100% and +100%, whereas negative values
@@ -15873,122 +15890,7 @@ PYTHON_ONLY(ENUM_PROPERTY(PropertyITriggerMoment, EnumPropertyI, mvIMPACT::acqui
 			PropertyI getFrameDelay_us( void ) const { return frameDelay_us; }
 #		endif // #ifdef DOTNET_ONLY_CODE
 		};
-#	endif // #if !defined(IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION)
-
-#	ifndef IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
-		//-----------------------------------------------------------------------------
-		/// \brief \b mvBlueLYNX related camera settings(\b Device specific interface layout only).
-		/**
-		 *  This class contains properties to control the way the image sensor of the
-		 *  \b mvBlueLYNX behaves.
-		 * 
-		 *  \note This class will only be available if \b mvIMPACT::acquire::Device::interfaceLayout is set to
-		 *  \b mvIMPACT::acquire::dilDeviceSpecific before the device is opened.
-		 */
-		class CameraSettingsBlueLYNX : public CameraSettingsBlueDevice
-		//-----------------------------------------------------------------------------
-		{
-		public:
-			/// \brief Constructs a new instance of \b mvIMPACT::acquire::CameraSettingsBlueLYNX.
-			explicit CameraSettingsBlueLYNX( /// [in] A pointer to a \b mvIMPACT::acquire::Device object obtained from a \b mvIMPACT::acquire::DeviceManager object.
-											Device* pDev,
-											/// [in] The name of the driver internal setting to access with this instance.
-											/// A list of valid setting names can be obtained by a call to
-											/// \b mvIMPACT::acquire::FunctionInterface::getAvailableSettings, new
-											/// settings can be created with the function
-											/// \b mvIMPACT::acquire::FunctionInterface::createSetting
-											const std::string& settingName = "Base" ) : CameraSettingsBlueDevice(pDev, settingName),
-											  offsetAutoCalibration(), lineDelay_clk(),
-											  flashMode(), flashOutputMask(), dataClipMode(), preFlashMode(), flashTime_lines(),
-											  preExposeErase(), inputThreshold_mV()
-			{
-				ComponentLocator locator(m_hRoot);
-				locator.bindComponent( offsetAutoCalibration, "OffsetAutoCalibration" );
-				locator.bindComponent( lineDelay_clk, "LineDelay_clk" );
-				locator.bindComponent( flashMode, "FlashMode" );
-				locator.bindComponent( flashOutputMask, "FlashOutputMask" );
-				locator.bindComponent( dataClipMode, "DataClipMode" );
-				locator.bindComponent( preFlashMode, "PreFlashMode" );
-				locator.bindComponent( flashTime_lines, "FlashTime_lines" );
-				locator.bindComponent( preExposeErase, "PreExposeErase" );
-				locator.bindComponent( inputThreshold_mV, "InputThreshold_mV" );
-			}
-		PYTHON_ONLY(%immutable;)
-			/// \brief An enumerated integer property defining the offset calibration mode.
-			/**
-			 *  If this property is set to \b mvIMPACT::acquire::aocOff
-			 *  the offset can be adjusted manually by modifying the \b mvIMPACT::acquire::CameraSettingsBlueLYNX::offset_pc property.
-			 * 
-			 *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TAutoOffsetCalibration.
-			 */
-			PropertyIAutoOffsetCalibration offsetAutoCalibration;
-			/// \brief An integer property defining the delay in clocks between two lines.
-			/**
-			 *  Can be used to slow down the image readout the reduce the peak bandwidth required
-			 *  for the transfer.
-			 */
-			PropertyI lineDelay_clk;
-			/// \brief An enumerated integer property defining the behaviour of the flash output of the camera (if available).
-			/**
-			 *  If this property is set the cameras flash output (if available) will be pulsed
-			 *  during the exposure period of the sensor. In that case the pulse width will be equal
-			 *  to the exposure time.
-			 * 
-			 *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBlueLYNXCameraFlashMode.
-			 */
-			PropertyIBlueLYNXCameraFlashMode flashMode;
-			/// \brief An integer property defining flash output mask.
-			/**
-			 *  If this property can be set specified for \b mvIMPACT::acquire::blcfmSoftware.
-			 */
-			PropertyI flashOutputMask;
-			/// \brief An enumerated integer property defining the behaviour of the sensor video data.
-			/**
-			 *  If this property is set to \b TBlueLYNXCameraDataClipMode::blcdcmOn the video data
-			 *  will be clipped to \b 247, leaves room to draw overlay with color information.
-			 * 
-			 *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBlueLYNXCameraDataClipMode.
-			 */
-			PropertyIBlueLYNXCameraDataClipMode dataClipMode;
-			/// \brief An integer property defining the delay if the flash to exposure.
-			/**
-			 *  If this property is \b 0 (\a "e.g. set to n") the flash starts \b n lines prior to exposure.
-			 */
-			PropertyI preFlashMode;
-			/// \brief An integer property defining the flash time in lines.
-			/**
-			 *  If this property is \b 0 (\a "auto mode") the flash signal is on during the pre-flash
-			 *  and exposure of sensor. By setting the property to a value \b >0 == n the flash signal is on
-			 *  for \b n lines while the pre-flash is active.
-			 */
-			PropertyI flashTime_lines;
-			/// \brief An integer property defining a pre exposure erasure.
-			/**
-			 *  If this property is \b 0 no erase takes place between trigger signal and the expose.
-			 *  For a value \b >0 == n the sensor performs \b n erase cycles.
-			 */
-			PropertyI preExposeErase;
-			/// \brief An integer property defining the input switching threshold for the digital inputs in \b mV resolution.
-			/**
-			 *  The range is \a "(1..16V)", if the threshold is outside this range it will be clipped silently
-			 *  to legal values. This level determines at which voltage a logical \b 1 or \b 0 is recognised.
-			 *  \note There is an hysteresis of \b +/-0.5V at the digital inputs.
-			 */
-			PropertyI inputThreshold_mV;
-		PYTHON_ONLY(%mutable;)
-#		ifdef DOTNET_ONLY_CODE
-			PropertyIAutoOffsetCalibration getOffsetAutoCalibration( void ) const { return offsetAutoCalibration; }
-			PropertyI getLineDelay_clk( void ) const { return lineDelay_clk; }
-			PropertyIBlueLYNXCameraFlashMode getFlashMode( void ) const { return flashMode; }
-			PropertyI getFlashOutputMask( void ) const { return flashOutputMask; }
-			PropertyIBlueLYNXCameraDataClipMode getDataClipMode( void ) const { return dataClipMode; }
-			PropertyI getPreFlashMode( void ) const { return preFlashMode; }
-			PropertyI getFlashTime_lines( void ) const { return flashTime_lines; }
-			PropertyI getPreExposeErase( void ) const { return preExposeErase; }
-			PropertyI getInputThreshold_mV( void ) const { return inputThreshold_mV; }
-#		endif // #ifdef DOTNET_ONLY_CODE
-		};
-#	endif // #ifndef IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
+#	endif // #if !defined(IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION)
 
 #	if !defined(IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION) || !defined(IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION)
 		//-----------------------------------------------------------------------------
@@ -16892,7 +16794,7 @@ PYTHON_ONLY(ENUM_PROPERTY(PropertyITriggerMoment, EnumPropertyI, mvIMPACT::acqui
 		 *  using namespace std;
 		 * 
 		 *  //-----------------------------------------------------------------------------
-		 *  int main(int argc, char* argv[])
+		 *  int main( int argc, char* argv[] )
 		 *  //-----------------------------------------------------------------------------
 		 *  {
 		 *    mvIMPACT::acquire::DeviceManager devMgr;
@@ -17526,7 +17428,7 @@ PYTHON_ONLY(ENUM_PROPERTY(PropertyITriggerMoment, EnumPropertyI, mvIMPACT::acqui
 		 * 
 		 *  //-----------------------------------------------------------------------------
 		 *  // lists all available camera descriptions for a certain device
-		 *  int main(int argc, char* argv[])
+		 *  int main( int argc, char* argv[] )
 		 *  //-----------------------------------------------------------------------------
 		 *  {
 		 *    DeviceManager devMgr;
@@ -18133,7 +18035,7 @@ PYTHON_ONLY(ENUM_PROPERTY(PropertyITriggerMoment, EnumPropertyI, mvIMPACT::acqui
 			PropertyI I2CDeviceSubAddressWidth;
 			/// \brief An integer property storing the sub-address of the I2C device to communicate with.
 			/**
-			 *  When <b>mvIMPACT::acquire::I2CControl::I2CDeviceSubAddressWidth</b> is set to 0, this property will be ignored.
+			 *  When \b mvIMPACT::acquire::I2CControl::I2CDeviceSubAddressWidth is set to 0, this property will be ignored.
 			 */
 			PropertyI I2CDeviceSubAddress;
 			/// \brief Defines the intermediate access buffer that allows the exchange of data between the I2C device and the application.

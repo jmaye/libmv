@@ -15,7 +15,7 @@ class ObjectFactory
 public:
 	bool Register( const _IDENTIFIER& id, _CREATOR creator )
 	{
-		return callbacks_.insert( make_pair( id, creator ) ).second;
+		return callbacks_.insert( std::make_pair( id, creator ) ).second;
 	}
 	bool Unregister( const _IDENTIFIER& id )
 	{

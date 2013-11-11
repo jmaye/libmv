@@ -27,21 +27,12 @@
 #			define IGNORE_MVBLUECOUGARS_SPECIFIC_DOCUMENTATION
 #		endif
 #		define IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION
-#		define IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVBLUELYNXX_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVGRABBER_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVV4L2_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVVIRTUALDEVICE_SPECIFIC_DOCUMENTATION
 #	elif defined(BUILD_MVBLUEFOX_DOCUMENTATION)
 #		define IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION
-#		define IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
-#		define IGNORE_MVBLUELYNXX_SPECIFIC_DOCUMENTATION
-#		define IGNORE_MVGRABBER_SPECIFIC_DOCUMENTATION
-#		define IGNORE_MVV4L2_SPECIFIC_DOCUMENTATION
-#		define IGNORE_MVVIRTUALDEVICE_SPECIFIC_DOCUMENTATION
-#	elif defined(BUILD_MVBLUELYNX_DOCUMENTATION)
-#		define IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION
-#		define IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVBLUELYNXX_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVGRABBER_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVV4L2_SPECIFIC_DOCUMENTATION
@@ -50,28 +41,24 @@
 #		define IGNORE_MVDEVICE_SPECIFIC_INTERFACE_DOCUMENTATION
 #		define IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION
-#		define IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVGRABBER_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVV4L2_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVVIRTUALDEVICE_SPECIFIC_DOCUMENTATION
 #	elif defined(BUILD_MVGRABBER_DOCUMENTATION)
 #		define IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION
-#		define IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVBLUELYNXX_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVV4L2_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVVIRTUALDEVICE_SPECIFIC_DOCUMENTATION
 #	elif defined(BUILD_MVVIRTUALDEVICE_DOCUMENTATION)
 #		define IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION
-#		define IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVBLUELYNXX_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVGRABBER_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVV4L2_SPECIFIC_DOCUMENTATION
 #	elif defined(BUILD_MVV4L2_DOCUMENTATION)
 #		define IGNORE_MVBLUECOUGAR_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION
-#		define IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVBLUELYNXX_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVGRABBER_SPECIFIC_DOCUMENTATION
 #		define IGNORE_MVVIRTUALDEVICE_SPECIFIC_DOCUMENTATION
@@ -518,41 +505,6 @@ enum TBayerWhiteBalanceResult
 		bfts2048KB = 2048*1024
 	};
 #endif // #ifndef IGNORE_MVBLUEFOX_SPECIFIC_DOCUMENTATION
-
-#ifndef IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
-	//-----------------------------------------------------------------------------
-	/// \brief Defines the pixel data clip mode on the <b>mvBlueLYNX</b> cameras.
-	/// \ingroup DeviceSpecificInterface
-	enum TBlueLYNXCameraDataClipMode
-	//-----------------------------------------------------------------------------
-	{
-		/// \brief Disable the <i>data clip</i> mode.
-		/**
-		 *  All pixel values <b>[0-255]</b> will be returned in the image.
-		 */
-		blcdcmOff = 0,
-		/// \brief Enable the <i>data clip</i> mode.
-		/**
-		 *  The image pixel values will be clipped to <b>247</b>. The other values
-		 *  <b>[248-255]</b> can be used for color display.
-		 */
-		blcdcmOn = 1
-	};
-
-	//-----------------------------------------------------------------------------
-	/// \brief Defines the flash mode on the <b>mvBlueLYNX</b> cameras.
-	/// \ingroup DeviceSpecificInterface
-	enum TBlueLYNXCameraFlashMode
-	//-----------------------------------------------------------------------------
-	{
-		/// \brief Disable the <i>flash</i>.
-		blcfmOff = 0,
-		/// \brief Enable the <i>flash</i>.
-		blcfmOn = 1,
-		/// \brief Enable the special mode: <i>software flash</i>.
-		blcfmSoftware = 2
-	};
-#endif // IGNORE_MVBLUELYNX_SPECIFIC_DOCUMENTATION
 
 //-----------------------------------------------------------------------------
 /// \brief Defines a Boolean value type.
@@ -1590,9 +1542,9 @@ enum TDarkCurrentFilterMode
 	dcfmOn,
 	/// \brief The next selected number of images will be taken for calculating the dark current correction image.
 	/**
-	*  In this mode after the correction image has been calculated the mode will automatically switch back to
-	*  <b>mvIMPACT::acquire::dcfmOff</b>
-	*/
+	 *  In this mode after the correction image has been calculated the mode will automatically switch back to
+	 *  <b>mvIMPACT::acquire::dcfmOff</b>
+	 */
 	dcfmCalibrateDarkCurrent,
 	/// \brief In this mode whenever reaching this filter, the captured image will be replaced by the
 	/// last correction image, that has been created as a result of the filter being calibrated.
@@ -2402,7 +2354,7 @@ enum TDMR_ERROR // no_property_type
 	 *  a short timeout and a long exposure time).
 	 *  - a triggered image has been requested but no trigger signal has been detected within the
 	 *  wait period.
-	 *  - a plug and play device(e.g. an USB device) has been unplugged an therefore can't deliver
+	 *  - a plug and play device(e.g. an USB device) has been unplugged and therefore can't deliver
 	 *  images anymore. In this case the \a 'state' property should be checked to find out if the
 	 *  device is still present or not.
 	 */
@@ -2953,9 +2905,9 @@ enum TImageBufferPixelFormat
 	 *    int offset = (3*pixel)/2;
 	 *    if( pixel % 2 )
 	 *    {
-	 *      return static_cast<unsigned short>(pBuffer[offset+1] << shift) | static_cast<unsigned short>(pBuffer[offset] & 0xF);
+	 *      return static_cast<unsigned short>(pBuffer[offset+1] << shift) | static_cast<unsigned short>(pBuffer[offset] >> 4);
 	 *    }
-	 *    return static_cast<unsigned short>(pBuffer[offset] << shift) | static_cast<unsigned short>(pBuffer[offset+1] >> 4);
+	 *    return static_cast<unsigned short>(pBuffer[offset] << shift) | static_cast<unsigned short>(pBuffer[offset+1] & 0xF);
 	 *  }
 	 * \endcode
 	 */
@@ -3416,9 +3368,9 @@ enum TImageDestinationPixelFormat
 	 *    int offset = (3*pixel)/2;
 	 *    if( pixel % 2 )
 	 *    {
-	 *      return static_cast<unsigned short>(pBuffer[offset+1] << shift) | static_cast<unsigned short>(pBuffer[offset] & 0xF);
+	 *      return static_cast<unsigned short>(pBuffer[offset+1] << shift) | static_cast<unsigned short>(pBuffer[offset] >> 4);
 	 *    }
-	 *    return static_cast<unsigned short>(pBuffer[offset] << shift) | static_cast<unsigned short>(pBuffer[offset+1] >> 4);
+	 *    return static_cast<unsigned short>(pBuffer[offset] << shift) | static_cast<unsigned short>(pBuffer[offset+1] & 0xF);
 	 *  }
 	 * \endcode
 	 */
@@ -4158,7 +4110,7 @@ enum TRequestResult // uint_type
 	/**
 	 *  This error code will occur if a request has been sent to a device that does not
 	 *  support the acquisition of data. This can e.g. be the case
-	 *
+	 * 
 	 *  - for GEV or U3V devices that do \b NOT support at least 1 streaming channel
 	 *  - for U3V devices that have been opened with <b>mvIMPACT::acquire::damRead</b> access
 	 */
@@ -4585,8 +4537,6 @@ enum TWhiteBalanceParameter
 	typedef enum TBlueFOXOffsetAutoBlackSpeed TBlueFOXOffsetAutoBlackSpeed;
 	typedef enum TBlueFOXSensorTiming TBlueFOXSensorTiming;
 	typedef enum TBlueFOXTransferSize TBlueFOXTransferSize;
-	typedef enum TBlueLYNXCameraDataClipMode TBlueLYNXCameraDataClipMode;
-	typedef enum TBlueLYNXCameraFlashMode TBlueLYNXCameraFlashMode;
 	typedef enum TBoolean TBoolean;
 	typedef enum TCameraAoiMode TCameraAoiMode;
 	typedef enum TCameraBinningMode TCameraBinningMode;

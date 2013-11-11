@@ -186,8 +186,8 @@ struct DetectedDeviceInfo
 		{
 		case pisNotChecked:     return "Not Checked";
 		case pisNone:           return "None";
-		case pisCannotAccess:   return "Cannot Access Device (In Use By Another Process?)";
-		case pisIssuesDetected: return "Issues Detected (right-click For Details)";
+		case pisCannotAccess:   return "Cannot Access Device (Incorrect Network Setup (Device Or Host) Or In Use By Another Process?)";
+		case pisIssuesDetected: return "Issues Detected (Right-Click For Details)";
 		}
 		return "Unknown Status";
 	}

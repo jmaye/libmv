@@ -122,7 +122,7 @@ void ImageCanvas::BlitAOIs( wxPaintDC& dc, double scaleFactor, int bmpXOff, int 
 }
 
 //-----------------------------------------------------------------------------
-/// Strings containing \a _PVDI_ (PropView Display Info) are treated differently.
+/// Strings containing \a _PVDI_ (wxPropView Display Info) are treated differently.
 ///
 /// These strings can be used to blit special information on top of the image.
 /// Supported things are strings rectangles and ellipse overlays.
