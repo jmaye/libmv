@@ -36,9 +36,9 @@ public:
 		const int offset = pixel + pixel/2;
 		if( pixel % 2 )
 		{
-			return static_cast<unsigned short>(pBuffer[offset] & 0x0F) << 8 | static_cast<unsigned short>(pBuffer[offset+1]);
+			return static_cast<unsigned short>(pBuffer[offset] >> 4) | static_cast<unsigned short>(pBuffer[offset+1] << 4);
 		}
-		return static_cast<unsigned short>(pBuffer[offset]) << 4 | static_cast<unsigned short>(pBuffer[offset+1] >> 4);
+		return static_cast<unsigned short>(pBuffer[offset]) | static_cast<unsigned short>((pBuffer[offset+1] & 0xF) << 8);
 	}
 	//-----------------------------------------------------------------------------
 	static unsigned short GetMonoPacked_V2Pixel( const unsigned char* const pBuffer, int pixel, int shift )

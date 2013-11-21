@@ -923,10 +923,6 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
 		WriteLogMessage( wxT("\n") );
 	}
 
-#ifdef BUILD_WITH_PLUGIN_SUPPORT
-	WriteLogMessage( wxString::Format( wxT("Deteced plugins: %d.\n"), m_pluginManager.getCount() ), style );
-#endif // #ifdef BUILD_WITH_PLUGIN_SUPPORT
-
 	m_pDevPropHandler = new DevicePropertyHandler(pPGDriver, pPGDevice, boDisplayDebugInfo, boDisplayFullTree, boDisplayInvisibleComponents);
 	switch( m_ViewMode )
 	{
@@ -3511,6 +3507,7 @@ void PropViewFrame::OnSetupHardDiscRecording( wxCommandEvent& )
 		m_HardDiscRecordingParameters.boActive_ = false;
 		return;
 	}
+	WriteLogMessage( wxString::Format( wxT("Hard disc recording enabled with file format '%s'.\n"), dlgFileFormat.GetStringSelection().c_str() ) );
 	m_HardDiscRecordingParameters.fileFormat_ = static_cast<TFileFormat>(dlgFileFormat.GetSelection());
 }
 
@@ -4658,9 +4655,6 @@ void PropViewFrame::UpdateData( const bool boShowInfo /* = false */, bool const 
 	}
 	if( p && p->vpData )
 	{
-#ifdef BUILD_WITH_PLUGIN_SUPPORT
-		m_pluginManager.forwardImage( p );
-#endif // #ifdef BUILD_WITH_PLUGIN_SUPPORT
 		if( m_HardDiscRecordingParameters.boActive_ )
 		{
 			wxFileName filename(m_HardDiscRecordingParameters.targetDirectory_, wxString::Format( wxT("IMG"MY_FMT_I64_0_PADDED""), m_CurrentRequestDataContainer[index].requestInfo_.frameNr ));
@@ -4804,9 +4798,6 @@ void PropViewFrame::UpdateDeviceFromComboBox( void )
 	m_pMonitorImage->GetDisplayArea()->SetImage( p );
 	if( p && p->vpData )
 	{
-#ifdef BUILD_WITH_PLUGIN_SUPPORT
-		m_pluginManager.forwardImage( p );
-#endif // #ifdef BUILD_WITH_PLUGIN_SUPPORT
 		if( m_CurrentImageAnalysisControlIndex >= 0 )
 		{
 			ConfigureAOIControlLimits( m_ImageAnalysisPlots[m_CurrentImageAnalysisControlIndex] );

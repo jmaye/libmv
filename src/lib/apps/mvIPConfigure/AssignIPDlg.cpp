@@ -80,7 +80,7 @@ AssignIPDlg::AssignIPDlg( IPConfigureFrame* pParent, MVTLI_HANDLE hTL, const wxS
 	pGroupBoxSizer->Add( pEditElementsGridSizer, wxSizerFlags().Align( wxGROW ) );
 	// row 5
 	pEditElementsGridSizer->Add( new wxStaticText(pPanel, wxID_ANY, wxT("Local IP To Use For Sending:")), wxSizerFlags().Left().Center() );
-	pCBAdapterList_ = new wxComboBox(pPanel, widAdapterList, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, wxCB_DROPDOWN);
+	pCBAdapterList_ = new wxComboBox(pPanel, widAdapterList, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, wxCB_DROPDOWN | wxCB_READONLY);
 	pEditElementsGridSizer->Add( pCBAdapterList_, wxSizerFlags(2).Align( wxGROW | wxALIGN_CENTER_VERTICAL ) );
 
 	const InterfaceContainer& interfaces(pParent->GetInterfaces());

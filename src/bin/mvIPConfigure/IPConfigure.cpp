@@ -303,7 +303,7 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 	pCurrentIPElementsGridSizer->Add( m_pSTMACAddress, wxSizerFlags(2).Align( wxGROW | wxALIGN_CENTER_VERTICAL ) );
 	// row 5
 	pCurrentIPElementsGridSizer->Add( new wxStaticText(pControlsPanel, wxID_ANY, wxT("Connected To IPv4 Address: ")), wxSizerFlags().Left() );
-	m_pCBConnectedToIPAddress = new wxComboBox(pControlsPanel, widConnectedToIPAddress, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, wxCB_DROPDOWN);
+	m_pCBConnectedToIPAddress = new wxComboBox(pControlsPanel, widConnectedToIPAddress, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, wxCB_DROPDOWN | wxCB_READONLY);
 	m_pCBConnectedToIPAddress->Append( wxT("-") );
 	m_pCBConnectedToIPAddress->Select( 0 );
 	pCurrentIPElementsGridSizer->Add( m_pCBConnectedToIPAddress, wxSizerFlags(2).Align( wxGROW | wxALIGN_CENTER_VERTICAL ) );

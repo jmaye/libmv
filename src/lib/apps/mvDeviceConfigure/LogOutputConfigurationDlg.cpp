@@ -99,7 +99,7 @@ LogWriterConfigurationDlg::LogWriterConfigurationDlg( wxWindow* pParent, LogOutp
 
 	wxBoxSizer* pLeftRightFileFormatSizer = new wxBoxSizer( wxHORIZONTAL );
 	pLeftRightFileFormatSizer->Add( new wxStaticText( pPanel, wxID_ANY, wxT("File Format: ") ), wxSizerFlags().Left().Center() );
-	m_pCOMFileFormat = new wxComboBox( pPanel, widCOMFileFormat, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_DROPDOWN );
+	m_pCOMFileFormat = new wxComboBox( pPanel, widCOMFileFormat, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_DROPDOWN | wxCB_READONLY );
 	m_pCOMFileFormat->Append( FileFormatToString( lffText ) );
 	m_pCOMFileFormat->Append( FileFormatToString( lffXML ) );
 	m_pCOMFileFormat->Append( FileFormatToString( lffMVLOG ) );

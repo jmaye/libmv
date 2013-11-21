@@ -3090,7 +3090,7 @@ enum TImageBufferPixelFormat
 	 * 
 	 * \code
 	 *  3 bytes                                               3 bytes                                               etc.
-	 *  bits 11..4(1) bits 3..0(1) bits 11..8(2) bits 7..0(2) bits 11..4(3) bits 3..0(3) bits 11..8(4) bits 7..0(4) etc.
+	 *  bits 0..7(1) bits 8..11(1) bits 0..3(2) bits 4..11(2) bits 0..7(3) bits 8..11(3) bits 0..3(4) bits 4..11(4) etc.
 	 * \endcode
 	 * 
 	 *  \note
@@ -3105,9 +3105,9 @@ enum TImageBufferPixelFormat
 	 *    const int offset = pixel + pixel/2;
 	 *    if( pixel % 2 )
 	 *    {
-	 *      return static_cast<unsigned short>(pBuffer[offset] & 0x0F) << 8 | static_cast<unsigned short>(pBuffer[offset+1]);
+	 *      return static_cast<unsigned short>(pBuffer[offset] >> 4) | static_cast<unsigned short>(pBuffer[offset+1] << 4);
 	 *    }
-	 *    return static_cast<unsigned short>(pBuffer[offset]) << 4 | static_cast<unsigned short>(pBuffer[offset+1] >> 4);
+	 *    return static_cast<unsigned short>(pBuffer[offset]) | static_cast<unsigned short>((pBuffer[offset+1] & 0xF) << 8);
 	 *  }
 	 * \endcode
 	 */
@@ -3553,7 +3553,7 @@ enum TImageDestinationPixelFormat
 	 * 
 	 * \code
 	 *  3 bytes                                               3 bytes                                               etc.
-	 *  bits 11..4(1) bits 3..0(1) bits 11..8(2) bits 7..0(2) bits 11..4(3) bits 3..0(3) bits 11..8(4) bits 7..0(4) etc.
+	 *  bits 0..7(1) bits 8..11(1) bits 0..3(2) bits 4..11(2) bits 0..7(3) bits 8..11(3) bits 0..3(4) bits 4..11(4) etc.
 	 * \endcode
 	 * 
 	 *  \note
@@ -3568,9 +3568,9 @@ enum TImageDestinationPixelFormat
 	 *    const int offset = pixel + pixel/2;
 	 *    if( pixel % 2 )
 	 *    {
-	 *      return static_cast<unsigned short>(pBuffer[offset] & 0x0F) << 8 | static_cast<unsigned short>(pBuffer[offset+1]);
+	 *      return static_cast<unsigned short>(pBuffer[offset] >> 4) | static_cast<unsigned short>(pBuffer[offset+1] << 4);
 	 *    }
-	 *    return static_cast<unsigned short>(pBuffer[offset]) << 4 | static_cast<unsigned short>(pBuffer[offset+1] >> 4);
+	 *    return static_cast<unsigned short>(pBuffer[offset]) | static_cast<unsigned short>((pBuffer[offset+1] & 0xF) << 8);
 	 *  }
 	 * \endcode
 	 */

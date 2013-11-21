@@ -7,9 +7,6 @@
 #include "HistogramCanvas.h"
 #include "ImageAnalysisPlotControls.h"
 #include "PlotCanvasInfo.h"
-#ifdef BUILD_WITH_PLUGIN_SUPPORT
-#	include <mvPluginManager/Include/mvPluginManager.h>
-#endif // #ifdef BUILD_WITH_PLUGIN_SUPPORT
 #include "PropGridFrameBase.h"
 #include "PropViewCallback.h"
 #include <set>
@@ -404,9 +401,6 @@ private:
 	wxTextCtrl*							m_pLogWindow;
 	wxNotebook*							m_pLowerRightWindow;
 	wxNotebook*							m_pNBPropertyGrids;
-#ifdef BUILD_WITH_PLUGIN_SUPPORT
-	PluginManager						m_pluginManager;
-#endif // #ifdef BUILD_WITH_PLUGIN_SUPPORT
 	wxMenuItem*							m_pMIAction_AutomaticallyReconnectToUnusedDevices;
 	wxMenuItem*							m_pMIAction_Use;
 	wxMenuItem*							m_pMIAction_DisplayConnectedDevicesOnly;
