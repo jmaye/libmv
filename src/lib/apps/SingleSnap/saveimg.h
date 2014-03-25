@@ -6,9 +6,9 @@
 //--------------------------------------------------------------------------
 //--------------------------------------------------------------------------
 int writeFile( const unsigned char* pData, const unsigned long ulWidth, const unsigned long ulHeight,
-					const unsigned long ulPitch, unsigned int uiBypp, const char* pFileName );
+               const unsigned long ulPitch, unsigned int uiBypp, const char* pFileName );
 
 //--------------------------------------------------------------------------
 //--------------------------------------------------------------------------
-#endif	//__saveimg_h__
+#endif  //__saveimg_h__
 

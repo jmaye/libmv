@@ -9,7 +9,7 @@ class IPv4StringValidator : public wxTextValidator
 //-----------------------------------------------------------------------------
 {
 public:
-	IPv4StringValidator( wxString* valPtr = NULL );
+    IPv4StringValidator( wxString* valPtr = NULL );
 };
 
 //-----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ class MACStringValidator : public wxTextValidator
 //-----------------------------------------------------------------------------
 {
 public:
-	MACStringValidator( wxString* valPtr = NULL );
+    MACStringValidator( wxString* valPtr = NULL );
 };
 
 #endif // CustomValidatorsH

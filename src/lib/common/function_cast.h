@@ -47,8 +47,8 @@ template<typename OutputPtr>
 union function_cast
 //-----------------------------------------------------------------------------
 {
-	void* pI;
-	OutputPtr pO;
+    void* pI;
+    OutputPtr pO;
 };
 
 #endif // function_castH

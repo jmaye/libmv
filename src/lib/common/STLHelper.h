@@ -16,7 +16,7 @@ template<class _Ty1, class _Ty2>
 const _Ty1& GetFirst( const std::pair<_Ty1, _Ty2>& data )
 //-----------------------------------------------------------------------------
 {
-	return data.first;
+    return data.first;
 }
 
 //-----------------------------------------------------------------------------
@@ -24,7 +24,7 @@ template<class _Ty1, class _Ty2>
 const _Ty2& GetSecond( const std::pair<_Ty1, _Ty2>& data )
 //-----------------------------------------------------------------------------
 {
-	return data.second;
+    return data.second;
 }
 
 //-----------------------------------------------------------------------------
@@ -32,8 +32,8 @@ template<class _Ty1, class _Ty2>
 void DeleteFirst( std::pair<_Ty1, _Ty2>& data )
 //-----------------------------------------------------------------------------
 {
-	delete data.first;
-	data.first = 0;
+    delete data.first;
+    data.first = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -41,8 +41,8 @@ template<class _Ty1, class _Ty2>
 void DeleteSecond( std::pair<_Ty1, _Ty2>& data )
 //-----------------------------------------------------------------------------
 {
-	delete data.second;
-	data.second = 0;
+    delete data.second;
+    data.second = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -50,10 +50,13 @@ template<class _Ty1, class _Ty2>
 class ContainsFirst : public std::unary_function<std::pair<_Ty1, _Ty2>, bool>
 //-----------------------------------------------------------------------------
 {
-	std::map<_Ty1, _Ty2> m_;
+    std::map<_Ty1, _Ty2> m_;
 public:
-	explicit ContainsFirst( const std::map<_Ty1, _Ty2>& m ) : m_(m) {}
-	bool operator()( const std::pair<_Ty1, _Ty2>& x ) { return m_.find( x.first ) != m_.end(); }
+    explicit ContainsFirst( const std::map<_Ty1, _Ty2>& m ) : m_( m ) {}
+    bool operator()( const std::pair<_Ty1, _Ty2>& x )
+    {
+        return m_.find( x.first ) != m_.end();
+    }
 };
 
 //-----------------------------------------------------------------------------
@@ -61,11 +64,14 @@ template<class _Ty1, class _Ty2>
 class FirstMatches : public std::unary_function<std::pair<_Ty1, _Ty2>, bool>
 //-----------------------------------------------------------------------------
 {
-	std::pair<_Ty1, _Ty2> value_;
-	FirstMatches<_Ty1, _Ty2>& operator=( const FirstMatches<_Ty1, _Ty2>& );	// do not allow assignments
+    std::pair<_Ty1, _Ty2> value_;
+    FirstMatches<_Ty1, _Ty2>& operator=( const FirstMatches<_Ty1, _Ty2>& ); // do not allow assignments
 public:
-	explicit FirstMatches( const std::pair<_Ty1, _Ty2>& val ) : value_(val) {}
-	bool operator()( const std::pair<_Ty1, _Ty2>& x ) { return x.first == value_.first; }
+    explicit FirstMatches( const std::pair<_Ty1, _Ty2>& val ) : value_( val ) {}
+    bool operator()( const std::pair<_Ty1, _Ty2>& x )
+    {
+        return x.first == value_.first;
+    }
 };
 
 //-----------------------------------------------------------------------------
@@ -73,11 +79,14 @@ template<class _Ty1, class _Ty2>
 class SecondMatches : public std::unary_function<std::pair<_Ty1, _Ty2>, bool>
 //-----------------------------------------------------------------------------
 {
-	std::pair<_Ty1, _Ty2> value_;
-	SecondMatches<_Ty1, _Ty2>& operator=( const SecondMatches<_Ty1, _Ty2>& );	// do not allow assignments
+    std::pair<_Ty1, _Ty2> value_;
+    SecondMatches<_Ty1, _Ty2>& operator=( const SecondMatches<_Ty1, _Ty2>& );   // do not allow assignments
 public:
-	explicit SecondMatches( const std::pair<_Ty1, _Ty2>& val ) : value_(val) {}
-	bool operator()( const std::pair<_Ty1, _Ty2>& x ) { return x.second == value_.second; }
+    explicit SecondMatches( const std::pair<_Ty1, _Ty2>& val ) : value_( val ) {}
+    bool operator()( const std::pair<_Ty1, _Ty2>& x )
+    {
+        return x.second == value_.second;
+    }
 };
 
 //-----------------------------------------------------------------------------
@@ -85,17 +94,17 @@ template<typename _Ty1, typename _Ty2>
 bool SecondSmaller( const std::pair<_Ty1, _Ty2>& a, const std::pair<_Ty1, _Ty2>& b )
 //-----------------------------------------------------------------------------
 {
-	if( a.second < b.second )
-	{
-		return true;
-	}
+    if( a.second < b.second )
+    {
+        return true;
+    }
 
-	if( a.second > b.second )
-	{
-		return false;
-	}
+    if( a.second > b.second )
+    {
+        return false;
+    }
 
-	return ( a.first < b.first );
+    return ( a.first < b.first );
 }
 
 //=============================================================================
@@ -106,8 +115,8 @@ template<class _Ty>
 void DeleteElement( _Ty& data )
 //-----------------------------------------------------------------------------
 {
-	delete data;
-	data = 0;
+    delete data;
+    data = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -115,8 +124,8 @@ template<class _Ty>
 void DeleteArrayElement( _Ty& data )
 //-----------------------------------------------------------------------------
 {
-	delete [] data;
-	data = 0;
+    delete [] data;
+    data = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -129,14 +138,14 @@ template<class _Ty>
 void ClearSetWithHeapAllocatedKeys( std::set<_Ty>& s )
 //-----------------------------------------------------------------------------
 {
-	typename std::set<_Ty>::iterator it = s.begin();
-	typename std::set<_Ty>::iterator itEnd = s.end();
-	while( it != itEnd )
-	{
-		delete *it;
-		++it;
-	}
-	s.clear();
+    typename std::set<_Ty>::iterator it = s.begin();
+    typename std::set<_Ty>::iterator itEnd = s.end();
+    while( it != itEnd )
+    {
+        delete *it;
+        ++it;
+    }
+    s.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -144,29 +153,38 @@ template<class T>
 class Sum : public std::unary_function<T, void>
 //-----------------------------------------------------------------------------
 {
-	T result_;
+    T result_;
 public:
-	explicit Sum( T i = 0 ) : result_(i) {}
-	void operator()( T x ) { result_ += x; }
-	const T& result( void ) const { return result_; }
+    explicit Sum( T i = 0 ) : result_( i ) {}
+    void operator()( T x )
+    {
+        result_ += x;
+    }
+    const T& result( void ) const
+    {
+        return result_;
+    }
 };
 
 //-----------------------------------------------------------------------------
 /// \brief Assigns a new value to a variable when this objects goes out of scope.
 ///
-/// Can be useful if a variable must be set to a defined value at the end of a 
+/// Can be useful if a variable must be set to a defined value at the end of a
 /// code block that might rise an exception.
 template<class T>
 class VarScopeMod
 //-----------------------------------------------------------------------------
 {
-	T& var_;
-	T newVal_;
-	VarScopeMod( const VarScopeMod& );				// do not allow copy constructor
-	VarScopeMod& operator=( const VarScopeMod& );	// do not allow assignments
+    T& var_;
+    T newVal_;
+    VarScopeMod( const VarScopeMod& );              // do not allow copy constructor
+    VarScopeMod& operator=( const VarScopeMod& );   // do not allow assignments
 public:
-	VarScopeMod( T& var, T newVal ) : var_(var), newVal_(newVal) {}
-	~VarScopeMod() { var_ = newVal_; }
+    VarScopeMod( T& var, T newVal ) : var_( var ), newVal_( newVal ) {}
+    ~VarScopeMod()
+    {
+        var_ = newVal_;
+    }
 };
 
 //-----------------------------------------------------------------------------
@@ -174,9 +192,9 @@ template<class T>
 void removeDuplicates( T& container )
 //-----------------------------------------------------------------------------
 {
-	std::sort( container.begin(), container.end() );
-	typename T::iterator it = std::unique( container.begin(), container.end() );
-	container.erase( it, container.end() );
+    std::sort( container.begin(), container.end() );
+    typename T::iterator it = std::unique( container.begin(), container.end() );
+    container.erase( it, container.end() );
 }
 
 #endif // STLHelperH

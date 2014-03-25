@@ -1,3 +1,9 @@
+libmv (2.6.3-31) precise; urgency=low
+
+  * upstream version 2.6.3
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Tue, 25 Mar 2014 13:09:13 +0100
+
 libmv (2.5.17-30) precise; urgency=low
 
   * iupstream version 2.5.17

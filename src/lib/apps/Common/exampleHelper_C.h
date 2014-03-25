@@ -4,13 +4,13 @@
 //-----------------------------------------------------------------------------
 #include <mvDeviceManager/Include/mvDeviceManager.h>
 
-#define END_APPLICATION										\
-	printf( "Press any key to end the application.\n" );	\
-	getchar();												\
-	return 0;												\
-
+#define END_APPLICATION                                     \
+    printf( "Press any key to end the application.\n" );    \
+    getchar();                                              \
+    return 0;                                               \
+     
 #ifdef linux
-    unsigned   waitForInput( int maxWait_sec, int fd );
+unsigned   waitForInput( int maxWait_sec, int fd );
 #endif // #ifdef linux
 
 int        getIntValFromSTDIn( void );

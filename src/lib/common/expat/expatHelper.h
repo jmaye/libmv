@@ -8,25 +8,32 @@
 
 //-----------------------------------------------------------------------------
 template<class _Ty>
-bool ParseXMLFromFile( CExpatImpl<_Ty>& parser, FILE* fp, const int bytesToProcessPerFileAccess = 256 )
+bool ParseXMLFromFile( CExpatImpl<_Ty>& parser, FILE* fp )
 //-----------------------------------------------------------------------------
 {
-	// Loop while there is data and processing so far went good
-	bool boSuccess = true;
-	while( !feof( fp ) && boSuccess )
-	{
-		char* pszBuffer = (char*)parser.GetBuffer( bytesToProcessPerFileAccess );
-		if( !pszBuffer )
-		{
-			boSuccess = false;
-		}
-		else
-		{
-			const size_t nLength = fread( pszBuffer, 1, bytesToProcessPerFileAccess, fp );
-			boSuccess = parser.ParseBuffer( static_cast<int>(nLength), nLength == 0 );
-		}
-	}
-	return boSuccess;
+    if( !fp )
+    {
+        return false;
+    }
+
+    fseek( fp, 0, SEEK_END );
+    const int fileSize = ftell( fp );
+    fseek( fp, 0, SEEK_SET );
+
+    if( fileSize <= 0 )
+    {
+        return false;
+    }
+
+    char* pszBuffer = reinterpret_cast<char*>( parser.GetBuffer( fileSize  + 1 ) );
+    if( !pszBuffer )
+    {
+        return false;
+    }
+
+    const size_t bytesRead = fread( pszBuffer, 1, fileSize, fp );
+    pszBuffer[bytesRead] = '\0'; // make this a well terminated string!
+    return parser.ParseBuffer( static_cast<int>( bytesRead ), true );
 }
 
 //-----------------------------------------------------------------------------
@@ -34,15 +41,15 @@ template<class _Ty>
 bool ParseXMLFromBuffer( CExpatImpl<_Ty>& parser, const char* pBuf, const size_t bufSize )
 //-----------------------------------------------------------------------------
 {
-	char* pszBuffer = static_cast<char*>(parser.GetBuffer( static_cast<int>(bufSize) + 1 ));
-	if( !pszBuffer )
-	{
-		return false;
-	}
+    char* pszBuffer = reinterpret_cast<char*>( parser.GetBuffer( static_cast<int>( bufSize ) + 1 ) );
+    if( !pszBuffer )
+    {
+        return false;
+    }
 
-	memcpy( pszBuffer, pBuf, bufSize );
-	pszBuffer[bufSize] = '\0'; // make this a well terminated string!
-	return parser.ParseBuffer( static_cast<int>(bufSize), true );
+    memcpy( pszBuffer, pBuf, bufSize );
+    pszBuffer[bufSize] = '\0'; // make this a well terminated string!
+    return parser.ParseBuffer( static_cast<int>( bufSize ), true );
 }
 
 #endif // expatHelperH
