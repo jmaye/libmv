@@ -350,7 +350,7 @@
 	<xs:complexType name="CategoryType">
 		<xs:annotation>
 			<xs:documentation xml:lang="en">
-        Contins references to features which are exposed to the user via API or GUI.
+        Contains references to features which are exposed to the user via API or GUI.
         Can be nested in any depth. 
       </xs:documentation>
 		</xs:annotation>

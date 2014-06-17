@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <apps/Common/wxAbstraction.h>
 #include "DebugFileParser.h"
+#include <functional>
 #include <map>
 
 using namespace std;

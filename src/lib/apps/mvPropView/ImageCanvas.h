@@ -6,6 +6,7 @@
 #include <map>
 #include <mvIMPACT_CPP/mvIMPACT_acquire.h>
 #include <vector>
+#include <wx/colordlg.h>
 #include <wx/dcclient.h>
 
 typedef std::map<const DrawingCanvas*, AOI*> AOIContainer;
@@ -132,6 +133,7 @@ private:
         miPopUpScalerMode_Cubic,
         miPopUpSetShiftValue,
         miPopUpShowRequestInfoOverlay,
+        miPopUpSelectRequestInfoOverlayColor,
         miPopUpShowPerformanceWarnings,
         miPopUpShowImageModificationsWarning
     };
@@ -144,6 +146,7 @@ private:
     const PlotCanvasImageAnalysis*          m_pActiveAnalysisPlot;
     bool                                    m_boScaleToClientSize;
     bool                                    m_boShowInfoOverlay;
+    wxColour                                m_InfoOverlayColor;
     std::vector<wxString>                   m_infoStringsOverlay;
     bool                                    m_boShowImageModificationWarning;
     bool                                    m_boShowPerformanceWarnings;
@@ -205,6 +208,10 @@ private:
     void                                    OnPopUpShowImageModificationsWarning( wxCommandEvent& e );
     void                                    OnPopUpShowPerformanceWarnings( wxCommandEvent& e );
     void                                    OnPopUpShowRequestInfoOverlay( wxCommandEvent& e );
+    void                                    OnPopUpSelectRequestInfoOverlayColor( wxCommandEvent& )
+    {
+        m_InfoOverlayColor = wxGetColourFromUser( this );
+    }
     void                                    OnRightDown( wxMouseEvent& );
     void                                    OnRightUp( wxMouseEvent& );
     DECLARE_EVENT_TABLE()

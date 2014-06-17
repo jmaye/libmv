@@ -9,12 +9,12 @@
 extern "C" {
 #endif // __cplusplus
 
-#if defined(WRAP_DOTNET) || defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
+#if defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
 namespace mvIMPACT
 {
 namespace acquire
 {
-#endif // #if defined(WRAP_DOTNET) || defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
+#endif // #if defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
 
 #if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY)
 #   ifdef _WIN32
@@ -774,10 +774,10 @@ typedef void*       CallbackHandle;
 #   endif // _WIN32
 #endif // !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY)
 
-#if defined(WRAP_DOTNET) || defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
+#if defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
 } // namespace acquire
 } // namespace mvIMPACT
-#endif // #if defined(WRAP_DOTNET) || defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
+#endif // #if defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
 
 #ifdef __cplusplus
 }

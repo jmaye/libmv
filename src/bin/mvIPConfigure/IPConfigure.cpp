@@ -434,6 +434,8 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
 
     if( m_TLILib.IsLoaded() )
     {
+        m_pGCInitLib = ResolveSymbol<PGCInitLib>( m_TLILib, wxT( "GCInitLib" ) );
+        m_pGCCloseLib = ResolveSymbol<PGCCloseLib>( m_TLILib, wxT( "GCCloseLib" ) );
         m_pTLOpen = ResolveSymbol<PTLOpen>( m_TLILib, wxT( "TLOpen" ) );
         m_pTLClose = ResolveSymbol<PTLClose>( m_TLILib, wxT( "TLClose" ) );
         m_pTLUpdateInterfaceList = ResolveSymbol<PTLUpdateInterfaceList>( m_TLILib, wxT( "TLUpdateInterfaceList" ) );
@@ -485,6 +487,7 @@ IPConfigureFrame::IPConfigureFrame( const wxString& title, const wxPoint& pos, c
     WriteLogMessage( wxT( "\n" ) );
 
     int status = 0;
+    LOGGED_TLI_CALL( GCInitLib, (), WriteLogMessage )
     LOGGED_TLI_CALL( TLOpen, ( &m_hTLI ), WriteLogMessage )
     UpdateDeviceList();
 
@@ -621,6 +624,7 @@ IPConfigureFrame::~IPConfigureFrame()
         ++it;
     }
     LOGGED_TLI_CALL( TLClose, ( m_hTLI ), WriteLogMessage )
+    LOGGED_TLI_CALL( GCCloseLib, (), WriteLogMessage )
     for_each( m_devices.begin(), m_devices.end(), ptr_fun( DeleteSecond<const string, DetectedDeviceInfo*> ) );
     m_devices.clear();
     // when we e.g. try to write config stuff on a read-only file system the result can
@@ -1555,7 +1559,7 @@ void IPConfigureFrame::UpdateDeviceList( bool boBuildList /* = true*/ )
                             LOGGED_TLI_CALL_WITH_CONTINUE( IFGetDeviceID, ( itInterfaces->second, i, pStringBuffer.get(), &stringSize ), WriteLogMessage )
 
                             string deviceName( pStringBuffer.get() );
-                            string serial = GetDeviceStringInfo( itInterfaces->second, deviceName, DEVICE_INFO_SERIALNUMBER );
+                            string serial = GetDeviceStringInfo( itInterfaces->second, deviceName, DEVICE_INFO_SERIAL_NUMBER );
                             DeviceMap::iterator itDev = m_devices.find( serial );
 
                             unsigned int adapterMTU = numeric_limits<unsigned int>::max();

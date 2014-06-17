@@ -9,6 +9,7 @@
 #include <wx/wx.h>
 #include <wx/treectrl.h>
 #include <wx/filename.h>
+#include <wx/spinctrl.h>
 
 class wxSpinCtrl;
 class ImageCanvas;
@@ -138,6 +139,40 @@ class SettingHierarchyDlg : public OkAndCancelDlg
     void PopulateTreeCtrl( wxTreeCtrl* pTreeCtrl, wxTreeItemId currentItem, const wxString& currentItemName, const StringToStringMap& settingRelationships );
 public:
     explicit SettingHierarchyDlg( wxWindow* pParent, const wxString& title, const StringToStringMap& settingRelationships );
+};
+
+//-----------------------------------------------------------------------------
+class DetailedRequestInformationDlg : public OkAndCancelDlg
+//-----------------------------------------------------------------------------
+{
+    DECLARE_EVENT_TABLE()
+
+    //-----------------------------------------------------------------------------
+    enum TWidgetIDs_DetailedRequestInformation
+    //-----------------------------------------------------------------------------
+    {
+        widSCRequestSelector = widFirst
+    };
+
+    mvIMPACT::acquire::FunctionInterface* pFI_;
+    wxTreeCtrl* pTreeCtrl_;
+    wxSpinCtrl* pSCRequestSelector_;
+
+    void ExpandAll( wxTreeCtrl* pTreeCtrl );
+    void ExpandAllChildren( wxTreeCtrl* pTreeCtrl, const wxTreeItemId& item );
+    void OnSCRequestSelectorChanged( wxSpinEvent& )
+    {
+        SelectRequest( pSCRequestSelector_->GetValue() );
+    }
+    void OnSCRequestSelectorTextChanged( wxCommandEvent& )
+    {
+        SelectRequest( pSCRequestSelector_->GetValue() );
+    }
+    void PopulateTreeCtrl( wxTreeCtrl* pTreeCtrl, wxTreeItemId parent, Component itComponent );
+    void PopulateTreeCtrl( wxTreeCtrl* pTreeCtrl, const int requestNr );
+    void SelectRequest( const int requestNr );
+public:
+    explicit DetailedRequestInformationDlg( wxWindow* pParent, const wxString& title, mvIMPACT::acquire::FunctionInterface* pFI );
 };
 
 //-----------------------------------------------------------------------------

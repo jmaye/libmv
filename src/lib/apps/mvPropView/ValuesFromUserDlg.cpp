@@ -5,7 +5,6 @@
 #include "ValuesFromUserDlg.h"
 #include <wx/file.h>
 #include <wx/listbox.h>
-#include <wx/spinctrl.h>
 
 using namespace std;
 
@@ -210,7 +209,7 @@ ValuesFromUserDlg::ValuesFromUserDlg( wxWindow* pParent, const wxString& title, 
         | pTopDownSizer                       |
         |                spacer               |
         | |---------------------------------| |
-        | | pInputControls                  | |
+        | | pGridSizer                      | |
         | |---------------------------------| |
         |                spacer               |
         | |---------------------------------| |
@@ -267,7 +266,7 @@ SettingHierarchyDlg::SettingHierarchyDlg( wxWindow* pParent, const wxString& tit
         | pTopDownSizer                       |
         |                spacer               |
         | |---------------------------------| |
-        | | pInputControls                  | |
+        | | pTreeCtrl                       | |
         | |---------------------------------| |
         |                spacer               |
         | |---------------------------------| |
@@ -333,6 +332,133 @@ void SettingHierarchyDlg::PopulateTreeCtrl( wxTreeCtrl* pTreeCtrl, wxTreeItemId 
 }
 
 //=============================================================================
+//============== Implementation DetailedRequestInformationDlg =================
+//=============================================================================
+
+BEGIN_EVENT_TABLE( DetailedRequestInformationDlg, OkAndCancelDlg )
+    EVT_SPINCTRL( widSCRequestSelector, DetailedRequestInformationDlg::OnSCRequestSelectorChanged )
+#ifdef BUILD_WITH_TEXT_EVENTS_FOR_SPINCTRL // BAT: Unfortunately on linux wxWidgets 2.6.x - ??? handling these messages will cause problems, while on Windows not doing so will not always update the GUI as desired :-(
+    EVT_TEXT( widSCRequestSelector, DetailedRequestInformationDlg::OnSCRequestSelectorTextChanged )
+#endif // #ifdef BUILD_WITH_TEXT_EVENTS_FOR_SPINCTRL
+END_EVENT_TABLE()
+
+//-----------------------------------------------------------------------------
+DetailedRequestInformationDlg::DetailedRequestInformationDlg( wxWindow* pParent, const wxString& title, mvIMPACT::acquire::FunctionInterface* pFI )
+    : OkAndCancelDlg( pParent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER | wxMAXIMIZE_BOX | wxMINIMIZE_BOX ),
+      pFI_( pFI ), pTreeCtrl_( 0 )
+//-----------------------------------------------------------------------------
+{
+    /*
+        |-------------------------------------|
+        | pTopDownSizer                       |
+        |                spacer               |
+        | |---------------------------------| |
+        | | pLeftRightSizer                 | |
+        | |---------------------------------| |
+        |                spacer               |
+        | |---------------------------------| |
+        | | property display                | |
+        | |---------------------------------| |
+        |                spacer               |
+        | |---------------------------------| |
+        | | pButtonSizer                    | |
+        | |---------------------------------| |
+        |-------------------------------------|
+    */
+
+    wxBoxSizer* pTopDownSizer = new wxBoxSizer( wxVERTICAL );
+    wxPanel* pPanel = new wxPanel( this );
+
+    wxBoxSizer* pLeftRightSizer = new wxBoxSizer( wxHORIZONTAL );
+    pSCRequestSelector_ = new wxSpinCtrl( pPanel, widSCRequestSelector, wxT( "0" ), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, pFI_->requestCount() - 1, 1 );
+    pSCRequestSelector_->SetToolTip( wxT( "Can be used to quickly move within the requests currently allocated" ) );
+    pLeftRightSizer->AddSpacer( 10 );
+    pLeftRightSizer->Add( new wxStaticText( pPanel, wxID_ANY, wxT( "Request Selector: " ) ) );
+    pLeftRightSizer->AddSpacer( 5 );
+    pLeftRightSizer->Add( pSCRequestSelector_, wxSizerFlags().Expand() );
+
+    pTreeCtrl_ = new wxTreeCtrl( pPanel, wxID_ANY );
+    PopulateTreeCtrl( pTreeCtrl_, 0 );
+    ExpandAll( pTreeCtrl_ );
+    pTopDownSizer->AddSpacer( 5 );
+    pTopDownSizer->Add( pLeftRightSizer, wxSizerFlags().Expand() );
+    pTopDownSizer->AddSpacer( 5 );
+    pTopDownSizer->Add( pTreeCtrl_, wxSizerFlags( 3 ).Expand() );
+    pTopDownSizer->AddSpacer( 10 );
+    AddButtons( pPanel, pTopDownSizer );
+    FinalizeDlgCreation( pPanel, pTopDownSizer );
+    SetSize( 400, 700 );
+}
+
+//-----------------------------------------------------------------------------
+void DetailedRequestInformationDlg::ExpandAll( wxTreeCtrl* pTreeCtrl )
+//-----------------------------------------------------------------------------
+{
+    ExpandAllChildren( pTreeCtrl, pTreeCtrl->GetRootItem() );
+}
+
+//-----------------------------------------------------------------------------
+/// \brief this code is 'stolen' from the wxWidgets 2.8.0 source as this application
+/// might be compiled with older versions of wxWidgets not supporting the wxTreeCtrl::ExpandAll function
+void DetailedRequestInformationDlg::ExpandAllChildren( wxTreeCtrl* pTreeCtrl, const wxTreeItemId& item )
+//-----------------------------------------------------------------------------
+{
+    // expand this item first, this might result in its children being added on
+    // the fly
+    pTreeCtrl->Expand( item );
+
+    // then (recursively) expand all the children
+    wxTreeItemIdValue cookie;
+    for( wxTreeItemId idCurr = pTreeCtrl->GetFirstChild( item, cookie ); idCurr.IsOk(); idCurr = pTreeCtrl->GetNextChild( item, cookie ) )
+    {
+        ExpandAllChildren( pTreeCtrl, idCurr );
+    }
+}
+
+//-----------------------------------------------------------------------------
+void DetailedRequestInformationDlg::PopulateTreeCtrl( wxTreeCtrl* pTreeCtrl, wxTreeItemId parent, Component itComponent )
+//-----------------------------------------------------------------------------
+{
+    while( itComponent.isValid() )
+    {
+        if( itComponent.isList() )
+        {
+            wxTreeItemId newList = pTreeCtrl->AppendItem( parent, wxString::Format( wxT( "%s" ), ConvertedString( itComponent.name() ).c_str() ) );
+            PopulateTreeCtrl( pTreeCtrl, newList, itComponent.firstChild() );
+        }
+        else if( itComponent.isProp() )
+        {
+            Property prop( itComponent );
+            pTreeCtrl->AppendItem( parent, wxString::Format( wxT( "%s: %s" ), ConvertedString( itComponent.name() ).c_str(), ConvertedString( prop.readS() ).c_str() ) );
+        }
+        else
+        {
+            pTreeCtrl->AppendItem( parent, wxString::Format( wxT( "%s" ), ConvertedString( itComponent.name() ).c_str() ) );
+        }
+        itComponent = itComponent.nextSibling();
+    }
+}
+
+//-----------------------------------------------------------------------------
+void DetailedRequestInformationDlg::PopulateTreeCtrl( wxTreeCtrl* pTreeCtrl, const int requestNr )
+//-----------------------------------------------------------------------------
+{
+    Component itComponent( pFI_->getRequest( requestNr )->getComponentLocator().hObj() );
+    wxTreeItemId rootId = pTreeCtrl->AddRoot( ConvertedString( itComponent.name() ) );
+    itComponent = itComponent.firstChild();
+    PopulateTreeCtrl( pTreeCtrl, rootId, itComponent );
+}
+
+//-----------------------------------------------------------------------------
+void DetailedRequestInformationDlg::SelectRequest( const int requestNr )
+//-----------------------------------------------------------------------------
+{
+    pTreeCtrl_->DeleteAllItems();
+    PopulateTreeCtrl( pTreeCtrl_, requestNr );
+    ExpandAll( pTreeCtrl_ );
+}
+
+//=============================================================================
 //============== Implementation DriverInformationDlg ==========================
 //=============================================================================
 //-----------------------------------------------------------------------------
@@ -345,7 +471,7 @@ DriverInformationDlg::DriverInformationDlg( wxWindow* pParent, const wxString& t
         | pTopDownSizer                       |
         |                spacer               |
         | |---------------------------------| |
-        | | pInputControls                  | |
+        | | pTreeCtrl                       | |
         | |---------------------------------| |
         |                spacer               |
         | |---------------------------------| |
@@ -480,8 +606,10 @@ FindFeatureDlg::FindFeatureDlg( PropGridFrameBase* pParent, const NameToFeatureM
         |-------------------------------------|
         | pTopDownSizer                       |
         |                spacer               |
+        |                message              |
+        |                spacer               |
         | |---------------------------------| |
-        | | pInputControls                  | |
+        | | pLBFeatureList_                 | |
         | |---------------------------------| |
         |                spacer               |
         | |---------------------------------| |
@@ -773,9 +901,8 @@ BinaryDataDlg::BinaryDataDlg( wxWindow* pParent, const wxString& featureName, co
         | pTopDownSizer                       |
         |                spacer               |
         | |---------------------------------| |
-        | | pInputControls                  | |
+        | | pLeftRightSizer                 | |
         | |---------------------------------| |
-        |                spacer               |
         | |---------------------------------| |
         | | pButtonSizer                    | |
         | |---------------------------------| |
@@ -935,7 +1062,7 @@ AssignSettingsToDisplaysDlg::AssignSettingsToDisplaysDlg( wxWindow* pParent, con
         |                message              |
         |                spacer               |
         | |---------------------------------| |
-        | | pInputControls                  | |
+        | | pGridSizer                      | |
         | |---------------------------------| |
         |                spacer               |
         | |---------------------------------| |
@@ -991,7 +1118,7 @@ RawImageImportDlg::RawImageImportDlg( PropGridFrameBase* pParent, const wxString
         | pTopDownSizer                       |
         |                spacer               |
         | |---------------------------------| |
-        | | pInputControls                  | |
+        | | pGridSizer                      | |
         | |---------------------------------| |
         |                spacer               |
         | |---------------------------------| |

@@ -28,17 +28,6 @@
 #   define PYTHON_CPP_SWITCH(PYTHON_WRAPPER_CODE,CPP_WRAPPER_CODE) CPP_WRAPPER_CODE
 #endif // #ifdef WRAP_PYTHON
 
-#ifdef WRAP_DOTNET
-#   define DOTNET_ONLY(X) X
-#   define DOTNET_CPP_SWITCH(DOTNET_WRAPPER_CODE,CPP_WRAPPER_CODE) DOTNET_WRAPPER_CODE
-#   ifndef WRAP_ANY
-#       define WRAP_ANY
-#   endif // #ifndef WRAP_ANY
-#else // #ifdef WRAP_DOTNET
-#   define DOTNET_ONLY(X)
-#   define DOTNET_CPP_SWITCH(DOTNET_WRAPPER_CODE,CPP_WRAPPER_CODE) CPP_WRAPPER_CODE
-#endif // #ifdef WRAP_DOTNET
-
 #ifdef _MSC_VER // is Microsoft compiler?
 #   pragma warning( push )
 #   if _MSC_VER < 1300 // is 'old' VC 6 compiler?
@@ -131,7 +120,8 @@ public:
         mvDeviceSensorName(),
         mvDeviceSensorColorMode(),
         mvDeviceFPGAVersion(),
-        mvDeviceFirmwareSource()
+        mvDeviceFirmwareSource(),
+        mvDeviceProcessingUnit()
     {
         mvIMPACT::acquire::DeviceComponentLocator locator( pDev, mvIMPACT::acquire::dltSetting, settingName );
         locator.bindSearchBase( locator.searchbase_id(), "Camera/GenICam" );
@@ -179,6 +169,7 @@ public:
         locator.bindComponent( mvDeviceSensorColorMode, "mvDeviceSensorColorMode" );
         locator.bindComponent( mvDeviceFPGAVersion, "mvDeviceFPGAVersion" );
         locator.bindComponent( mvDeviceFirmwareSource, "mvDeviceFirmwareSource" );
+        locator.bindComponent( mvDeviceProcessingUnit, "mvDeviceProcessingUnit" );
     }
     PYTHON_ONLY( %immutable; )
     /// \brief Name of the manufacturer of the device.
@@ -402,185 +393,12 @@ public:
      *  Shows the location from where the firmware was loaded.
      */
     PropertyI64 mvDeviceFirmwareSource;
+    /// \brief The processing unit to activate for the selected processing unit.
+    /**
+     *  The processing unit to activate for the selected processing unit.
+     */
+    PropertyI64 mvDeviceProcessingUnit;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyS getDeviceVendorName( void ) const
-    {
-        return deviceVendorName;
-    }
-    PropertyS getDeviceModelName( void ) const
-    {
-        return deviceModelName;
-    }
-    PropertyS getDeviceManufacturerInfo( void ) const
-    {
-        return deviceManufacturerInfo;
-    }
-    PropertyS getDeviceVersion( void ) const
-    {
-        return deviceVersion;
-    }
-    PropertyS getDeviceFirmwareVersion( void ) const
-    {
-        return deviceFirmwareVersion;
-    }
-    PropertyI64 getDeviceSFNCVersionMajor( void ) const
-    {
-        return deviceSFNCVersionMajor;
-    }
-    PropertyI64 getDeviceSFNCVersionMinor( void ) const
-    {
-        return deviceSFNCVersionMinor;
-    }
-    PropertyI64 getDeviceSFNCVersionSubMinor( void ) const
-    {
-        return deviceSFNCVersionSubMinor;
-    }
-    PropertyI64 getDeviceManifestEntrySelector( void ) const
-    {
-        return deviceManifestEntrySelector;
-    }
-    PropertyI64 getDeviceManifestXMLMajorVersion( void ) const
-    {
-        return deviceManifestXMLMajorVersion;
-    }
-    PropertyI64 getDeviceManifestXMLMinorVersion( void ) const
-    {
-        return deviceManifestXMLMinorVersion;
-    }
-    PropertyI64 getDeviceManifestXMLSubMinorVersion( void ) const
-    {
-        return deviceManifestXMLSubMinorVersion;
-    }
-    PropertyI64 getDeviceManifestSchemaMajorVersion( void ) const
-    {
-        return deviceManifestSchemaMajorVersion;
-    }
-    PropertyI64 getDeviceManifestSchemaMinorVersion( void ) const
-    {
-        return deviceManifestSchemaMinorVersion;
-    }
-    PropertyS getDeviceManifestPrimaryURL( void ) const
-    {
-        return deviceManifestPrimaryURL;
-    }
-    PropertyS getDeviceManifestSecondaryURL( void ) const
-    {
-        return deviceManifestSecondaryURL;
-    }
-    PropertyS getDeviceID( void ) const
-    {
-        return deviceID;
-    }
-    PropertyS getDeviceUserID( void ) const
-    {
-        return deviceUserID;
-    }
-    Method getDeviceReset( void ) const
-    {
-        return deviceReset;
-    }
-    Method getDeviceRegistersStreamingStart( void ) const
-    {
-        return deviceRegistersStreamingStart;
-    }
-    Method getDeviceRegistersStreamingEnd( void ) const
-    {
-        return deviceRegistersStreamingEnd;
-    }
-    Method getDeviceRegistersCheck( void ) const
-    {
-        return deviceRegistersCheck;
-    }
-    PropertyIBoolean getDeviceRegistersValid( void ) const
-    {
-        return deviceRegistersValid;
-    }
-    PropertyI64 getDeviceMaxThroughput( void ) const
-    {
-        return deviceMaxThroughput;
-    }
-    PropertyI64 getDeviceTemperatureSelector( void ) const
-    {
-        return deviceTemperatureSelector;
-    }
-    PropertyF getDeviceTemperature( void ) const
-    {
-        return deviceTemperature;
-    }
-    PropertyI64 getDeviceClockSelector( void ) const
-    {
-        return deviceClockSelector;
-    }
-    PropertyF getDeviceClockFrequency( void ) const
-    {
-        return deviceClockFrequency;
-    }
-    PropertyI64 getDeviceSerialPortSelector( void ) const
-    {
-        return deviceSerialPortSelector;
-    }
-    PropertyI64 getDeviceSerialPortBaudRate( void ) const
-    {
-        return deviceSerialPortBaudRate;
-    }
-    PropertyI64 getDeviceScanType( void ) const
-    {
-        return deviceScanType;
-    }
-    PropertyI64 getTimestamp( void ) const
-    {
-        return timestamp;
-    }
-    Method getTimestampReset( void ) const
-    {
-        return timestampReset;
-    }
-    Method getTimestampLatch( void ) const
-    {
-        return timestampLatch;
-    }
-    PropertyI64 getmvDeviceTemperatureRaw( void ) const
-    {
-        return mvDeviceTemperatureRaw;
-    }
-    PropertyI64 getmvDeviceTemperatureUpperLimit( void ) const
-    {
-        return mvDeviceTemperatureUpperLimit;
-    }
-    PropertyI64 getmvDeviceTemperatureLowerLimit( void ) const
-    {
-        return mvDeviceTemperatureLowerLimit;
-    }
-    PropertyI64 getmvDeviceTemperatureLimitHysteresis( void ) const
-    {
-        return mvDeviceTemperatureLimitHysteresis;
-    }
-    PropertyI64 getmvDeviceClockFrequency( void ) const
-    {
-        return mvDeviceClockFrequency;
-    }
-    PropertyI64 getmvDeviceClockGranularity( void ) const
-    {
-        return mvDeviceClockGranularity;
-    }
-    PropertyS getmvDeviceSensorName( void ) const
-    {
-        return mvDeviceSensorName;
-    }
-    PropertyI64 getmvDeviceSensorColorMode( void ) const
-    {
-        return mvDeviceSensorColorMode;
-    }
-    PropertyS getmvDeviceFPGAVersion( void ) const
-    {
-        return mvDeviceFPGAVersion;
-    }
-    PropertyI64 getmvDeviceFirmwareSource( void ) const
-    {
-        return mvDeviceFirmwareSource;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -806,120 +624,6 @@ public:
      */
     PropertyI64 testImageSelector;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getSensorWidth( void ) const
-    {
-        return sensorWidth;
-    }
-    PropertyI64 getSensorHeight( void ) const
-    {
-        return sensorHeight;
-    }
-    PropertyI64 getSensorTaps( void ) const
-    {
-        return sensorTaps;
-    }
-    PropertyI64 getSensorDigitizationTaps( void ) const
-    {
-        return sensorDigitizationTaps;
-    }
-    PropertyI64 getWidthMax( void ) const
-    {
-        return widthMax;
-    }
-    PropertyI64 getHeightMax( void ) const
-    {
-        return heightMax;
-    }
-    PropertyI64 getWidth( void ) const
-    {
-        return width;
-    }
-    PropertyI64 getHeight( void ) const
-    {
-        return height;
-    }
-    PropertyI64 getOffsetX( void ) const
-    {
-        return offsetX;
-    }
-    PropertyI64 getOffsetY( void ) const
-    {
-        return offsetY;
-    }
-    PropertyI64 getmvOffsetYSensorB( void ) const
-    {
-        return mvOffsetYSensorB;
-    }
-    PropertyI64 getmvSensorLineOffsetSelector( void ) const
-    {
-        return mvSensorLineOffsetSelector;
-    }
-    PropertyI64 getmvSensorLineOffset( void ) const
-    {
-        return mvSensorLineOffset;
-    }
-    PropertyI64 getmvSensorLinePeriod( void ) const
-    {
-        return mvSensorLinePeriod;
-    }
-    PropertyI64 getLinePitch( void ) const
-    {
-        return linePitch;
-    }
-    PropertyI64 getBinningHorizontal( void ) const
-    {
-        return binningHorizontal;
-    }
-    PropertyI64 getBinningVertical( void ) const
-    {
-        return binningVertical;
-    }
-    PropertyI64 getDecimationHorizontal( void ) const
-    {
-        return decimationHorizontal;
-    }
-    PropertyI64 getDecimationVertical( void ) const
-    {
-        return decimationVertical;
-    }
-    PropertyIBoolean getReverseX( void ) const
-    {
-        return reverseX;
-    }
-    PropertyIBoolean getReverseY( void ) const
-    {
-        return reverseY;
-    }
-    PropertyI64 getPixelFormat( void ) const
-    {
-        return pixelFormat;
-    }
-    PropertyI64 getPixelCoding( void ) const
-    {
-        return pixelCoding;
-    }
-    PropertyI64 getPixelSize( void ) const
-    {
-        return pixelSize;
-    }
-    PropertyI64 getPixelColorFilter( void ) const
-    {
-        return pixelColorFilter;
-    }
-    PropertyI64 getPixelDynamicRangeMin( void ) const
-    {
-        return pixelDynamicRangeMin;
-    }
-    PropertyI64 getPixelDynamicRangeMax( void ) const
-    {
-        return pixelDynamicRangeMax;
-    }
-    PropertyI64 getTestImageSelector( void ) const
-    {
-        return testImageSelector;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -1003,9 +707,17 @@ public:
         locator.bindComponent( mvAcquisitionFrameRateEnable, "mvAcquisitionFrameRateEnable" );
         locator.bindComponent( mvResultingFrameRate, "mvResultingFrameRate" );
         locator.bindComponent( acquisitionFrameRate, "AcquisitionFrameRate" );
+        if( !acquisitionFrameRate.isValid() )
+        {
+            locator.bindComponent( acquisitionFrameRate, "AcquisitionFrameRateAbs" );
+        }
         locator.bindComponent( acquisitionFrameRateAbs, "AcquisitionFrameRateAbs" );
         locator.bindComponent( acquisitionFrameRateRaw, "AcquisitionFrameRateRaw" );
         locator.bindComponent( acquisitionLineRate, "AcquisitionLineRate" );
+        if( !acquisitionLineRate.isValid() )
+        {
+            locator.bindComponent( acquisitionLineRate, "AcquisitionLineRateAbs" );
+        }
         locator.bindComponent( acquisitionLineRateAbs, "AcquisitionLineRateAbs" );
         locator.bindComponent( acquisitionLineRateRaw, "AcquisitionLineRateRaw" );
         locator.bindComponent( acquisitionStatusSelector, "AcquisitionStatusSelector" );
@@ -1017,12 +729,20 @@ public:
         locator.bindComponent( triggerActivation, "TriggerActivation" );
         locator.bindComponent( triggerOverlap, "TriggerOverlap" );
         locator.bindComponent( triggerDelay, "TriggerDelay" );
+        if( !triggerDelay.isValid() )
+        {
+            locator.bindComponent( triggerDelay, "TriggerDelayAbs" );
+        }
         locator.bindComponent( triggerDelayAbs, "TriggerDelayAbs" );
         locator.bindComponent( triggerDelayRaw, "TriggerDelayRaw" );
         locator.bindComponent( triggerDivider, "TriggerDivider" );
         locator.bindComponent( triggerMultiplier, "TriggerMultiplier" );
         locator.bindComponent( exposureMode, "ExposureMode" );
         locator.bindComponent( exposureTime, "ExposureTime" );
+        if( !exposureTime.isValid() )
+        {
+            locator.bindComponent( exposureTime, "ExposureTimeAbs" );
+        }
         locator.bindComponent( exposureTimeAbs, "ExposureTimeAbs" );
         locator.bindComponent( exposureTimeRaw, "ExposureTimeRaw" );
         locator.bindComponent( exposureAuto, "ExposureAuto" );
@@ -1312,212 +1032,6 @@ public:
      */
     PropertyI64 mvAcquisitionMemoryAOIParameterChanged;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getAcquisitionMode( void ) const
-    {
-        return acquisitionMode;
-    }
-    Method getAcquisitionArm( void ) const
-    {
-        return acquisitionArm;
-    }
-    PropertyI64 getAcquisitionFrameCount( void ) const
-    {
-        return acquisitionFrameCount;
-    }
-    PropertyI64 getAcquisitionBurstFrameCount( void ) const
-    {
-        return acquisitionBurstFrameCount;
-    }
-    PropertyI64 getmvAcquisitionFrameRateLimitMode( void ) const
-    {
-        return mvAcquisitionFrameRateLimitMode;
-    }
-    PropertyI64 getmvAcquisitionFrameRateEnable( void ) const
-    {
-        return mvAcquisitionFrameRateEnable;
-    }
-    PropertyF getmvResultingFrameRate( void ) const
-    {
-        return mvResultingFrameRate;
-    }
-    PropertyF getAcquisitionFrameRate( void ) const
-    {
-        return acquisitionFrameRate;
-    }
-    PropertyF getAcquisitionFrameRateAbs( void ) const
-    {
-        return acquisitionFrameRateAbs;
-    }
-    PropertyI64 getAcquisitionFrameRateRaw( void ) const
-    {
-        return acquisitionFrameRateRaw;
-    }
-    PropertyF getAcquisitionLineRate( void ) const
-    {
-        return acquisitionLineRate;
-    }
-    PropertyF getAcquisitionLineRateAbs( void ) const
-    {
-        return acquisitionLineRateAbs;
-    }
-    PropertyI64 getAcquisitionLineRateRaw( void ) const
-    {
-        return acquisitionLineRateRaw;
-    }
-    PropertyI64 getAcquisitionStatusSelector( void ) const
-    {
-        return acquisitionStatusSelector;
-    }
-    PropertyIBoolean getAcquisitionStatus( void ) const
-    {
-        return acquisitionStatus;
-    }
-    PropertyI64 getTriggerSelector( void ) const
-    {
-        return triggerSelector;
-    }
-    PropertyI64 getTriggerMode( void ) const
-    {
-        return triggerMode;
-    }
-    Method getTriggerSoftware( void ) const
-    {
-        return triggerSoftware;
-    }
-    PropertyI64 getTriggerSource( void ) const
-    {
-        return triggerSource;
-    }
-    PropertyI64 getTriggerActivation( void ) const
-    {
-        return triggerActivation;
-    }
-    PropertyI64 getTriggerOverlap( void ) const
-    {
-        return triggerOverlap;
-    }
-    PropertyF getTriggerDelay( void ) const
-    {
-        return triggerDelay;
-    }
-    PropertyF getTriggerDelayAbs( void ) const
-    {
-        return triggerDelayAbs;
-    }
-    PropertyI64 getTriggerDelayRaw( void ) const
-    {
-        return triggerDelayRaw;
-    }
-    PropertyI64 getTriggerDivider( void ) const
-    {
-        return triggerDivider;
-    }
-    PropertyI64 getTriggerMultiplier( void ) const
-    {
-        return triggerMultiplier;
-    }
-    PropertyI64 getExposureMode( void ) const
-    {
-        return exposureMode;
-    }
-    PropertyF getExposureTime( void ) const
-    {
-        return exposureTime;
-    }
-    PropertyF getExposureTimeAbs( void ) const
-    {
-        return exposureTimeAbs;
-    }
-    PropertyI64 getExposureTimeRaw( void ) const
-    {
-        return exposureTimeRaw;
-    }
-    PropertyI64 getExposureAuto( void ) const
-    {
-        return exposureAuto;
-    }
-    PropertyI64 getmvShutterMode( void ) const
-    {
-        return mvShutterMode;
-    }
-    PropertyI64 getmvCompressionKneepoint( void ) const
-    {
-        return mvCompressionKneepoint;
-    }
-    PropertyIBoolean getmvDefectivePixelEnable( void ) const
-    {
-        return mvDefectivePixelEnable;
-    }
-    PropertyF getmvExposureAutoLowerLimit( void ) const
-    {
-        return mvExposureAutoLowerLimit;
-    }
-    PropertyF getmvExposureAutoUpperLimit( void ) const
-    {
-        return mvExposureAutoUpperLimit;
-    }
-    PropertyI64 getmvExposureAutoSpeed( void ) const
-    {
-        return mvExposureAutoSpeed;
-    }
-    PropertyI64 getmvExposureAutoDelayImages( void ) const
-    {
-        return mvExposureAutoDelayImages;
-    }
-    PropertyI64 getmvExposureAutoAverageGrey( void ) const
-    {
-        return mvExposureAutoAverageGrey;
-    }
-    PropertyI64 getmvExposureAutoHighlightAOI( void ) const
-    {
-        return mvExposureAutoHighlightAOI;
-    }
-    PropertyI64 getmvExposureAutoAOIMode( void ) const
-    {
-        return mvExposureAutoAOIMode;
-    }
-    PropertyI64 getmvExposureAutoOffsetX( void ) const
-    {
-        return mvExposureAutoOffsetX;
-    }
-    PropertyI64 getmvExposureAutoOffsetY( void ) const
-    {
-        return mvExposureAutoOffsetY;
-    }
-    PropertyI64 getmvExposureAutoWidth( void ) const
-    {
-        return mvExposureAutoWidth;
-    }
-    PropertyI64 getmvExposureAutoHeight( void ) const
-    {
-        return mvExposureAutoHeight;
-    }
-    PropertyI64 getmvExposureAutoMode( void ) const
-    {
-        return mvExposureAutoMode;
-    }
-    PropertyI64 getmvSmearReduction( void ) const
-    {
-        return mvSmearReduction;
-    }
-    PropertyI64 getmvAcquisitionMemoryMode( void ) const
-    {
-        return mvAcquisitionMemoryMode;
-    }
-    PropertyI64 getmvPretriggerFrameCount( void ) const
-    {
-        return mvPretriggerFrameCount;
-    }
-    PropertyI64 getmvAcquisitionMemoryMaxFrameCount( void ) const
-    {
-        return mvAcquisitionMemoryMaxFrameCount;
-    }
-    PropertyI64 getmvAcquisitionMemoryAOIParameterChanged( void ) const
-    {
-        return mvAcquisitionMemoryAOIParameterChanged;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -1650,68 +1164,6 @@ public:
      */
     PropertyI64 mvRTMSource;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getLineSelector( void ) const
-    {
-        return lineSelector;
-    }
-    PropertyI64 getLineMode( void ) const
-    {
-        return lineMode;
-    }
-    PropertyIBoolean getLineInverter( void ) const
-    {
-        return lineInverter;
-    }
-    PropertyIBoolean getLineStatus( void ) const
-    {
-        return lineStatus;
-    }
-    PropertyI64 getLineStatusAll( void ) const
-    {
-        return lineStatusAll;
-    }
-    PropertyI64 getLineSource( void ) const
-    {
-        return lineSource;
-    }
-    PropertyI64 getLineFormat( void ) const
-    {
-        return lineFormat;
-    }
-    PropertyI64 getUserOutputSelector( void ) const
-    {
-        return userOutputSelector;
-    }
-    PropertyIBoolean getUserOutputValue( void ) const
-    {
-        return userOutputValue;
-    }
-    PropertyI64 getUserOutputValueAll( void ) const
-    {
-        return userOutputValueAll;
-    }
-    PropertyI64 getUserOutputValueAllMask( void ) const
-    {
-        return userOutputValueAllMask;
-    }
-    PropertyI64 getmvLineDebounceTimeRisingEdge( void ) const
-    {
-        return mvLineDebounceTimeRisingEdge;
-    }
-    PropertyI64 getmvLineDebounceTimeFallingEdge( void ) const
-    {
-        return mvLineDebounceTimeFallingEdge;
-    }
-    PropertyI64 getmvRTMInputSelector( void ) const
-    {
-        return mvRTMInputSelector;
-    }
-    PropertyI64 getmvRTMSource( void ) const
-    {
-        return mvRTMSource;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -1776,13 +1228,25 @@ public:
         locator.bindComponent( counterTriggerActivation, "CounterTriggerActivation" );
         locator.bindComponent( timerSelector, "TimerSelector" );
         locator.bindComponent( timerDuration, "TimerDuration" );
+        if( !timerDuration.isValid() )
+        {
+            locator.bindComponent( timerDuration, "TimerDurationAbs" );
+        }
         locator.bindComponent( timerDurationAbs, "TimerDurationAbs" );
         locator.bindComponent( timerDurationRaw, "TimerDurationRaw" );
         locator.bindComponent( timerDelay, "TimerDelay" );
+        if( !timerDelay.isValid() )
+        {
+            locator.bindComponent( timerDelay, "TimerDelayAbs" );
+        }
         locator.bindComponent( timerDelayAbs, "TimerDelayAbs" );
         locator.bindComponent( timerDelayRaw, "TimerDelayRaw" );
         locator.bindComponent( timerReset, "TimerReset@i" );
         locator.bindComponent( timerValue, "TimerValue" );
+        if( !timerValue.isValid() )
+        {
+            locator.bindComponent( timerValue, "TimerValueAbs" );
+        }
         locator.bindComponent( timerValueAbs, "TimerValueAbs" );
         locator.bindComponent( timerValueRaw, "TimerValueRaw" );
         locator.bindComponent( timerStatus, "TimerStatus" );
@@ -1927,112 +1391,6 @@ public:
      */
     PropertyI64 timerTriggerActivation;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getCounterSelector( void ) const
-    {
-        return counterSelector;
-    }
-    PropertyI64 getCounterEventSource( void ) const
-    {
-        return counterEventSource;
-    }
-    PropertyI64 getCounterEventActivation( void ) const
-    {
-        return counterEventActivation;
-    }
-    PropertyI64 getCounterResetSource( void ) const
-    {
-        return counterResetSource;
-    }
-    PropertyI64 getCounterResetActivation( void ) const
-    {
-        return counterResetActivation;
-    }
-    Method getCounterReset( void ) const
-    {
-        return counterReset;
-    }
-    PropertyI64 getCounterValue( void ) const
-    {
-        return counterValue;
-    }
-    PropertyI64 getCounterValueAtReset( void ) const
-    {
-        return counterValueAtReset;
-    }
-    PropertyI64 getCounterDuration( void ) const
-    {
-        return counterDuration;
-    }
-    PropertyI64 getCounterStatus( void ) const
-    {
-        return counterStatus;
-    }
-    PropertyI64 getCounterTriggerSource( void ) const
-    {
-        return counterTriggerSource;
-    }
-    PropertyI64 getCounterTriggerActivation( void ) const
-    {
-        return counterTriggerActivation;
-    }
-    PropertyI64 getTimerSelector( void ) const
-    {
-        return timerSelector;
-    }
-    PropertyF getTimerDuration( void ) const
-    {
-        return timerDuration;
-    }
-    PropertyF getTimerDurationAbs( void ) const
-    {
-        return timerDurationAbs;
-    }
-    PropertyI64 getTimerDurationRaw( void ) const
-    {
-        return timerDurationRaw;
-    }
-    PropertyF getTimerDelay( void ) const
-    {
-        return timerDelay;
-    }
-    PropertyF getTimerDelayAbs( void ) const
-    {
-        return timerDelayAbs;
-    }
-    PropertyI64 getTimerDelayRaw( void ) const
-    {
-        return timerDelayRaw;
-    }
-    Method getTimerReset( void ) const
-    {
-        return timerReset;
-    }
-    PropertyF getTimerValue( void ) const
-    {
-        return timerValue;
-    }
-    PropertyF getTimerValueAbs( void ) const
-    {
-        return timerValueAbs;
-    }
-    PropertyI64 getTimerValueRaw( void ) const
-    {
-        return timerValueRaw;
-    }
-    PropertyI64 getTimerStatus( void ) const
-    {
-        return timerStatus;
-    }
-    PropertyI64 getTimerTriggerSource( void ) const
-    {
-        return timerTriggerSource;
-    }
-    PropertyI64 getTimerTriggerActivation( void ) const
-    {
-        return timerTriggerActivation;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -2837,452 +2195,6 @@ public:
      */
     PropertyI64 eventErrorCode;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getEventSelector( void ) const
-    {
-        return eventSelector;
-    }
-    PropertyI64 getEventNotification( void ) const
-    {
-        return eventNotification;
-    }
-    PropertyI64 getEventAcquisitionTrigger( void ) const
-    {
-        return eventAcquisitionTrigger;
-    }
-    PropertyI64 getEventAcquisitionTriggerTimestamp( void ) const
-    {
-        return eventAcquisitionTriggerTimestamp;
-    }
-    PropertyI64 getEventAcquisitionTriggerFrameID( void ) const
-    {
-        return eventAcquisitionTriggerFrameID;
-    }
-    PropertyI64 getEventAcquisitionStart( void ) const
-    {
-        return eventAcquisitionStart;
-    }
-    PropertyI64 getEventAcquisitionStartTimestamp( void ) const
-    {
-        return eventAcquisitionStartTimestamp;
-    }
-    PropertyI64 getEventAcquisitionStartFrameID( void ) const
-    {
-        return eventAcquisitionStartFrameID;
-    }
-    PropertyI64 getEventAcquisitionEnd( void ) const
-    {
-        return eventAcquisitionEnd;
-    }
-    PropertyI64 getEventAcquisitionEndTimestamp( void ) const
-    {
-        return eventAcquisitionEndTimestamp;
-    }
-    PropertyI64 getEventAcquisitionEndFrameID( void ) const
-    {
-        return eventAcquisitionEndFrameID;
-    }
-    PropertyI64 getEventAcquisitionTransferStart( void ) const
-    {
-        return eventAcquisitionTransferStart;
-    }
-    PropertyI64 getEventAcquisitionTransferStartTimestamp( void ) const
-    {
-        return eventAcquisitionTransferStartTimestamp;
-    }
-    PropertyI64 getEventAcquisitionTransferStartFrameID( void ) const
-    {
-        return eventAcquisitionTransferStartFrameID;
-    }
-    PropertyI64 getEventAcquisitionTransferEnd( void ) const
-    {
-        return eventAcquisitionTransferEnd;
-    }
-    PropertyI64 getEventAcquisitionTransferEndTimestamp( void ) const
-    {
-        return eventAcquisitionTransferEndTimestamp;
-    }
-    PropertyI64 getEventAcquisitionTransferEndFrameID( void ) const
-    {
-        return eventAcquisitionTransferEndFrameID;
-    }
-    PropertyI64 getEventAcquisitionError( void ) const
-    {
-        return eventAcquisitionError;
-    }
-    PropertyI64 getEventAcquisitionErrorTimestamp( void ) const
-    {
-        return eventAcquisitionErrorTimestamp;
-    }
-    PropertyI64 getEventAcquisitionErrorFrameID( void ) const
-    {
-        return eventAcquisitionErrorFrameID;
-    }
-    PropertyI64 getEventFrameTrigger( void ) const
-    {
-        return eventFrameTrigger;
-    }
-    PropertyI64 getEventFrameTriggerTimestamp( void ) const
-    {
-        return eventFrameTriggerTimestamp;
-    }
-    PropertyI64 getEventFrameTriggerFrameID( void ) const
-    {
-        return eventFrameTriggerFrameID;
-    }
-    PropertyI64 getEventFrameStart( void ) const
-    {
-        return eventFrameStart;
-    }
-    PropertyI64 getEventFrameStartTimestamp( void ) const
-    {
-        return eventFrameStartTimestamp;
-    }
-    PropertyI64 getEventFrameStartFrameID( void ) const
-    {
-        return eventFrameStartFrameID;
-    }
-    PropertyI64 getEventFrameEnd( void ) const
-    {
-        return eventFrameEnd;
-    }
-    PropertyI64 getEventFrameEndTimestamp( void ) const
-    {
-        return eventFrameEndTimestamp;
-    }
-    PropertyI64 getEventFrameEndFrameID( void ) const
-    {
-        return eventFrameEndFrameID;
-    }
-    PropertyI64 getEventFrameBurstStart( void ) const
-    {
-        return eventFrameBurstStart;
-    }
-    PropertyI64 getEventFrameBurstStartTimestamp( void ) const
-    {
-        return eventFrameBurstStartTimestamp;
-    }
-    PropertyI64 getEventFrameBurstStartFrameID( void ) const
-    {
-        return eventFrameBurstStartFrameID;
-    }
-    PropertyI64 getEventFrameBurstEnd( void ) const
-    {
-        return eventFrameBurstEnd;
-    }
-    PropertyI64 getEventFrameBurstEndTimestamp( void ) const
-    {
-        return eventFrameBurstEndTimestamp;
-    }
-    PropertyI64 getEventFrameBurstEndFrameID( void ) const
-    {
-        return eventFrameBurstEndFrameID;
-    }
-    PropertyI64 getEventFrameTransferStart( void ) const
-    {
-        return eventFrameTransferStart;
-    }
-    PropertyI64 getEventFrameTransferStartTimestamp( void ) const
-    {
-        return eventFrameTransferStartTimestamp;
-    }
-    PropertyI64 getEventFrameTransferStartFrameID( void ) const
-    {
-        return eventFrameTransferStartFrameID;
-    }
-    PropertyI64 getEventFrameTransferEnd( void ) const
-    {
-        return eventFrameTransferEnd;
-    }
-    PropertyI64 getEventFrameTransferEndTimestamp( void ) const
-    {
-        return eventFrameTransferEndTimestamp;
-    }
-    PropertyI64 getEventFrameTransferEndFrameID( void ) const
-    {
-        return eventFrameTransferEndFrameID;
-    }
-    PropertyI64 getEventExposureStart( void ) const
-    {
-        return eventExposureStart;
-    }
-    PropertyI64 getEventExposureStartTimestamp( void ) const
-    {
-        return eventExposureStartTimestamp;
-    }
-    PropertyI64 getEventExposureStartFrameID( void ) const
-    {
-        return eventExposureStartFrameID;
-    }
-    PropertyI64 getEventExposureEnd( void ) const
-    {
-        return eventExposureEnd;
-    }
-    PropertyI64 getEventExposureEndTimestamp( void ) const
-    {
-        return eventExposureEndTimestamp;
-    }
-    PropertyI64 getEventExposureEndFrameID( void ) const
-    {
-        return eventExposureEndFrameID;
-    }
-    PropertyI64 getEventCounter1Start( void ) const
-    {
-        return eventCounter1Start;
-    }
-    PropertyI64 getEventCounter1StartTimestamp( void ) const
-    {
-        return eventCounter1StartTimestamp;
-    }
-    PropertyI64 getEventCounter1StartFrameID( void ) const
-    {
-        return eventCounter1StartFrameID;
-    }
-    PropertyI64 getEventCounter2Start( void ) const
-    {
-        return eventCounter2Start;
-    }
-    PropertyI64 getEventCounter2StartTimestamp( void ) const
-    {
-        return eventCounter2StartTimestamp;
-    }
-    PropertyI64 getEventCounter2StartFrameID( void ) const
-    {
-        return eventCounter2StartFrameID;
-    }
-    PropertyI64 getEventCounter1End( void ) const
-    {
-        return eventCounter1End;
-    }
-    PropertyI64 getEventCounter1EndTimestamp( void ) const
-    {
-        return eventCounter1EndTimestamp;
-    }
-    PropertyI64 getEventCounter1EndFrameID( void ) const
-    {
-        return eventCounter1EndFrameID;
-    }
-    PropertyI64 getEventCounter2End( void ) const
-    {
-        return eventCounter2End;
-    }
-    PropertyI64 getEventCounter2EndTimestamp( void ) const
-    {
-        return eventCounter2EndTimestamp;
-    }
-    PropertyI64 getEventCounter2EndFrameID( void ) const
-    {
-        return eventCounter2EndFrameID;
-    }
-    PropertyI64 getEventTimer1Start( void ) const
-    {
-        return eventTimer1Start;
-    }
-    PropertyI64 getEventTimer1StartTimestamp( void ) const
-    {
-        return eventTimer1StartTimestamp;
-    }
-    PropertyI64 getEventTimer1StartFrameID( void ) const
-    {
-        return eventTimer1StartFrameID;
-    }
-    PropertyI64 getEventTimer2Start( void ) const
-    {
-        return eventTimer2Start;
-    }
-    PropertyI64 getEventTimer2StartTimestamp( void ) const
-    {
-        return eventTimer2StartTimestamp;
-    }
-    PropertyI64 getEventTimer2StartFrameID( void ) const
-    {
-        return eventTimer2StartFrameID;
-    }
-    PropertyI64 getEventTimer1End( void ) const
-    {
-        return eventTimer1End;
-    }
-    PropertyI64 getEventTimer1EndTimestamp( void ) const
-    {
-        return eventTimer1EndTimestamp;
-    }
-    PropertyI64 getEventTimer1EndFrameID( void ) const
-    {
-        return eventTimer1EndFrameID;
-    }
-    PropertyI64 getEventTimer2End( void ) const
-    {
-        return eventTimer2End;
-    }
-    PropertyI64 getEventTimer2EndTimestamp( void ) const
-    {
-        return eventTimer2EndTimestamp;
-    }
-    PropertyI64 getEventTimer2EndFrameID( void ) const
-    {
-        return eventTimer2EndFrameID;
-    }
-    PropertyI64 getEventLine0RisingEdge( void ) const
-    {
-        return eventLine0RisingEdge;
-    }
-    PropertyI64 getEventLine0RisingEdgeTimestamp( void ) const
-    {
-        return eventLine0RisingEdgeTimestamp;
-    }
-    PropertyI64 getEventLine0RisingEdgeFrameID( void ) const
-    {
-        return eventLine0RisingEdgeFrameID;
-    }
-    PropertyI64 getEventLine1RisingEdge( void ) const
-    {
-        return eventLine1RisingEdge;
-    }
-    PropertyI64 getEventLine1RisingEdgeTimestamp( void ) const
-    {
-        return eventLine1RisingEdgeTimestamp;
-    }
-    PropertyI64 getEventLine1RisingEdgeFrameID( void ) const
-    {
-        return eventLine1RisingEdgeFrameID;
-    }
-    PropertyI64 getEventLine2RisingEdge( void ) const
-    {
-        return eventLine2RisingEdge;
-    }
-    PropertyI64 getEventLine2RisingEdgeTimestamp( void ) const
-    {
-        return eventLine2RisingEdgeTimestamp;
-    }
-    PropertyI64 getEventLine2RisingEdgeFrameID( void ) const
-    {
-        return eventLine2RisingEdgeFrameID;
-    }
-    PropertyI64 getEventLine3RisingEdge( void ) const
-    {
-        return eventLine3RisingEdge;
-    }
-    PropertyI64 getEventLine3RisingEdgeTimestamp( void ) const
-    {
-        return eventLine3RisingEdgeTimestamp;
-    }
-    PropertyI64 getEventLine3RisingEdgeFrameID( void ) const
-    {
-        return eventLine3RisingEdgeFrameID;
-    }
-    PropertyI64 getEventLine0FallingEdge( void ) const
-    {
-        return eventLine0FallingEdge;
-    }
-    PropertyI64 getEventLine0FallingEdgeTimestamp( void ) const
-    {
-        return eventLine0FallingEdgeTimestamp;
-    }
-    PropertyI64 getEventLine0FallingEdgeFrameID( void ) const
-    {
-        return eventLine0FallingEdgeFrameID;
-    }
-    PropertyI64 getEventLine1FallingEdge( void ) const
-    {
-        return eventLine1FallingEdge;
-    }
-    PropertyI64 getEventLine1FallingEdgeTimestamp( void ) const
-    {
-        return eventLine1FallingEdgeTimestamp;
-    }
-    PropertyI64 getEventLine1FallingEdgeFrameID( void ) const
-    {
-        return eventLine1FallingEdgeFrameID;
-    }
-    PropertyI64 getEventLine2FallingEdge( void ) const
-    {
-        return eventLine2FallingEdge;
-    }
-    PropertyI64 getEventLine2FallingEdgeTimestamp( void ) const
-    {
-        return eventLine2FallingEdgeTimestamp;
-    }
-    PropertyI64 getEventLine2FallingEdgeFrameID( void ) const
-    {
-        return eventLine2FallingEdgeFrameID;
-    }
-    PropertyI64 getEventLine3FallingEdge( void ) const
-    {
-        return eventLine3FallingEdge;
-    }
-    PropertyI64 getEventLine3FallingEdgeTimestamp( void ) const
-    {
-        return eventLine3FallingEdgeTimestamp;
-    }
-    PropertyI64 getEventLine3FallingEdgeFrameID( void ) const
-    {
-        return eventLine3FallingEdgeFrameID;
-    }
-    PropertyI64 getEventLine0AnyEdge( void ) const
-    {
-        return eventLine0AnyEdge;
-    }
-    PropertyI64 getEventLine0AnyEdgeTimestamp( void ) const
-    {
-        return eventLine0AnyEdgeTimestamp;
-    }
-    PropertyI64 getEventLine0AnyEdgeFrameID( void ) const
-    {
-        return eventLine0AnyEdgeFrameID;
-    }
-    PropertyI64 getEventLine1AnyEdge( void ) const
-    {
-        return eventLine1AnyEdge;
-    }
-    PropertyI64 getEventLine1AnyEdgeTimestamp( void ) const
-    {
-        return eventLine1AnyEdgeTimestamp;
-    }
-    PropertyI64 getEventLine1AnyEdgeFrameID( void ) const
-    {
-        return eventLine1AnyEdgeFrameID;
-    }
-    PropertyI64 getEventLine2AnyEdge( void ) const
-    {
-        return eventLine2AnyEdge;
-    }
-    PropertyI64 getEventLine2AnyEdgeTimestamp( void ) const
-    {
-        return eventLine2AnyEdgeTimestamp;
-    }
-    PropertyI64 getEventLine2AnyEdgeFrameID( void ) const
-    {
-        return eventLine2AnyEdgeFrameID;
-    }
-    PropertyI64 getEventLine3AnyEdge( void ) const
-    {
-        return eventLine3AnyEdge;
-    }
-    PropertyI64 getEventLine3AnyEdgeTimestamp( void ) const
-    {
-        return eventLine3AnyEdgeTimestamp;
-    }
-    PropertyI64 getEventLine3AnyEdgeFrameID( void ) const
-    {
-        return eventLine3AnyEdgeFrameID;
-    }
-    PropertyI64 getEventError( void ) const
-    {
-        return eventError;
-    }
-    PropertyI64 getEventErrorTimestamp( void ) const
-    {
-        return eventErrorTimestamp;
-    }
-    PropertyI64 getEventErrorFrameID( void ) const
-    {
-        return eventErrorFrameID;
-    }
-    PropertyI64 getEventErrorCode( void ) const
-    {
-        return eventErrorCode;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -3312,14 +2224,14 @@ public:
         gainAutoBalance(),
         blackLevelSelector(),
         blackLevel(),
-        blackLevelRaw(),
         blackLevelAbs(),
+        blackLevelRaw(),
         blackLevelAuto(),
         blackLevelAutoBalance(),
         whiteClipSelector(),
         whiteClip(),
-        whiteClipRaw(),
         whiteClipAbs(),
+        whiteClipRaw(),
         balanceRatioSelector(),
         balanceRatio(),
         balanceRatioAbs(),
@@ -3356,22 +2268,38 @@ public:
         locator.bindSearchBase( locator.searchbase_id(), "Camera/GenICam" );
         locator.bindComponent( gainSelector, "GainSelector" );
         locator.bindComponent( gain, "Gain" );
+        if( !gain.isValid() )
+        {
+            locator.bindComponent( gain, "GainAbs" );
+        }
         locator.bindComponent( gainRaw, "GainRaw" );
         locator.bindComponent( gainAbs, "GainAbs" );
         locator.bindComponent( gainAuto, "GainAuto" );
         locator.bindComponent( gainAutoBalance, "GainAutoBalance" );
         locator.bindComponent( blackLevelSelector, "BlackLevelSelector" );
         locator.bindComponent( blackLevel, "BlackLevel" );
-        locator.bindComponent( blackLevelRaw, "BlackLevelRaw" );
+        if( !blackLevel.isValid() )
+        {
+            locator.bindComponent( blackLevel, "BlackLevelAbs" );
+        }
         locator.bindComponent( blackLevelAbs, "BlackLevelAbs" );
+        locator.bindComponent( blackLevelRaw, "BlackLevelRaw" );
         locator.bindComponent( blackLevelAuto, "BlackLevelAuto" );
         locator.bindComponent( blackLevelAutoBalance, "BlackLevelAutoBalance" );
         locator.bindComponent( whiteClipSelector, "WhiteClipSelector" );
         locator.bindComponent( whiteClip, "WhiteClip" );
-        locator.bindComponent( whiteClipRaw, "WhiteClipRaw" );
+        if( !whiteClip.isValid() )
+        {
+            locator.bindComponent( whiteClip, "WhiteClipAbs" );
+        }
         locator.bindComponent( whiteClipAbs, "WhiteClipAbs" );
+        locator.bindComponent( whiteClipRaw, "WhiteClipRaw" );
         locator.bindComponent( balanceRatioSelector, "BalanceRatioSelector" );
         locator.bindComponent( balanceRatio, "BalanceRatio" );
+        if( !balanceRatio.isValid() )
+        {
+            locator.bindComponent( balanceRatio, "BalanceRatioAbs" );
+        }
         locator.bindComponent( balanceRatioAbs, "BalanceRatioAbs" );
         locator.bindComponent( balanceWhiteAuto, "BalanceWhiteAuto" );
         locator.bindComponent( gamma, "Gamma" );
@@ -3448,15 +2376,15 @@ public:
     /// \brief This feature is deprecated.
     /**
      *  \deprecated
-     *  This feature is deprecated. It controls the analog black level as a raw integer value. This represents a DC offset applied to the video signal.
-     */
-    PropertyI64 blackLevelRaw;
-    /// \brief This feature is deprecated.
-    /**
-     *  \deprecated
      *  This feature is deprecated. This feature controls the analog black level as an absolute physical value. This represents a DC offset applied to the video signal.
      */
     PropertyF blackLevelAbs;
+    /// \brief This feature is deprecated.
+    /**
+     *  \deprecated
+     *  This feature is deprecated. It controls the analog black level as a raw integer value. This represents a DC offset applied to the video signal.
+     */
+    PropertyI64 blackLevelRaw;
     /// \brief Controls the mode for automatic black level adjustment.
     /**
      *  Controls the mode for automatic black level adjustment. The exact algorithm used to implement this adjustment is device-specific.
@@ -3480,15 +2408,15 @@ public:
     /// \brief This feature is deprecated.
     /**
      *  \deprecated
-     *  This feature is deprecated. Controls the maximal intensity taken by the video signal before being clipped as a raw integer value. The video signal will never exceed the white clipping point: it will saturate at that level.
-     */
-    PropertyI64 whiteClipRaw;
-    /// \brief This feature is deprecated.
-    /**
-     *  \deprecated
      *  This feature is deprecated. Controls the maximal intensity taken by the video signal before being clipped as an absolute physical value. The video signal will never exceed the white clipping point: it will saturate at that level.
      */
     PropertyF whiteClipAbs;
+    /// \brief This feature is deprecated.
+    /**
+     *  \deprecated
+     *  This feature is deprecated. Controls the maximal intensity taken by the video signal before being clipped as a raw integer value. The video signal will never exceed the white clipping point: it will saturate at that level.
+     */
+    PropertyI64 whiteClipRaw;
     /// \brief Selects which Balance ratio to control.
     /**
      *  Selects which Balance ratio to control.
@@ -3646,196 +2574,6 @@ public:
      */
     Method mvSaveCalibrationData;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getGainSelector( void ) const
-    {
-        return gainSelector;
-    }
-    PropertyF getGain( void ) const
-    {
-        return gain;
-    }
-    PropertyI64 getGainRaw( void ) const
-    {
-        return gainRaw;
-    }
-    PropertyF getGainAbs( void ) const
-    {
-        return gainAbs;
-    }
-    PropertyI64 getGainAuto( void ) const
-    {
-        return gainAuto;
-    }
-    PropertyI64 getGainAutoBalance( void ) const
-    {
-        return gainAutoBalance;
-    }
-    PropertyI64 getBlackLevelSelector( void ) const
-    {
-        return blackLevelSelector;
-    }
-    PropertyF getBlackLevel( void ) const
-    {
-        return blackLevel;
-    }
-    PropertyI64 getBlackLevelRaw( void ) const
-    {
-        return blackLevelRaw;
-    }
-    PropertyF getBlackLevelAbs( void ) const
-    {
-        return blackLevelAbs;
-    }
-    PropertyI64 getBlackLevelAuto( void ) const
-    {
-        return blackLevelAuto;
-    }
-    PropertyI64 getBlackLevelAutoBalance( void ) const
-    {
-        return blackLevelAutoBalance;
-    }
-    PropertyI64 getWhiteClipSelector( void ) const
-    {
-        return whiteClipSelector;
-    }
-    PropertyF getWhiteClip( void ) const
-    {
-        return whiteClip;
-    }
-    PropertyI64 getWhiteClipRaw( void ) const
-    {
-        return whiteClipRaw;
-    }
-    PropertyF getWhiteClipAbs( void ) const
-    {
-        return whiteClipAbs;
-    }
-    PropertyI64 getBalanceRatioSelector( void ) const
-    {
-        return balanceRatioSelector;
-    }
-    PropertyF getBalanceRatio( void ) const
-    {
-        return balanceRatio;
-    }
-    PropertyF getBalanceRatioAbs( void ) const
-    {
-        return balanceRatioAbs;
-    }
-    PropertyI64 getBalanceWhiteAuto( void ) const
-    {
-        return balanceWhiteAuto;
-    }
-    PropertyF getGamma( void ) const
-    {
-        return gamma;
-    }
-    PropertyI64 getmvGainAutoDelayImages( void ) const
-    {
-        return mvGainAutoDelayImages;
-    }
-    PropertyF getmvGainAutoUpperLimit( void ) const
-    {
-        return mvGainAutoUpperLimit;
-    }
-    PropertyF getmvGainAutoLowerLimit( void ) const
-    {
-        return mvGainAutoLowerLimit;
-    }
-    PropertyI64 getmvGainAutoSpeed( void ) const
-    {
-        return mvGainAutoSpeed;
-    }
-    PropertyI64 getmvGainAutoAverageGrey( void ) const
-    {
-        return mvGainAutoAverageGrey;
-    }
-    PropertyI64 getmvGainAutoHighlightAOI( void ) const
-    {
-        return mvGainAutoHighlightAOI;
-    }
-    PropertyI64 getmvGainAutoAOIMode( void ) const
-    {
-        return mvGainAutoAOIMode;
-    }
-    PropertyI64 getmvGainAutoOffsetX( void ) const
-    {
-        return mvGainAutoOffsetX;
-    }
-    PropertyI64 getmvGainAutoOffsetY( void ) const
-    {
-        return mvGainAutoOffsetY;
-    }
-    PropertyI64 getmvGainAutoWidth( void ) const
-    {
-        return mvGainAutoWidth;
-    }
-    PropertyI64 getmvGainAutoHeight( void ) const
-    {
-        return mvGainAutoHeight;
-    }
-    PropertyI64 getmvGainAutoMode( void ) const
-    {
-        return mvGainAutoMode;
-    }
-    PropertyI64 getmvBalanceWhiteAutoAOIMode( void ) const
-    {
-        return mvBalanceWhiteAutoAOIMode;
-    }
-    PropertyI64 getmvBalanceWhiteAutoOffsetX( void ) const
-    {
-        return mvBalanceWhiteAutoOffsetX;
-    }
-    PropertyI64 getmvBalanceWhiteAutoOffsetY( void ) const
-    {
-        return mvBalanceWhiteAutoOffsetY;
-    }
-    PropertyI64 getmvBalanceWhiteAutoWidth( void ) const
-    {
-        return mvBalanceWhiteAutoWidth;
-    }
-    PropertyI64 getmvBalanceWhiteAutoHeight( void ) const
-    {
-        return mvBalanceWhiteAutoHeight;
-    }
-    PropertyI64 getmvVCAL( void ) const
-    {
-        return mvVCAL;
-    }
-    PropertyI64 getmvVBLACK( void ) const
-    {
-        return mvVBLACK;
-    }
-    PropertyI64 getmvVOFFSET( void ) const
-    {
-        return mvVOFFSET;
-    }
-    PropertyI64 getmvLowLight( void ) const
-    {
-        return mvLowLight;
-    }
-    PropertyI64 getmvADCGain( void ) const
-    {
-        return mvADCGain;
-    }
-    PropertyI64 getmvVRamp( void ) const
-    {
-        return mvVRamp;
-    }
-    PropertyI64 getmvLinearLogarithmicMode( void ) const
-    {
-        return mvLinearLogarithmicMode;
-    }
-    PropertyI64 getmvDigitalGainOffset( void ) const
-    {
-        return mvDigitalGainOffset;
-    }
-    Method getmvSaveCalibrationData( void ) const
-    {
-        return mvSaveCalibrationData;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -3884,20 +2622,6 @@ public:
      */
     Method mvReadCustomData;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyS getmvCustomText( void ) const
-    {
-        return mvCustomText;
-    }
-    Method getmvWriteCustomData( void ) const
-    {
-        return mvWriteCustomData;
-    }
-    Method getmvReadCustomData( void ) const
-    {
-        return mvReadCustomData;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -3960,28 +2684,6 @@ public:
      */
     PropertyS LUTValueAll;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getLUTSelector( void ) const
-    {
-        return LUTSelector;
-    }
-    PropertyIBoolean getLUTEnable( void ) const
-    {
-        return LUTEnable;
-    }
-    PropertyI64 getLUTIndex( void ) const
-    {
-        return LUTIndex;
-    }
-    PropertyI64 getLUTValue( void ) const
-    {
-        return LUTValue;
-    }
-    PropertyS getLUTValueAll( void ) const
-    {
-        return LUTValueAll;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -4100,60 +2802,6 @@ public:
      */
     PropertyI64 sequencerTriggerActivation;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getSequencerMode( void ) const
-    {
-        return sequencerMode;
-    }
-    PropertyI64 getSequencerConfigurationMode( void ) const
-    {
-        return sequencerConfigurationMode;
-    }
-    PropertyI64 getSequencerFeatureSelector( void ) const
-    {
-        return sequencerFeatureSelector;
-    }
-    PropertyIBoolean getSequencerFeatureEnable( void ) const
-    {
-        return sequencerFeatureEnable;
-    }
-    PropertyI64 getSequencerSetSelector( void ) const
-    {
-        return sequencerSetSelector;
-    }
-    Method getSequencerSetSave( void ) const
-    {
-        return sequencerSetSave;
-    }
-    Method getSequencerSetLoad( void ) const
-    {
-        return sequencerSetLoad;
-    }
-    PropertyI64 getSequencerSetActive( void ) const
-    {
-        return sequencerSetActive;
-    }
-    PropertyI64 getSequencerSetStart( void ) const
-    {
-        return sequencerSetStart;
-    }
-    PropertyI64 getSequencerPathSelector( void ) const
-    {
-        return sequencerPathSelector;
-    }
-    PropertyI64 getSequencerSetNext( void ) const
-    {
-        return sequencerSetNext;
-    }
-    PropertyI64 getSequencerTriggerSource( void ) const
-    {
-        return sequencerTriggerSource;
-    }
-    PropertyI64 getSequencerTriggerActivation( void ) const
-    {
-        return sequencerTriggerActivation;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -4944,336 +3592,6 @@ public:
     {
         return gevGetResultingPacketDelay( acquisitionFrameRateValue, gevSCPSPacketSizeValue, payloadSize.read(), gevTimestampTickFrequencyValue, bandwidthAvailable, boExtendedID );
     }
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getPayloadSize( void ) const
-    {
-        return payloadSize;
-    }
-    PropertyI64 getGevVersionMajor( void ) const
-    {
-        return gevVersionMajor;
-    }
-    PropertyI64 getGevVersionMinor( void ) const
-    {
-        return gevVersionMinor;
-    }
-    PropertyIBoolean getGevDeviceModeIsBigEndian( void ) const
-    {
-        return gevDeviceModeIsBigEndian;
-    }
-    PropertyI64 getGevDeviceClass( void ) const
-    {
-        return gevDeviceClass;
-    }
-    PropertyI64 getGevDeviceModeCharacterSet( void ) const
-    {
-        return gevDeviceModeCharacterSet;
-    }
-    PropertyI64 getGevInterfaceSelector( void ) const
-    {
-        return gevInterfaceSelector;
-    }
-    PropertyI64 getGevMACAddress( void ) const
-    {
-        return gevMACAddress;
-    }
-    PropertyI64 getGevSupportedOptionSelector( void ) const
-    {
-        return gevSupportedOptionSelector;
-    }
-    PropertyIBoolean getGevSupportedOption( void ) const
-    {
-        return gevSupportedOption;
-    }
-    PropertyIBoolean getGevSupportedIPConfigurationLLA( void ) const
-    {
-        return gevSupportedIPConfigurationLLA;
-    }
-    PropertyIBoolean getGevSupportedIPConfigurationDHCP( void ) const
-    {
-        return gevSupportedIPConfigurationDHCP;
-    }
-    PropertyIBoolean getGevSupportedIPConfigurationPersistentIP( void ) const
-    {
-        return gevSupportedIPConfigurationPersistentIP;
-    }
-    PropertyI64 getGevCurrentIPConfiguration( void ) const
-    {
-        return gevCurrentIPConfiguration;
-    }
-    PropertyIBoolean getGevCurrentIPConfigurationLLA( void ) const
-    {
-        return gevCurrentIPConfigurationLLA;
-    }
-    PropertyIBoolean getGevCurrentIPConfigurationDHCP( void ) const
-    {
-        return gevCurrentIPConfigurationDHCP;
-    }
-    PropertyIBoolean getGevCurrentIPConfigurationPersistentIP( void ) const
-    {
-        return gevCurrentIPConfigurationPersistentIP;
-    }
-    PropertyI64 getGevCurrentIPAddress( void ) const
-    {
-        return gevCurrentIPAddress;
-    }
-    PropertyI64 getGevCurrentSubnetMask( void ) const
-    {
-        return gevCurrentSubnetMask;
-    }
-    PropertyI64 getGevCurrentDefaultGateway( void ) const
-    {
-        return gevCurrentDefaultGateway;
-    }
-    PropertyI64 getGevIPConfigurationStatus( void ) const
-    {
-        return gevIPConfigurationStatus;
-    }
-    PropertyS getGevFirstURL( void ) const
-    {
-        return gevFirstURL;
-    }
-    PropertyS getGevSecondURL( void ) const
-    {
-        return gevSecondURL;
-    }
-    PropertyI64 getGevNumberOfInterfaces( void ) const
-    {
-        return gevNumberOfInterfaces;
-    }
-    PropertyI64 getGevPersistentIPAddress( void ) const
-    {
-        return gevPersistentIPAddress;
-    }
-    PropertyI64 getGevPersistentSubnetMask( void ) const
-    {
-        return gevPersistentSubnetMask;
-    }
-    PropertyI64 getGevPersistentDefaultGateway( void ) const
-    {
-        return gevPersistentDefaultGateway;
-    }
-    PropertyI64 getGevLinkSpeed( void ) const
-    {
-        return gevLinkSpeed;
-    }
-    PropertyI64 getGevMessageChannelCount( void ) const
-    {
-        return gevMessageChannelCount;
-    }
-    PropertyI64 getGevStreamChannelCount( void ) const
-    {
-        return gevStreamChannelCount;
-    }
-    PropertyIBoolean getGevSupportedOptionalCommandsUserDefinedName( void ) const
-    {
-        return gevSupportedOptionalCommandsUserDefinedName;
-    }
-    PropertyIBoolean getGevSupportedOptionalCommandsSerialNumber( void ) const
-    {
-        return gevSupportedOptionalCommandsSerialNumber;
-    }
-    PropertyIBoolean getGevSupportedOptionalCommandsEVENTDATA( void ) const
-    {
-        return gevSupportedOptionalCommandsEVENTDATA;
-    }
-    PropertyIBoolean getGevSupportedOptionalCommandsEVENT( void ) const
-    {
-        return gevSupportedOptionalCommandsEVENT;
-    }
-    PropertyIBoolean getGevSupportedOptionalCommandsPACKETRESEND( void ) const
-    {
-        return gevSupportedOptionalCommandsPACKETRESEND;
-    }
-    PropertyIBoolean getGevSupportedOptionalCommandsWRITEMEM( void ) const
-    {
-        return gevSupportedOptionalCommandsWRITEMEM;
-    }
-    PropertyIBoolean getGevSupportedOptionalCommandsConcatenation( void ) const
-    {
-        return gevSupportedOptionalCommandsConcatenation;
-    }
-    PropertyI64 getGevHeartbeatTimeout( void ) const
-    {
-        return gevHeartbeatTimeout;
-    }
-    PropertyI64 getGevTimestampTickFrequency( void ) const
-    {
-        return gevTimestampTickFrequency;
-    }
-    Method getGevTimestampControlLatch( void ) const
-    {
-        return gevTimestampControlLatch;
-    }
-    Method getGevTimestampControlReset( void ) const
-    {
-        return gevTimestampControlReset;
-    }
-    PropertyI64 getGevTimestampValue( void ) const
-    {
-        return gevTimestampValue;
-    }
-    PropertyI64 getGevDiscoveryAckDelay( void ) const
-    {
-        return gevDiscoveryAckDelay;
-    }
-    PropertyIBoolean getGevGVCPExtendedStatusCodes( void ) const
-    {
-        return gevGVCPExtendedStatusCodes;
-    }
-    PropertyIBoolean getGevGVCPPendingAck( void ) const
-    {
-        return gevGVCPPendingAck;
-    }
-    PropertyIBoolean getGevGVCPHeartbeatDisable( void ) const
-    {
-        return gevGVCPHeartbeatDisable;
-    }
-    PropertyI64 getGevGVCPPendingTimeout( void ) const
-    {
-        return gevGVCPPendingTimeout;
-    }
-    PropertyI64 getGevPrimaryApplicationSwitchoverKey( void ) const
-    {
-        return gevPrimaryApplicationSwitchoverKey;
-    }
-    PropertyI64 getGevCCP( void ) const
-    {
-        return gevCCP;
-    }
-    PropertyI64 getGevPrimaryApplicationSocket( void ) const
-    {
-        return gevPrimaryApplicationSocket;
-    }
-    PropertyI64 getGevPrimaryApplicationIPAddress( void ) const
-    {
-        return gevPrimaryApplicationIPAddress;
-    }
-    PropertyI64 getGevMCPHostPort( void ) const
-    {
-        return gevMCPHostPort;
-    }
-    PropertyI64 getGevMCDA( void ) const
-    {
-        return gevMCDA;
-    }
-    PropertyI64 getGevMCTT( void ) const
-    {
-        return gevMCTT;
-    }
-    PropertyI64 getGevMCRC( void ) const
-    {
-        return gevMCRC;
-    }
-    PropertyI64 getGevMCSP( void ) const
-    {
-        return gevMCSP;
-    }
-    PropertyI64 getGevStreamChannelSelector( void ) const
-    {
-        return gevStreamChannelSelector;
-    }
-    PropertyIBoolean getGevSCCFGUnconditionalStreaming( void ) const
-    {
-        return gevSCCFGUnconditionalStreaming;
-    }
-    PropertyIBoolean getGevSCCFGExtendedChunkData( void ) const
-    {
-        return gevSCCFGExtendedChunkData;
-    }
-    PropertyI64 getGevSCPDirection( void ) const
-    {
-        return gevSCPDirection;
-    }
-    PropertyI64 getGevSCPInterfaceIndex( void ) const
-    {
-        return gevSCPInterfaceIndex;
-    }
-    PropertyI64 getGevSCPHostPort( void ) const
-    {
-        return gevSCPHostPort;
-    }
-    PropertyIBoolean getGevSCPSFireTestPacket( void ) const
-    {
-        return gevSCPSFireTestPacket;
-    }
-    PropertyIBoolean getGevSCPSDoNotFragment( void ) const
-    {
-        return gevSCPSDoNotFragment;
-    }
-    PropertyIBoolean getGevSCPSBigEndian( void ) const
-    {
-        return gevSCPSBigEndian;
-    }
-    PropertyI64 getGevSCPSPacketSize( void ) const
-    {
-        return gevSCPSPacketSize;
-    }
-    PropertyI64 getGevSCPD( void ) const
-    {
-        return gevSCPD;
-    }
-    PropertyI64 getGevSCDA( void ) const
-    {
-        return gevSCDA;
-    }
-    PropertyI64 getGevSCSP( void ) const
-    {
-        return gevSCSP;
-    }
-    PropertyI64 getGevManifestEntrySelector( void ) const
-    {
-        return gevManifestEntrySelector;
-    }
-    PropertyI64 getGevManifestXMLMajorVersion( void ) const
-    {
-        return gevManifestXMLMajorVersion;
-    }
-    PropertyI64 getGevManifestXMLMinorVersion( void ) const
-    {
-        return gevManifestXMLMinorVersion;
-    }
-    PropertyI64 getGevManifestXMLSubMinorVersion( void ) const
-    {
-        return gevManifestXMLSubMinorVersion;
-    }
-    PropertyI64 getGevManifestSchemaMajorVersion( void ) const
-    {
-        return gevManifestSchemaMajorVersion;
-    }
-    PropertyI64 getGevManifestSchemaMinorVersion( void ) const
-    {
-        return gevManifestSchemaMinorVersion;
-    }
-    PropertyS getGevManifestPrimaryURL( void ) const
-    {
-        return gevManifestPrimaryURL;
-    }
-    PropertyS getGevManifestSecondaryURL( void ) const
-    {
-        return gevManifestSecondaryURL;
-    }
-    PropertyI64 getClConfiguration( void ) const
-    {
-        return clConfiguration;
-    }
-    PropertyI64 getClTimeSlotsCount( void ) const
-    {
-        return clTimeSlotsCount;
-    }
-    PropertyI64 getDeviceTapGeometry( void ) const
-    {
-        return deviceTapGeometry;
-    }
-    PropertyI64 getmvGevSCBWControl( void ) const
-    {
-        return mvGevSCBWControl;
-    }
-    PropertyI64 getmvGevSCBW( void ) const
-    {
-        return mvGevSCBW;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -5337,28 +3655,6 @@ public:
      */
     PropertyS mvUserData;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getUserSetSelector( void ) const
-    {
-        return userSetSelector;
-    }
-    Method getUserSetLoad( void ) const
-    {
-        return userSetLoad;
-    }
-    Method getUserSetSave( void ) const
-    {
-        return userSetSave;
-    }
-    PropertyI64 getUserSetDefaultSelector( void ) const
-    {
-        return userSetDefaultSelector;
-    }
-    PropertyS getmvUserData( void ) const
-    {
-        return mvUserData;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -5586,120 +3882,6 @@ public:
      */
     PropertyI64 chunkFrameID;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyIBoolean getChunkModeActive( void ) const
-    {
-        return chunkModeActive;
-    }
-    PropertyI64 getChunkSelector( void ) const
-    {
-        return chunkSelector;
-    }
-    PropertyIBoolean getChunkEnable( void ) const
-    {
-        return chunkEnable;
-    }
-    PropertyS getChunkImage( void ) const
-    {
-        return chunkImage;
-    }
-    PropertyI64 getChunkOffsetX( void ) const
-    {
-        return chunkOffsetX;
-    }
-    PropertyI64 getChunkOffsetY( void ) const
-    {
-        return chunkOffsetY;
-    }
-    PropertyI64 getChunkWidth( void ) const
-    {
-        return chunkWidth;
-    }
-    PropertyI64 getChunkHeight( void ) const
-    {
-        return chunkHeight;
-    }
-    PropertyI64 getChunkPixelFormat( void ) const
-    {
-        return chunkPixelFormat;
-    }
-    PropertyI64 getChunkPixelDynamicRangeMin( void ) const
-    {
-        return chunkPixelDynamicRangeMin;
-    }
-    PropertyI64 getChunkPixelDynamicRangeMax( void ) const
-    {
-        return chunkPixelDynamicRangeMax;
-    }
-    PropertyI64 getChunkDynamicRangeMin( void ) const
-    {
-        return chunkDynamicRangeMin;
-    }
-    PropertyI64 getChunkDynamicRangeMax( void ) const
-    {
-        return chunkDynamicRangeMax;
-    }
-    PropertyI64 getChunkTimestamp( void ) const
-    {
-        return chunkTimestamp;
-    }
-    PropertyI64 getChunkLineStatusAll( void ) const
-    {
-        return chunkLineStatusAll;
-    }
-    PropertyI64 getChunkCounterSelector( void ) const
-    {
-        return chunkCounterSelector;
-    }
-    PropertyI64 getChunkCounterValue( void ) const
-    {
-        return chunkCounterValue;
-    }
-    PropertyI64 getChunkCounter( void ) const
-    {
-        return chunkCounter;
-    }
-    PropertyI64 getChunkTimerSelector( void ) const
-    {
-        return chunkTimerSelector;
-    }
-    PropertyF getChunkTimerValue( void ) const
-    {
-        return chunkTimerValue;
-    }
-    PropertyF getChunkTimer( void ) const
-    {
-        return chunkTimer;
-    }
-    PropertyF getChunkExposureTime( void ) const
-    {
-        return chunkExposureTime;
-    }
-    PropertyI64 getChunkGainSelector( void ) const
-    {
-        return chunkGainSelector;
-    }
-    PropertyF getChunkGain( void ) const
-    {
-        return chunkGain;
-    }
-    PropertyI64 getChunkBlackLevelSelector( void ) const
-    {
-        return chunkBlackLevelSelector;
-    }
-    PropertyF getChunkBlackLevel( void ) const
-    {
-        return chunkBlackLevel;
-    }
-    PropertyI64 getChunkLinePitch( void ) const
-    {
-        return chunkLinePitch;
-    }
-    PropertyI64 getChunkFrameID( void ) const
-    {
-        return chunkFrameID;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -5797,48 +3979,6 @@ public:
      */
     PropertyI64 fileSize;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getFileSelector( void ) const
-    {
-        return fileSelector;
-    }
-    PropertyI64 getFileOperationSelector( void ) const
-    {
-        return fileOperationSelector;
-    }
-    Method getFileOperationExecute( void ) const
-    {
-        return fileOperationExecute;
-    }
-    PropertyI64 getFileOpenMode( void ) const
-    {
-        return fileOpenMode;
-    }
-    PropertyS getFileAccessBuffer( void ) const
-    {
-        return fileAccessBuffer;
-    }
-    PropertyI64 getFileAccessOffset( void ) const
-    {
-        return fileAccessOffset;
-    }
-    PropertyI64 getFileAccessLength( void ) const
-    {
-        return fileAccessLength;
-    }
-    PropertyI64 getFileOperationStatus( void ) const
-    {
-        return fileOperationStatus;
-    }
-    PropertyI64 getFileOperationResult( void ) const
-    {
-        return fileOperationResult;
-    }
-    PropertyI64 getFileSize( void ) const
-    {
-        return fileSize;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -5894,24 +4034,6 @@ public:
      */
     PropertyF colorTransformationValue;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getColorTransformationSelector( void ) const
-    {
-        return colorTransformationSelector;
-    }
-    PropertyIBoolean getColorTransformationEnable( void ) const
-    {
-        return colorTransformationEnable;
-    }
-    PropertyI64 getColorTransformationValueSelector( void ) const
-    {
-        return colorTransformationValueSelector;
-    }
-    PropertyF getColorTransformationValue( void ) const
-    {
-        return colorTransformationValue;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -5967,24 +4089,6 @@ public:
      */
     PropertyI64 actionGroupKey;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getActionDeviceKey( void ) const
-    {
-        return actionDeviceKey;
-    }
-    PropertyI64 getActionSelector( void ) const
-    {
-        return actionSelector;
-    }
-    PropertyI64 getActionGroupMask( void ) const
-    {
-        return actionGroupMask;
-    }
-    PropertyI64 getActionGroupKey( void ) const
-    {
-        return actionGroupKey;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -6035,20 +4139,6 @@ public:
      */
     PropertyI64 mvAutoExposure;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getmvGain( void ) const
-    {
-        return mvGain;
-    }
-    PropertyI64 getmvBalanceWhiteAuto( void ) const
-    {
-        return mvBalanceWhiteAuto;
-    }
-    PropertyI64 getmvAutoExposure( void ) const
-    {
-        return mvAutoExposure;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -6127,36 +4217,6 @@ public:
      */
     PropertyI64 mvXLampLEDPairCurrent;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getmvXLampSource( void ) const
-    {
-        return mvXLampSource;
-    }
-    PropertyI64 getmvXLampActivationSourceSelector( void ) const
-    {
-        return mvXLampActivationSourceSelector;
-    }
-    PropertyI64 getmvXLampActivationSource( void ) const
-    {
-        return mvXLampActivationSource;
-    }
-    PropertyI64 getmvXLampLEDPairSelector( void ) const
-    {
-        return mvXLampLEDPairSelector;
-    }
-    PropertyI64 getmvXLampActivationSourceModeSelector( void ) const
-    {
-        return mvXLampActivationSourceModeSelector;
-    }
-    PropertyIBoolean getmvXLampLEDActivationSourceMode( void ) const
-    {
-        return mvXLampLEDActivationSourceMode;
-    }
-    PropertyI64 getmvXLampLEDPairCurrent( void ) const
-    {
-        return mvXLampLEDPairCurrent;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -6319,84 +4379,6 @@ public:
      */
     PropertyI64 mvLogicGateORTermSrc1;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getmvLogicGateANDSelector( void ) const
-    {
-        return mvLogicGateANDSelector;
-    }
-    PropertyI64 getmvLogicGateANDSource1( void ) const
-    {
-        return mvLogicGateANDSource1;
-    }
-    PropertyIBoolean getmvANDSource1Inverter( void ) const
-    {
-        return mvANDSource1Inverter;
-    }
-    PropertyI64 getmvLogicGateANDSource2( void ) const
-    {
-        return mvLogicGateANDSource2;
-    }
-    PropertyIBoolean getmvANDSource2Inverter( void ) const
-    {
-        return mvANDSource2Inverter;
-    }
-    PropertyI64 getmvLogicGateORSelector( void ) const
-    {
-        return mvLogicGateORSelector;
-    }
-    PropertyI64 getmvLogicGateORSource1( void ) const
-    {
-        return mvLogicGateORSource1;
-    }
-    PropertyI64 getmvLogicGateORSource2( void ) const
-    {
-        return mvLogicGateORSource2;
-    }
-    PropertyI64 getmvLogicGateORSource3( void ) const
-    {
-        return mvLogicGateORSource3;
-    }
-    PropertyI64 getmvLogicGateORSource4( void ) const
-    {
-        return mvLogicGateORSource4;
-    }
-    PropertyI64 getmvLogicGateSourceSelector( void ) const
-    {
-        return mvLogicGateSourceSelector;
-    }
-    PropertyI64 getmvLogicGateSource( void ) const
-    {
-        return mvLogicGateSource;
-    }
-    PropertyIBoolean getmvLogicGateSourceInverter( void ) const
-    {
-        return mvLogicGateSourceInverter;
-    }
-    PropertyI64 getmvLogicGateANDTermSelector( void ) const
-    {
-        return mvLogicGateANDTermSelector;
-    }
-    PropertyI64 getmvLogicGateANDTermSrc0( void ) const
-    {
-        return mvLogicGateANDTermSrc0;
-    }
-    PropertyI64 getmvLogicGateANDTermSrc1( void ) const
-    {
-        return mvLogicGateANDTermSrc1;
-    }
-    PropertyI64 getmvLogicGateORTermSelector( void ) const
-    {
-        return mvLogicGateORTermSelector;
-    }
-    PropertyI64 getmvLogicGateORTermSrc0( void ) const
-    {
-        return mvLogicGateORTermSrc0;
-    }
-    PropertyI64 getmvLogicGateORTermSrc1( void ) const
-    {
-        return mvLogicGateORTermSrc1;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -6440,16 +4422,6 @@ public:
      */
     PropertyI64 mvCurrent;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getmvCurrentSelector( void ) const
-    {
-        return mvCurrentSelector;
-    }
-    PropertyI64 getmvCurrent( void ) const
-    {
-        return mvCurrent;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -6500,20 +4472,6 @@ public:
      */
     Method mvFFCCalibrate;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyIBoolean getmvFFCEnable( void ) const
-    {
-        return mvFFCEnable;
-    }
-    PropertyI64 getmvFFCCalibrationImageCount( void ) const
-    {
-        return mvFFCCalibrationImageCount;
-    }
-    Method getmvFFCCalibrate( void ) const
-    {
-        return mvFFCCalibrate;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -6536,37 +4494,62 @@ public:
         /// <b>mvIMPACT::acquire::FunctionInterface::createSetting</b>
         const std::string& settingName = "Base" ) :
         mvIMPACT::acquire::ComponentCollection( pDev ),
+        mvFrameAverageMode(),
         mvFrameAverageEnable(),
-        mvFrameAverageSlope()
+        mvFrameAverageSlope(),
+        mvFrameAverageDynamicMode(),
+        mvFrameAverageNoiseLimit(),
+        mvFrameAverageNoiseGain(),
+        mvFrameAverageFrameCount()
     {
         mvIMPACT::acquire::DeviceComponentLocator locator( pDev, mvIMPACT::acquire::dltSetting, settingName );
         locator.bindSearchBase( locator.searchbase_id(), "Camera/GenICam/mvFrameAverageControl" );
         m_hRoot = locator.searchbase_id();
+        locator.bindComponent( mvFrameAverageMode, "mvFrameAverageMode" );
         locator.bindComponent( mvFrameAverageEnable, "mvFrameAverageEnable" );
         locator.bindComponent( mvFrameAverageSlope, "mvFrameAverageSlope" );
+        locator.bindComponent( mvFrameAverageDynamicMode, "mvFrameAverageDynamicMode" );
+        locator.bindComponent( mvFrameAverageNoiseLimit, "mvFrameAverageNoiseLimit" );
+        locator.bindComponent( mvFrameAverageNoiseGain, "mvFrameAverageNoiseGain" );
+        locator.bindComponent( mvFrameAverageFrameCount, "mvFrameAverageFrameCount" );
     }
     PYTHON_ONLY( %immutable; )
+    /// \brief Sets the frame average operating mode.
+    /**
+     *  Sets the frame average operating mode.
+     */
+    PropertyI64 mvFrameAverageMode;
     /// \brief Enables the frame averaging engine.
     /**
      *  Enables the frame averaging engine.
      */
     PropertyIBoolean mvFrameAverageEnable;
-    /// \brief The slope in full range of register.
+    /// \brief Here you specify the noise border for very dark pictures.
     /**
-     *  The slope in full range of register.
+     *  Here you specify the noise border for very dark pictures.
      */
     PropertyI64 mvFrameAverageSlope;
+    /// \brief Sets the frame average dynamic operating mode.
+    /**
+     *  Sets the frame average dynamic operating mode.
+     */
+    PropertyI64 mvFrameAverageDynamicMode;
+    /// \brief Here you specify the noise limit for very bright pictures.
+    /**
+     *  Here you specify the noise limit for very bright pictures.
+     */
+    PropertyI64 mvFrameAverageNoiseLimit;
+    /// \brief Here you specify the noise border for very bright pictures.
+    /**
+     *  Here you specify the noise border for very bright pictures.
+     */
+    PropertyI64 mvFrameAverageNoiseGain;
+    /// \brief Here you specify the frame count used for the calculation of the frame average.
+    /**
+     *  Here you specify the frame count used for the calculation of the frame average.
+     */
+    PropertyI64 mvFrameAverageFrameCount;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyIBoolean getmvFrameAverageEnable( void ) const
-    {
-        return mvFrameAverageEnable;
-    }
-    PropertyI64 getmvFrameAverageSlope( void ) const
-    {
-        return mvFrameAverageSlope;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -6645,36 +4628,6 @@ public:
      */
     PropertyI64 mvHDRExposure2;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyIBoolean getmvHDREnable( void ) const
-    {
-        return mvHDREnable;
-    }
-    PropertyI64 getmvHDRPreset( void ) const
-    {
-        return mvHDRPreset;
-    }
-    PropertyI64 getmvHDRSelector( void ) const
-    {
-        return mvHDRSelector;
-    }
-    PropertyI64 getmvHDRVoltage1( void ) const
-    {
-        return mvHDRVoltage1;
-    }
-    PropertyI64 getmvHDRVoltage2( void ) const
-    {
-        return mvHDRVoltage2;
-    }
-    PropertyI64 getmvHDRExposure1( void ) const
-    {
-        return mvHDRExposure1;
-    }
-    PropertyI64 getmvHDRExposure2( void ) const
-    {
-        return mvHDRExposure2;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -6739,28 +4692,6 @@ public:
      */
     PropertyI64 mvSPIAccessLength;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getmvSPIDeviceSelector( void ) const
-    {
-        return mvSPIDeviceSelector;
-    }
-    PropertyI64 getmvSPIOperationSelector( void ) const
-    {
-        return mvSPIOperationSelector;
-    }
-    Method getmvSPIOperationExecute( void ) const
-    {
-        return mvSPIOperationExecute;
-    }
-    PropertyS getmvSPIAccessBuffer( void ) const
-    {
-        return mvSPIAccessBuffer;
-    }
-    PropertyI64 getmvSPIAccessLength( void ) const
-    {
-        return mvSPIAccessLength;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -6860,48 +4791,6 @@ public:
      */
     PropertyIBoolean mvLampDetect;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyI64 getmvDACOUTA( void ) const
-    {
-        return mvDACOUTA;
-    }
-    PropertyI64 getmvDACOUTB( void ) const
-    {
-        return mvDACOUTB;
-    }
-    PropertyI64 getmvDACOUTC( void ) const
-    {
-        return mvDACOUTC;
-    }
-    PropertyI64 getmvDACOUTD( void ) const
-    {
-        return mvDACOUTD;
-    }
-    PropertyI64 getDACIndex( void ) const
-    {
-        return DACIndex;
-    }
-    PropertyI64 getDACValue( void ) const
-    {
-        return DACValue;
-    }
-    PropertyS getDACValueAll( void ) const
-    {
-        return DACValueAll;
-    }
-    PropertyI64 getmvErrorDetect0( void ) const
-    {
-        return mvErrorDetect0;
-    }
-    PropertyI64 getmvErrorDetect1( void ) const
-    {
-        return mvErrorDetect1;
-    }
-    PropertyIBoolean getmvLampDetect( void ) const
-    {
-        return mvLampDetect;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -6959,24 +4848,6 @@ public:
      */
     PropertyI64 mvZAxis;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyIBoolean getmvACCEnable( void ) const
-    {
-        return mvACCEnable;
-    }
-    PropertyI64 getmvXAxis( void ) const
-    {
-        return mvXAxis;
-    }
-    PropertyI64 getmvYAxis( void ) const
-    {
-        return mvYAxis;
-    }
-    PropertyI64 getmvZAxis( void ) const
-    {
-        return mvZAxis;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -7182,112 +5053,6 @@ public:
      */
     PropertyI64 u3vVersionMinor;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyS getTLVendorName( void ) const
-    {
-        return TLVendorName;
-    }
-    PropertyS getTLModelName( void ) const
-    {
-        return TLModelName;
-    }
-    PropertyS getTLID( void ) const
-    {
-        return TLID;
-    }
-    PropertyS getTLVersion( void ) const
-    {
-        return TLVersion;
-    }
-    PropertyS getTLPath( void ) const
-    {
-        return TLPath;
-    }
-    PropertyI64 getTLType( void ) const
-    {
-        return TLType;
-    }
-    Method getInterfaceUpdateList( void ) const
-    {
-        return interfaceUpdateList;
-    }
-    PropertyI64 getInterfaceSelector( void ) const
-    {
-        return interfaceSelector;
-    }
-    PropertyS getInterfaceID( void ) const
-    {
-        return interfaceID;
-    }
-    PropertyI64 getInterfaceType( void ) const
-    {
-        return interfaceType;
-    }
-    PropertyI64 getGevInterfaceMACAddress( void ) const
-    {
-        return gevInterfaceMACAddress;
-    }
-    PropertyI64 getGevInterfaceDefaultIPAddress( void ) const
-    {
-        return gevInterfaceDefaultIPAddress;
-    }
-    PropertyI64 getGevInterfaceDefaultSubnetMask( void ) const
-    {
-        return gevInterfaceDefaultSubnetMask;
-    }
-    PropertyI64 getGevInterfaceDefaultGateway( void ) const
-    {
-        return gevInterfaceDefaultGateway;
-    }
-    PropertyI64 getmvGevInterfaceMTU( void ) const
-    {
-        return mvGevInterfaceMTU;
-    }
-    PropertyI64 getmvGevInterfaceLinkSpeed( void ) const
-    {
-        return mvGevInterfaceLinkSpeed;
-    }
-    PropertyI64 getGenTLVersionMajor( void ) const
-    {
-        return genTLVersionMajor;
-    }
-    PropertyI64 getGenTLVersionMinor( void ) const
-    {
-        return genTLVersionMinor;
-    }
-    PropertyI64 getGenCPVersionMajor( void ) const
-    {
-        return genCPVersionMajor;
-    }
-    PropertyI64 getGenCPVersionMinor( void ) const
-    {
-        return genCPVersionMinor;
-    }
-    PropertyI64 getGevVersionMajor( void ) const
-    {
-        return gevVersionMajor;
-    }
-    PropertyI64 getGevVersionMinor( void ) const
-    {
-        return gevVersionMinor;
-    }
-    PropertyIBoolean getmvGevChannelDummyPacketSendEnable( void ) const
-    {
-        return mvGevChannelDummyPacketSendEnable;
-    }
-    PropertyI64 getmvGevChannelDummyPacketSendInterval( void ) const
-    {
-        return mvGevChannelDummyPacketSendInterval;
-    }
-    PropertyI64 getU3vVersionMajor( void ) const
-    {
-        return u3vVersionMajor;
-    }
-    PropertyI64 getU3vVersionMinor( void ) const
-    {
-        return u3vVersionMinor;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -7555,144 +5320,6 @@ public:
      */
     PropertyI64 gevDeviceMACAddress;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyS getInterfaceID( void ) const
-    {
-        return interfaceID;
-    }
-    PropertyI64 getInterfaceType( void ) const
-    {
-        return interfaceType;
-    }
-    PropertyI64 getGevInterfaceGatewaySelector( void ) const
-    {
-        return gevInterfaceGatewaySelector;
-    }
-    PropertyI64 getGevInterfaceGateway( void ) const
-    {
-        return gevInterfaceGateway;
-    }
-    PropertyI64 getGevInterfaceMACAddress( void ) const
-    {
-        return gevInterfaceMACAddress;
-    }
-    PropertyI64 getGevInterfaceSubnetSelector( void ) const
-    {
-        return gevInterfaceSubnetSelector;
-    }
-    PropertyI64 getGevInterfaceSubnetIPAddress( void ) const
-    {
-        return gevInterfaceSubnetIPAddress;
-    }
-    PropertyI64 getGevInterfaceSubnetMask( void ) const
-    {
-        return gevInterfaceSubnetMask;
-    }
-    PropertyI64 getmvGevInterfaceMTU( void ) const
-    {
-        return mvGevInterfaceMTU;
-    }
-    PropertyI64 getmvGevInterfaceLinkSpeed( void ) const
-    {
-        return mvGevInterfaceLinkSpeed;
-    }
-    PropertyIBoolean getmvGevAdvancedDeviceDiscoveryEnable( void ) const
-    {
-        return mvGevAdvancedDeviceDiscoveryEnable;
-    }
-    Method getDeviceUpdateList( void ) const
-    {
-        return deviceUpdateList;
-    }
-    PropertyI64 getDeviceSelector( void ) const
-    {
-        return deviceSelector;
-    }
-    PropertyS getDeviceID( void ) const
-    {
-        return deviceID;
-    }
-    PropertyS getDeviceVendorName( void ) const
-    {
-        return deviceVendorName;
-    }
-    PropertyS getDeviceModelName( void ) const
-    {
-        return deviceModelName;
-    }
-    PropertyI64 getDeviceType( void ) const
-    {
-        return deviceType;
-    }
-    PropertyI64 getDeviceLinkSpeed( void ) const
-    {
-        return deviceLinkSpeed;
-    }
-    PropertyI64 getDeviceAccessStatus( void ) const
-    {
-        return deviceAccessStatus;
-    }
-    PropertyI64 getmvDeviceCommandChannelTransmissionTimeout( void ) const
-    {
-        return mvDeviceCommandChannelTransmissionTimeout;
-    }
-    PropertyI64 getmvDeviceCommandChannelRetryCount( void ) const
-    {
-        return mvDeviceCommandChannelRetryCount;
-    }
-    PropertyI64 getGevVersionMajor( void ) const
-    {
-        return gevVersionMajor;
-    }
-    PropertyI64 getGevVersionMinor( void ) const
-    {
-        return gevVersionMinor;
-    }
-    PropertyI64 getGenCPVersionMajor( void ) const
-    {
-        return genCPVersionMajor;
-    }
-    PropertyI64 getGenCPVersionMinor( void ) const
-    {
-        return genCPVersionMinor;
-    }
-    PropertyI64 getU3vVersionMajor( void ) const
-    {
-        return u3vVersionMajor;
-    }
-    PropertyI64 getU3vVersionMinor( void ) const
-    {
-        return u3vVersionMinor;
-    }
-    PropertyIBoolean getmvDevicePrimaryApplicationSwitchoverSupported( void ) const
-    {
-        return mvDevicePrimaryApplicationSwitchoverSupported;
-    }
-    PropertyIBoolean getmvDevicePrimaryApplicationSwitchoverEnable( void ) const
-    {
-        return mvDevicePrimaryApplicationSwitchoverEnable;
-    }
-    PropertyI64 getmvDevicePrimaryApplicationSwitchoverKey( void ) const
-    {
-        return mvDevicePrimaryApplicationSwitchoverKey;
-    }
-    PropertyI64 getmvDeviceNetworkInterfaceCount( void ) const
-    {
-        return mvDeviceNetworkInterfaceCount;
-    }
-    PropertyI64 getGevDeviceIPAddress( void ) const
-    {
-        return gevDeviceIPAddress;
-    }
-    PropertyI64 getGevDeviceSubnetMask( void ) const
-    {
-        return gevDeviceSubnetMask;
-    }
-    PropertyI64 getGevDeviceMACAddress( void ) const
-    {
-        return gevDeviceMACAddress;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -7849,80 +5476,6 @@ public:
      */
     PropertyS streamID;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyS getDeviceID( void ) const
-    {
-        return deviceID;
-    }
-    PropertyS getDeviceVendorName( void ) const
-    {
-        return deviceVendorName;
-    }
-    PropertyS getDeviceModelName( void ) const
-    {
-        return deviceModelName;
-    }
-    PropertyI64 getDeviceType( void ) const
-    {
-        return deviceType;
-    }
-    PropertyI64 getDeviceLinkSpeed( void ) const
-    {
-        return deviceLinkSpeed;
-    }
-    PropertyI64 getGevVersionMajor( void ) const
-    {
-        return gevVersionMajor;
-    }
-    PropertyI64 getGevVersionMinor( void ) const
-    {
-        return gevVersionMinor;
-    }
-    PropertyI64 getGenCPVersionMajor( void ) const
-    {
-        return genCPVersionMajor;
-    }
-    PropertyI64 getGenCPVersionMinor( void ) const
-    {
-        return genCPVersionMinor;
-    }
-    PropertyI64 getU3vVersionMajor( void ) const
-    {
-        return u3vVersionMajor;
-    }
-    PropertyI64 getU3vVersionMinor( void ) const
-    {
-        return u3vVersionMinor;
-    }
-    PropertyI64 getGevDeviceIPAddress( void ) const
-    {
-        return gevDeviceIPAddress;
-    }
-    PropertyI64 getGevDeviceSubnetMask( void ) const
-    {
-        return gevDeviceSubnetMask;
-    }
-    PropertyI64 getGevDeviceMACAddress( void ) const
-    {
-        return gevDeviceMACAddress;
-    }
-    PropertyI64 getGevDeviceGateway( void ) const
-    {
-        return gevDeviceGateway;
-    }
-    PropertyI64 getDeviceEndianessMechanism( void ) const
-    {
-        return deviceEndianessMechanism;
-    }
-    PropertyI64 getStreamSelector( void ) const
-    {
-        return streamSelector;
-    }
-    PropertyS getStreamID( void ) const
-    {
-        return streamID;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 //-----------------------------------------------------------------------------
@@ -8076,76 +5629,6 @@ public:
      */
     PropertyI64 mvResendFeaturesLocked;
     PYTHON_ONLY( %mutable; )
-#ifdef DOTNET_ONLY_CODE
-    PropertyS getStreamID( void ) const
-    {
-        return streamID;
-    }
-    PropertyI64 getStreamAnnouncedBufferCount( void ) const
-    {
-        return streamAnnouncedBufferCount;
-    }
-    PropertyI64 getmvStreamAnnounceBufferMaximum( void ) const
-    {
-        return mvStreamAnnounceBufferMaximum;
-    }
-    PropertyI64 getStreamAcquisitionModeSelector( void ) const
-    {
-        return streamAcquisitionModeSelector;
-    }
-    PropertyI64 getStreamAnnounceBufferMinimum( void ) const
-    {
-        return streamAnnounceBufferMinimum;
-    }
-    PropertyI64 getStreamType( void ) const
-    {
-        return streamType;
-    }
-    PropertyS getmvStreamDriverTechnology( void ) const
-    {
-        return mvStreamDriverTechnology;
-    }
-    PropertyIBoolean getmvResendActive( void ) const
-    {
-        return mvResendActive;
-    }
-    PropertyI64 getmvResendMode( void ) const
-    {
-        return mvResendMode;
-    }
-    PropertyIBoolean getmvResendBatchingActive( void ) const
-    {
-        return mvResendBatchingActive;
-    }
-    PropertyI64 getmvResendCaptureWindowSize( void ) const
-    {
-        return mvResendCaptureWindowSize;
-    }
-    PropertyI64 getmvResendThreshold( void ) const
-    {
-        return mvResendThreshold;
-    }
-    PropertyI64 getmvResendRequestMax( void ) const
-    {
-        return mvResendRequestMax;
-    }
-    PropertyF getmvResendRequestCredits( void ) const
-    {
-        return mvResendRequestCredits;
-    }
-    PropertyI64 getmvResendResponseTimeout( void ) const
-    {
-        return mvResendResponseTimeout;
-    }
-    PropertyI64 getmvResendsPerTimeout( void ) const
-    {
-        return mvResendsPerTimeout;
-    }
-    PropertyI64 getmvResendFeaturesLocked( void ) const
-    {
-        return mvResendFeaturesLocked;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 };
 
 /// @}

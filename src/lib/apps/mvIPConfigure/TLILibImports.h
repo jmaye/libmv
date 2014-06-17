@@ -59,11 +59,15 @@ enum DEVICE_INFO_CMD
     DEVICE_INFO_TLTYPE                              = 3,                          /// STRING      Transport layer technologies that are supported.
     DEVICE_INFO_DISPLAYNAME                         = 4,                          /// STRING      String containing a display name for the device ( including a unique id )
     DEVICE_INFO_ACCESS_STATUS                       = 5,                          /// INT32       Gets the access mode the GenTL Producer has on the opened device. (DEVICE_ACCESS_STATUS enumeration value).
+    DEVICE_INFO_USER_DEFINED_NAME                   = 6,                          /// STRING      String containing the user defined name, GenTL v1.4
+    DEVICE_INFO_SERIAL_NUMBER                       = 7,                          /// STRING      String containing the device's serial number, GenTL v1.4
+    DEVICE_INFO_VERSION                             = 8,                          /// STRING      String containing the device version, GenTL v1.4
+    DEVICE_INFO_TIMESTAMP_FREQUENCY                 = 9,                          /// UINT64      Tickfrequency of the timestamp clock, GenTL v1.4
     DEVICE_INFO_CUSTOM_ID                           = 1000,                       /// Starting value for GenTL Producer custom IDs.
     DEVICE_INFO_MANUFACTURER_SPECIFIC_INFO          = DEVICE_INFO_CUSTOM_ID + 0,  /// STRING      String containing the manufacturer specific info
     DEVICE_INFO_GVCP_MESSAGE_TIMEOUT                = DEVICE_INFO_CUSTOM_ID + 1,  /// UINT32_T    Timeout of the message channel in ms
     DEVICE_INFO_LOGMSGWRITER_NAME                   = DEVICE_INFO_CUSTOM_ID + 2,  /// STRING      String containing the name of the log message writer
-    DEVICE_INFO_VERSION                             = DEVICE_INFO_CUSTOM_ID + 3,  /// STRING      String containing the device version register
+    //DEVICE_INFO_VERSION                             = DEVICE_INFO_CUSTOM_ID + 3, // in GenTL.h since GenTL 1.4
     DEVICE_INFO_SUPPORTS_USER_DEFINED_NAME          = DEVICE_INFO_CUSTOM_ID + 4,  /// BOOL8
     DEVICE_INFO_PERSISTENT_IP_STRING                = DEVICE_INFO_CUSTOM_ID + 5,
     DEVICE_INFO_PERSISTENT_NETMASK_STRING           = DEVICE_INFO_CUSTOM_ID + 6,
@@ -74,8 +78,8 @@ enum DEVICE_INFO_CMD
     DEVICE_INFO_AUTONEG_OPTIMAL_SCPS_VALUE          = DEVICE_INFO_CUSTOM_ID + 11,
     DEVICE_INFO_IP_STRING                           = DEVICE_INFO_CUSTOM_ID + 12,
     DEVICE_INFO_MAC_STRING                          = DEVICE_INFO_CUSTOM_ID + 13,
-    DEVICE_INFO_SERIALNUMBER                        = DEVICE_INFO_CUSTOM_ID + 14,
-    DEVICE_INFO_USER_DEFINED_NAME                   = DEVICE_INFO_CUSTOM_ID + 15,
+    //DEVICE_INFO_SERIALNUMBER                        = DEVICE_INFO_CUSTOM_ID + 14, // in GenTL.h since GenTL 1.4
+    //DEVICE_INFO_USER_DEFINED_NAME                   = DEVICE_INFO_CUSTOM_ID + 15, // in GenTL.h since GenTL 1.4
     DEVICE_INFO_MAC                                 = DEVICE_INFO_CUSTOM_ID + 16,
     DEVICE_INFO_IP                                  = DEVICE_INFO_CUSTOM_ID + 17,
     DEVICE_INFO_SUBNET                              = DEVICE_INFO_CUSTOM_ID + 18,
@@ -86,7 +90,7 @@ enum DEVICE_INFO_CMD
     DEVICE_INFO_CURRENT_IP_LLA                      = DEVICE_INFO_CUSTOM_ID + 23,
     DEVICE_INFO_CURRENT_IP_DHCP                     = DEVICE_INFO_CUSTOM_ID + 24,
     DEVICE_INFO_CURRENT_IP_PERSISTENT               = DEVICE_INFO_CUSTOM_ID + 25,
-    DEVICE_INFO_TIMESTAMP_TICK_FREQUENCY            = DEVICE_INFO_CUSTOM_ID + 26,
+    //DEVICE_INFO_TIMESTAMP_TICK_FREQUENCY            = DEVICE_INFO_CUSTOM_ID + 26, // in GenTL.h since GenTL 1.4
     //DEVICE_INFO_SUPPORTS_MESSAGE_CHANNEL            = DEVICE_INFO_CUSTOM_ID + 27, // no longer used
     DEVICE_INFO_ADAPTERNAME                         = DEVICE_INFO_CUSTOM_ID + 28, /// STRING      String with the GUID of the Interface adapter, this is equal to DEVICE_INFO_CUSTOM_CMD in the used version of the TLI headers
     DEVICE_INFO_PRIMARY_APP_SWITCHOVER_SUPPORTED    = DEVICE_INFO_CUSTOM_ID + 29, /// BOOL8
@@ -119,7 +123,7 @@ enum STREAM_INFO_CMD
     STREAM_INFO_DEFINES_PAYLOADSIZE          =  9,   /// BOOL8      Flag that indicated that this data stream defines a payload size independent from the remote device.
     STREAM_INFO_TLTYPE                       = 10,   /// STRING     Transport layer technology that is supported.
     STREAM_INFO_NUM_CHUNKS_MAX               = 11,   /// SIZET      Max number of chunks in a buffer, if known. GenTL v1.3
-    STREAM_INFO_NUM_ANNOUNCE_MIN             = 12,   /// SIZET      Min number of buffers to announce before acq can start, if known. GenTL v1.3
+    STREAM_INFO_BUF_ANNOUNCE_MIN             = 12,   /// SIZET      Min number of buffers to announce before acq can start, if known. GenTL v1.3
     STREAM_INFO_BUF_ALIGNMENT                = 13,   /// SIZET      Buffer alignment in bytes. GenTL v1.3
     STREAM_INFO_CUSTOM_ID                    = 1000, /// Starting value for GenTL Producer custom IDs.
     STREAM_INFO_NUM_PENDING = STREAM_INFO_CUSTOM_ID, /// UINT64     Number of buffers that have been queued but havn't been completed
@@ -168,6 +172,8 @@ typedef int GC_ERROR;
 #     define GC_API_P(function) typedef GC_ERROR( GC_CALLTYPE *function )
 #endif
 
+GC_API_P( PGCInitLib )                       ( void );
+GC_API_P( PGCCloseLib )                      ( void );
 GC_API_P( PTLOpen )                          ( MVTLI_HANDLE* phTL );
 GC_API_P( PTLClose )                         ( MVTLI_HANDLE hTL );
 GC_API_P( PTLUpdateInterfaceList )           ( MVTLI_HANDLE hTL, char* bHasChanged, int64_type timeout );

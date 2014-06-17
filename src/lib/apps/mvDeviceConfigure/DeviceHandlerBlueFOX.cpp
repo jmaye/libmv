@@ -32,7 +32,7 @@ int DeviceHandlerBlueFOX::UpdateFirmware( bool boSilentMode )
         {
             if( result == DMR_FEATURE_NOT_AVAILABLE )
             {
-                pParent_->WriteLogMessage( wxT( "This device doesn't support firmware updates.\n" ) );
+                pParent_->WriteLogMessage( wxString::Format( wxT( "Device %s doesn't support firmware updates.\n" ), serial.c_str() ) );
             }
             else if( result != DMR_NO_ERROR )
             {

@@ -855,7 +855,7 @@ WizardLUTGammaDlg::WizardLUTGammaDlg( wxWindow* pParent, const wxString& title, 
         | pTopDownSizer                       |
         |                spacer               |
         | |---------------------------------| |
-        | | pInputControls                  | |
+        | | pGridSizer                      | |
         | |---------------------------------| |
         |                spacer               |
         | |---------------------------------| |

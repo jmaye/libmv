@@ -257,6 +257,7 @@ BEGIN_EVENT_TABLE( PropViewFrame, PropGridFrameBase )
     EVT_MENU( miCapture_CaptureSettings_UsageMode_Manual, PropViewFrame::OnCapture_CaptureSettings_UsageMode_Changed )
     EVT_MENU( miCapture_CaptureSettings_UsageMode_Automatic, PropViewFrame::OnCapture_CaptureSettings_UsageMode_Changed )
     EVT_MENU( miCapture_SetupCaptureQueueDepth, PropViewFrame::OnSetupCaptureQueueDepth )
+    EVT_MENU( miCapture_DetailedRequestInformation, PropViewFrame::OnDetailedRequestInformation )
     EVT_MENU( miSettings_Display_Active, PropViewFrame::OnActivateDisplay )
     EVT_MENU( miSettings_Display_ShowMonitorImage, PropViewFrame::OnShowMonitorDisplay )
     EVT_MENU( miSettings_Display_ShowIncompleteFrames, PropViewFrame::OnShowIncompleteFrames )
@@ -474,7 +475,8 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
       m_DeviceCount( 0 ), m_ProductFirmwareTable(), m_NoteBook_ToolTipSplitterPos( -1 ), m_NoDevStr( wxT( "No Device" ) ), m_SingleFrameStr( wxT( "SingleFrame" ) ), m_MultiFrameStr( wxT( "MultiFrame" ) ),
       m_ContinuousStr( wxT( "Continuous" ) ), m_pDevPropHandler( 0 ), m_pLastMouseHooverDisplay( 0 ), m_pCurrentAnalysisDisplay( 0 ),
       m_CurrentRequestDataIndex( 0 ), m_pUserExperienceCombo( 0 ), m_pMonitorImage( 0 ), m_pLUTControlDlg( 0 ),
-      m_pColorCorrectionDlg( 0 ), m_pLogWindow( 0 ), m_pWindowDisabler( 0 ), m_pPropViewCallback( new PropViewCallback() ), m_currentWizard( wNone ),
+      m_pColorCorrectionDlg( 0 ), m_pLogWindow( 0 ), m_pWindowDisabler( 0 ),
+      m_pPropViewCallback( new PropViewCallback() ), m_currentWizard( wNone ),
       m_defaultDeviceInterfaceLayout( wxT( "GenICam" ) ), m_HardDiscRecordingParameters()
 //-----------------------------------------------------------------------------
 {
@@ -557,6 +559,7 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
     pMenuCapture->AppendSeparator();
     pMenuCapture->Append( wxID_ANY, wxT( "Capture Settings" ), pMenuCaptureCaptureSettings );
     m_pMICapture_SetupCaptureQueueDepth = pMenuCapture->Append( miCapture_SetupCaptureQueueDepth, wxT( "Setup Capture Queue Depth\tCTRL+Q" ), wxT( "Sets the number of buffers that will be used to prefill the capture queue" ) );
+    m_pMICapture_DetailedRequestInformation = pMenuCapture->Append( miCapture_DetailedRequestInformation, wxT( "Detailed Request Information..." ), wxT( "Opens a dialog that displays detailed information about each capture buffer" ) );
 
     // sub menu 'Settings -> Property Grid'
     wxMenu* pMenuSettingsPropertyGrid = new wxMenu;
@@ -867,7 +870,7 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
     wxBoxSizer* pInfoPlotSizer = new wxBoxSizer( wxVERTICAL );
     pInfoPlotSizer->AddSpacer( 5 );
     pInfoPlotSizer->Add( pInfoPlotTopLineSizer );
-    pInfoPlotSizer->AddSpacer( 5 );
+    pInfoPlotSizer->AddSpacer( 10 );
     pInfoPlotSizer->Add( pInfoPlotPanelSizer, wxSizerFlags( 1 ).Expand() );
 
     pPanelInfoPlot->SetSizer( pInfoPlotSizer );
@@ -1134,12 +1137,19 @@ PropViewFrame::~PropViewFrame()
     delete GlobalDataStorage::Instance();
     delete m_pPropViewCallback;
     m_pMonitorImage->Destroy();
-    DestroyDialog( &m_pLUTControlDlg );
-    DestroyDialog( &m_pColorCorrectionDlg );
+    DestroyAdditionalDialogs();
     // when we e.g. try to write config stuff on a read-only file system the result can
     // be an annoying message box. Therefore we switch off logging now, as otherwise higher level
     // clean up code might produce error messages
     wxLog::EnableLogging( false );
+}
+
+//-----------------------------------------------------------------------------
+void PropViewFrame::DestroyAdditionalDialogs( void )
+//-----------------------------------------------------------------------------
+{
+    DestroyDialog( &m_pLUTControlDlg );
+    DestroyDialog( &m_pColorCorrectionDlg );
 }
 
 //-----------------------------------------------------------------------------
@@ -2341,6 +2351,26 @@ void PropViewFrame::OnContinuousRecording( wxCommandEvent& e )
         if( pThread )
         {
             pThread->SetContinuousRecording( e.IsChecked() );
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------
+void PropViewFrame::OnDetailedRequestInformation( wxCommandEvent& )
+//-----------------------------------------------------------------------------
+{
+    FunctionInterface* pFI = 0;
+    Device* pDev = m_pDevPropHandler->GetActiveDevice( &pFI );
+    if( pDev && pFI )
+    {
+        try
+        {
+            DetailedRequestInformationDlg dlg( this, wxString::Format( wxT( "Detailed Request Information [%s]" ), ConvertedString( pDev->serial.read() ).c_str() ), pFI );
+            dlg.ShowModal();
+        }
+        catch( const ImpactAcquireException& e )
+        {
+            WriteErrorMessage( wxString::Format( wxT( "%s(%d): Internal error: %s(%s) while trying to deal with the detailed request information dialog for device '%s'.\n" ), ConvertedString( __FUNCTION__ ).c_str(), __LINE__, ConvertedString( e.getErrorString() ).c_str(), ConvertedString( e.getErrorCodeAsString() ).c_str(), ConvertedString( pDev->serial.read() ).c_str() ) );
         }
     }
 }
@@ -4259,6 +4289,7 @@ void PropViewFrame::SetupDlgControls( void )
     m_pMICapture_Forward->Enable( boOpen_Present_NotLive && !boSequenceEnd );
     m_pMICapture_Backward->Enable( boOpen_Present_NotLive && !boSequenceBegin );
     m_pMICapture_SetupCaptureQueueDepth->Enable( boOpen_NotLive );
+    m_pMICapture_DetailedRequestInformation->Enable( boOpen_NotLive );
     m_pMICapture_Recording_Continuous->Enable( boDevOpen );
     m_pMICapture_Recording_SlientMode->Enable( boOpen_NotLive );
     m_pMICapture_Recording_SetupSequenceSize->Enable( boOpen_NotLive );
@@ -4385,8 +4416,7 @@ void PropViewFrame::ToggleCurrentDevice( void )
                         wxCriticalSectionLocker locker( m_critSect );
                         m_settingToDisplayDict.clear();
                     }
-                    DestroyDialog( &m_pLUTControlDlg );
-                    DestroyDialog( &m_pColorCorrectionDlg );
+                    DestroyAdditionalDialogs();
                     wxStopWatch stopWatch;
                     m_pDevPropHandler->CloseDriver( GetSelectedDeviceSerial() );
                     WriteLogMessage( wxString::Format( wxT( "Closing device '%s' took %ld ms.\n" ), ConvertedString( pDev->serial.read() ).c_str(), stopWatch.Time() ) );
@@ -5218,7 +5248,7 @@ void PropViewFrame::Wizard_FileAccessControl( bool boUpload )
                         if( !file.fail() )
                         {
                             const std::streamsize fileSize = file.size();
-                            if( file > 0 )
+                            if( fileSize > 0 )
                             {
                                 pBuf = new char[fileSize];
                                 memset( pBuf, 0, fileSize );

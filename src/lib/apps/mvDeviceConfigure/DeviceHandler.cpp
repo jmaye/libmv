@@ -63,7 +63,7 @@ int DeviceHandler::UpdateFirmware( bool /*boSilentMode*/ )
 {
     if( pParent_ )
     {
-        pParent_->WriteErrorMessage( wxT( "This device doesn't implement firmware updates\n" ) );
+        pParent_->WriteErrorMessage( wxString::Format( wxT( "Device %s doesn't implement firmware updates\n" ), ConvertedString( pDev_->serial.read() ).c_str() ) );
     }
     return urFeatureUnsupported;
 }
@@ -74,7 +74,7 @@ int DeviceHandler::UpdateKernelDriver( bool /*boSilentMode*/ )
 {
     if( pParent_ )
     {
-        pParent_->WriteErrorMessage( wxT( "This device doesn't implement kernel driver updates\n" ) );
+        pParent_->WriteErrorMessage( wxString::Format( wxT( "Device %s doesn't implement kernel driver updates\n" ), ConvertedString( pDev_->serial.read() ).c_str() ) );
     }
     return urFeatureUnsupported;
 }

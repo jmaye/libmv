@@ -53,13 +53,30 @@ public:
     enum TUpdateResult
     //-----------------------------------------------------------------------------
     {
-        urOperationSuccessful,
+        urOperationSuccessful = 0,
         urFeatureUnsupported,
         urOperationCanceled,
         urInvalidFileSelection,
         urFileIOError,
-        urDeviceAccessError
+        urDeviceAccessError,
+        urInvalidParameter
     };
+};
+
+//-----------------------------------------------------------------------------
+class DeviceHandler3rdParty : public DeviceHandler
+//-----------------------------------------------------------------------------
+{
+public:
+    DeviceHandler3rdParty( mvIMPACT::acquire::Device* pDev ) : DeviceHandler( pDev ) {}
+    static DeviceHandler* Create( mvIMPACT::acquire::Device* pDev )
+    {
+        return new DeviceHandler3rdParty( pDev );
+    }
+    virtual bool SupportsFirmwareUpdate( void ) const
+    {
+        return false;
+    }
 };
 
 #endif // DeviceHandlerH

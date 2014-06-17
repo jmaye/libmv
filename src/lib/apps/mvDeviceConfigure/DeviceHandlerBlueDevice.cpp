@@ -477,7 +477,15 @@ DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueFOX3(
         MessageToUser( wxT( "Warning" ), wxString::Format( wxT( "Activating the firmware downloaded to device %s failed. Error reported from driver: %d(%s). Please power-cycle the device now, update the device list and re-try to update the firmware." ), ConvertedString( serial ).c_str(), fileOperationExecuteResult, ConvertedString( ImpactAcquireException::getErrorCodeAsString( fileOperationExecuteResult ) ).c_str() ), boSilentMode, wxOK | wxICON_INFORMATION );
         return urFileIOError;
     }
+    // It would be correct to enable this next section but there was a bug in the firmware until version 1.6.129 that would return
+    // an error here, thus lots of devices out there would suddenly report a problem during the update thus leave this code disabled!
+    //if( fac.fileOperationStatus.readS() != "Success" )
+    //{
+    //    MessageToUser( wxT( "Warning" ), wxString::Format( wxT( "Activating the firmware downloaded to device %s failed. Error reported from device (fileOperationStatus): '%s'. Please power-cycle the device now, update the device list and re-try to update the firmware." ), ConvertedString( serial ).c_str(), ConvertedString( fac.fileOperationStatus.readS() ).c_str() ), boSilentMode, wxOK | wxICON_INFORMATION );
+    //    return urFileIOError;
+    //}
 
+    DeviceHandler::TUpdateResult result = urOperationSuccessful;
     // download the file again to check its integrity
     auto_array_ptr<char> pBufCheck( bufSize );
     memset( pBufCheck.get(), 0, bufSize );
@@ -487,39 +495,41 @@ DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueFOX3(
         if( downloadFile.fail() )
         {
             MessageToUser( wxT( "Warning" ), wxString::Format( wxT( "Failed to open firmware file on device %s while trying to verify the firmware." ), ConvertedString( serial ).c_str() ), boSilentMode, wxOK | wxICON_INFORMATION );
-            return urFileIOError;
+            result = urFileIOError;
         }
-
-        wxProgressDialog dlgProgress( wxT( "Verifying Firmware Image" ),
-                                      wxString::Format( wxT( "%08d/%08d bytes read" ), 0, static_cast<int>( bufSize ) ),
-                                      static_cast<int>( bufSize ), // range
-                                      pParent_, // parent
-                                      wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_ELAPSED_TIME | wxPD_ESTIMATED_TIME | wxPD_REMAINING_TIME );
-        size_t bytesRead = 0;
-        while( bytesRead < bufSize )
+        else
         {
-            const wxFileOffset bytesToRead = ( ( bytesRead + fileOperationBlockSize ) <= bufSize ) ? fileOperationBlockSize : bufSize - bytesRead;
-            downloadFile.read( pBufCheck + bytesRead, static_cast<std::streamsize>( bytesToRead ) );
-            bytesRead += bytesToRead;
-            std::ostringstream progress;
-            progress << std::setw( 8 ) << std::setfill( '0' ) << bytesRead << '/'
-                     << std::setw( 8 ) << std::setfill( '0' ) << bufSize;
-            dlgProgress.Update( static_cast<int>( bytesRead ), wxString::Format( wxT( "%s bytes read" ), ConvertedString( progress.str() ).c_str() ) );
-        }
-        downloadFile.close();
-        if( downloadFile.fail() )
-        {
-            MessageToUser( wxT( "Warning" ), wxString::Format( wxT( "Failed to download firmware file from device %s." ), ConvertedString( serial ).c_str() ), boSilentMode, wxOK | wxICON_INFORMATION );
-            return urFileIOError;
+            wxProgressDialog dlgProgress( wxT( "Verifying Firmware Image" ),
+                                          wxString::Format( wxT( "%08d/%08d bytes read" ), 0, static_cast<int>( bufSize ) ),
+                                          static_cast<int>( bufSize ), // range
+                                          pParent_, // parent
+                                          wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_ELAPSED_TIME | wxPD_ESTIMATED_TIME | wxPD_REMAINING_TIME );
+            size_t bytesRead = 0;
+            while( bytesRead < bufSize )
+            {
+                const wxFileOffset bytesToRead = ( ( bytesRead + fileOperationBlockSize ) <= bufSize ) ? fileOperationBlockSize : bufSize - bytesRead;
+                downloadFile.read( pBufCheck + bytesRead, static_cast<std::streamsize>( bytesToRead ) );
+                bytesRead += bytesToRead;
+                std::ostringstream progress;
+                progress << std::setw( 8 ) << std::setfill( '0' ) << bytesRead << '/'
+                         << std::setw( 8 ) << std::setfill( '0' ) << bufSize;
+                dlgProgress.Update( static_cast<int>( bytesRead ), wxString::Format( wxT( "%s bytes read" ), ConvertedString( progress.str() ).c_str() ) );
+            }
+            downloadFile.close();
+            if( downloadFile.fail() )
+            {
+                MessageToUser( wxT( "Warning" ), wxString::Format( wxT( "Failed to download firmware file from device %s." ), ConvertedString( serial ).c_str() ), boSilentMode, wxOK | wxICON_INFORMATION );
+                result = urFileIOError;
+            }
         }
     }
 
     if( memcmp( pBuf, pBufCheck, bufSize ) != 0 )
     {
-        MessageToUser( wxT( "Warning" ), wxString::Format( wxT( "The verification of the firmware downloaded to device %s failed. Please power-cycle the device now, update the device list and re-try to update the firmware." ), ConvertedString( serial ).c_str() ), boSilentMode, wxOK | wxICON_INFORMATION );
+        MessageToUser( wxT( "Warning" ), wxString::Format( wxT( "The verification of the firmware downloaded to device %s failed. The device will be power-cycled now, update the device list and re-try to update the firmware." ), ConvertedString( serial ).c_str() ), boSilentMode, wxOK | wxICON_INFORMATION );
         if( pParent_ )
         {
-            pParent_->WriteErrorMessage( wxString::Format( wxT( "The verification of the firmware downloaded to device %s failed. Please power-cycle the device now, update the device list and re-try to update the firmware. A detailed list of diffenrences will follow now." ), ConvertedString( serial ).c_str() ) );
+            pParent_->WriteErrorMessage( wxString::Format( wxT( "The verification of the firmware downloaded to device %s failed. The device will be power-cycled now, update the device list and re-try to update the firmware. A detailed list of diffenrences will follow now." ), ConvertedString( serial ).c_str() ) );
             for( size_t i = 0; i < bufSize; i++ )
             {
                 if( pBuf[i] != pBufCheck[i] )
@@ -528,7 +538,7 @@ DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueFOX3(
                 }
             }
         }
-        return urFileIOError;
+        result = urFileIOError;
     }
 
     mvIMPACT::acquire::GenICam::DeviceControl dc( pDev_ );
@@ -548,7 +558,7 @@ DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueFOX3(
     pDev_->close();
     wxSleep( 10 );
 
-    return urOperationSuccessful;
+    return result;
 }
 
 //-----------------------------------------------------------------------------
@@ -1093,7 +1103,7 @@ int DeviceHandlerBlueDevice::UpdateCOUGAR_XAndFOX3Device( bool boSilentMode )
                                                    currentFirmwareVersion.major_, currentFirmwareVersion.minor_, currentFirmwareVersion.subMinor_, currentFirmwareVersion.release_,
                                                    fileEntries[i].version_.major_, fileEntries[i].version_.minor_, fileEntries[i].version_.subMinor_, fileEntries[i].version_.release_ ) );
                     }
-                    return urOperationCanceled;
+                    return urOperationSuccessful;
                 }
                 else
                 {

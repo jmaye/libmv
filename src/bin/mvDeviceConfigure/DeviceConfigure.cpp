@@ -5,6 +5,7 @@
 #include "apps/mvDeviceConfigure/DeviceHandlerBlueFOX.h"
 #include "apps/mvDeviceConfigure/DeviceHandlerHYPERION.h"
 #include "apps/mvDeviceConfigure/DeviceListCtrl.h"
+#include <fstream>
 #include <limits>
 #include "apps/mvDeviceConfigure/LogOutputHandlerDlg.h"
 #include <memory>
@@ -77,6 +78,7 @@ class MyApp : public wxApp
 {
 public:
     virtual bool OnInit();
+    virtual int  OnRun();
 };
 
 // ----------------------------------------------------------------------------
@@ -115,7 +117,7 @@ END_EVENT_TABLE()
 IMPLEMENT_APP( MyApp )
 
 //-----------------------------------------------------------------------------
-// `Main program' equivalent: the program execution "starts" here
+// 'Main program' equivalent: the program execution "starts" here
 bool MyApp::OnInit()
 //-----------------------------------------------------------------------------
 {
@@ -131,9 +133,20 @@ bool MyApp::OnInit()
     return true;
 }
 
+//-----------------------------------------------------------------------------
+int MyApp::OnRun()
+//-----------------------------------------------------------------------------
+{
+    wxApp::OnRun();
+    return DeviceConfigureFrame::GetUpdateResult();
+}
+
 //=============================================================================
 //================= Implementation DeviceConfigureFrame =======================
 //=============================================================================
+
+int DeviceConfigureFrame::m_updateResult = 0;
+
 //-----------------------------------------------------------------------------
 DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint& pos, const wxSize& size, int argc, wxChar** argv )
     : wxFrame( ( wxFrame* )NULL, wxID_ANY, title, pos, size ),
@@ -144,7 +157,8 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
 //-----------------------------------------------------------------------------
 {
-    m_deviceHandlerFactory.Register( wxString( wxT( "GigEVisionDevice" ) ), DeviceHandlerBlueDevice::Create );
+    m_deviceHandlerFactory.Register( wxString( wxT( "GigEVisionDevice" ) ), DeviceHandler3rdParty::Create );
+    m_deviceHandlerFactory.Register( wxString( wxT( "USB3VisionDevice" ) ), DeviceHandler3rdParty::Create );
     m_deviceHandlerFactory.Register( wxString( wxT( "mvBlueCOUGAR" ) ), DeviceHandlerBlueDevice::Create );
     m_deviceHandlerFactory.Register( wxString( wxT( "mvBlueLYNX" ) ), DeviceHandlerBlueDevice::Create );
     m_deviceHandlerFactory.Register( wxString( wxT( "mvBlueFOX" ) ), DeviceHandlerBlueFOX::Create );
@@ -241,6 +255,7 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
     BuildList();
 
     wxString processedParameters;
+    std::vector<wxString> commandLineErrors;
     for( int i = 1; i < argc; i++ )
     {
         wxString key, value;
@@ -249,13 +264,17 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
         value = param.AfterFirst( wxT( '=' ) );
         if( key.IsEmpty() )
         {
-            WriteErrorMessage( wxString::Format( wxT( "%s: Invalid command line parameter: '%s'.\n" ), ConvertedString( __FUNCTION__ ).c_str(), param.c_str() ) );
+            commandLineErrors.push_back( wxString::Format( wxT( "%s: Invalid command line parameter: '%s'.\n" ), ConvertedString( __FUNCTION__ ).c_str(), param.c_str() ) );
         }
         else
         {
             if( ( key == wxT( "update_fw" ) ) || ( key == wxT( "ufw" ) ) )
             {
                 GetConfigurationEntry( value )->second.boUpdateFW_ = true;
+            }
+            else if( ( key == wxT( "update_fw_file" ) ) || ( key == wxT( "ufwf" ) ) )
+            {
+                GetConfigurationEntriesFromFile( value );
             }
             else if( key == wxT( "fw_path" ) )
             {
@@ -286,14 +305,14 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
                 wxString idString( value.AfterFirst( wxT( '.' ) ) );
                 if( serial.IsEmpty() || idString.IsEmpty() )
                 {
-                    WriteErrorMessage( wxString::Format( wxT( "%s: Invalid command line parameter: '%s'.\n" ), ConvertedString( __FUNCTION__ ).c_str(), param.c_str() ) );
+                    commandLineErrors.push_back( wxString::Format( wxT( "%s: Invalid command line parameter: '%s'.\n" ), ConvertedString( __FUNCTION__ ).c_str(), param.c_str() ) );
                 }
                 else
                 {
                     long id;
                     if( !idString.ToLong( &id ) )
                     {
-                        WriteErrorMessage( wxString::Format( wxT( "%s: Invalid command line parameter: '%s'.\n" ), ConvertedString( __FUNCTION__ ).c_str(), param.c_str() ) );
+                        commandLineErrors.push_back( wxString::Format( wxT( "%s: Invalid command line parameter: '%s'.\n" ), ConvertedString( __FUNCTION__ ).c_str(), param.c_str() ) );
                     }
                     else
                     {
@@ -308,7 +327,7 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
             }
             else
             {
-                WriteErrorMessage( wxString::Format( wxT( "%s: Invalid command line parameter: '%s'.\n" ), ConvertedString( __FUNCTION__ ).c_str(), param.c_str() ) );
+                commandLineErrors.push_back( wxString::Format( wxT( "%s: Invalid command line parameter: '%s'.\n" ), ConvertedString( __FUNCTION__ ).c_str(), param.c_str() ) );
             }
         }
         processedParameters += param;
@@ -322,12 +341,14 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
     boldFont.SetPointSize( 10 );
     boldFont.SetUnderlined( true );
     boldStyle.SetFont( boldFont );
+    boldStyle.SetTextColour( wxColour( 0, 0, 0 ) );
     WriteLogMessage( wxT( "Available command line options:\n" ), boldStyle );
     WriteLogMessage( wxT( "'setid'                     or 'id'   to update the firmware of one or many devices(syntax: 'id=<serial>.id' or 'id=<product>.id')\n" ) );
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
     WriteLogMessage( wxT( "'set_processor_idle_states' or 'spis' to change the C1, C2 and C3 states for ALL processors in the current system(syntax: 'spis=1' or 'spis=0')\n" ) );
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
     WriteLogMessage( wxT( "'update_fw'                 or 'ufw'  to update the firmware of one or many devices\n" ) );
+    WriteLogMessage( wxT( "'update_fw_file'            or 'ufwf' to update the firmware of one or many devices. Pass a full path to a text file that contains a serial number or a product type per line.\n" ) );
     WriteLogMessage( wxT( "'ipv4_mask'                           to specify an IPv4 address mask to use as a filter for the selected update operations\n" ) );
     WriteLogMessage( wxT( "'fw_path'                             to specify a custom path for the firmware files\n" ) );
     WriteLogMessage( wxT( "'update_kd'                 or 'ukd'  to update the kernel driver of one or many devices\n" ) );
@@ -349,6 +370,16 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
     {
         WriteLogMessage( wxString::Format( wxT( "Processed command line: %s.\n" ), processedParameters.c_str() ), boldStyle );
         WriteLogMessage( wxT( "\n" ) );
+    }
+    if( commandLineErrors.empty() == false )
+    {
+        vector<wxString>::size_type cnt = commandLineErrors.size();
+        for( vector<wxString>::size_type i = 0; i < cnt; i++ )
+        {
+            WriteErrorMessage( commandLineErrors[i] );
+        }
+        WriteLogMessage( wxT( "\n" ) );
+        m_updateResult = DeviceHandler::urInvalidParameter;
     }
     WriteLogMessage( wxT( "Usage:\n" ), boldStyle );
     wxTextAttr blueStyle( wxColour( 0, 0, 255 ) );
@@ -600,6 +631,39 @@ void DeviceConfigureFrame::BuildList( void )
     m_pDevListCtrl->SetColumnWidth( lcDSRegistered, wxLIST_AUTOSIZE_USEHEADER );
     m_pDevListCtrl->SetColumnWidth( lcDSFriendlyName, wxLIST_AUTOSIZE_USEHEADER );
 #endif // #ifdef BUILD_WITH_DIRECT_SHOW_SUPPORT
+    WriteLogMessage( wxT( "\n" ) );
+}
+
+//-----------------------------------------------------------------------------
+void DeviceConfigureFrame::GetConfigurationEntriesFromFile( const wxString& fileName )
+//-----------------------------------------------------------------------------
+{
+    std::ifstream file( fileName.mb_str() );
+    if( !file.good() )
+    {
+        WriteErrorMessage( wxString::Format( wxT( "Could not open file '%s' for obtaining device update information." ), fileName.c_str() ) );
+        return;
+    }
+
+    while( !file.eof() )
+    {
+        std::string l;
+        file >> l;
+        wxString line = ConvertedString( l );
+        // remove all whitespaces, TABs and newlines
+        line = line.Strip( wxString::both );
+        if( line.IsEmpty() == false )
+        {
+            if( line.Contains( wxT( "mvBlueCOUGAR-S" ) ) == false )
+            {
+                GetConfigurationEntry( line )->second.boUpdateFW_ = true;
+            }
+            else if( line.StartsWith( wxT( "mvBlueCOUGAR-S" ) ) == true )
+            {
+                WriteErrorMessage( wxString::Format( wxT( "Devices of type '%s' do not support this update mechanism as there is no way to check if the firmware on the device is the same as the one in the update archive and this could result in a lot of redundant update cycles in an automatic environment.\n" ), line.c_str() ) );
+            }
+        }
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -710,15 +774,15 @@ void DeviceConfigureFrame::OnTimer( wxTimerEvent& e )
                     }
                     if( it->second.boSetDeviceID_ )
                     {
-                        SetID( pDev, it->second.deviceID_ );
+                        RefreshApplicationExitCode( SetID( pDev, it->second.deviceID_ ) );
                     }
                     if( it->second.boUpdateKernelDriver_ )
                     {
-                        UpdateKernelDriver( pDev, true );
+                        RefreshApplicationExitCode( UpdateKernelDriver( pDev, true ) );
                     }
                     if( it->second.boUpdateFW_ )
                     {
-                        UpdateFirmware( pDev, true );
+                        RefreshApplicationExitCode( UpdateFirmware( pDev, true ) );
                     }
                     ++i;
                 }
@@ -800,11 +864,11 @@ int DeviceConfigureFrame::SetID( Device* pDev, int newID )
         int result = pDev->setID( newID );
         if( result == DMR_FEATURE_NOT_AVAILABLE )
         {
-            WriteErrorMessage( wxT( "This device doesn't support setting the device ID.\n" ) );
+            WriteErrorMessage( wxString::Format( wxT( "Device %s doesn't support setting the device ID.\n" ), ConvertedString( pDev->serial.read() ).c_str() ) );
         }
         else if( result != DMR_NO_ERROR )
         {
-            WriteErrorMessage( wxString::Format( wxT( "An error occurred: %s(please refer to the manual for this error code).\n" ), ConvertedString( ImpactAcquireException::getErrorCodeAsString( result ) ).c_str() ) );
+            WriteErrorMessage( wxString::Format( wxT( "An error occurred while setting the device ID for device %s: %s(please refer to the manual for this error code).\n" ), ConvertedString( pDev->serial.read() ).c_str(), ConvertedString( ImpactAcquireException::getErrorCodeAsString( result ) ).c_str() ) );
         }
         else
         {
@@ -885,7 +949,7 @@ int DeviceConfigureFrame::UpdateFirmware( Device* pDev, bool boSilentMode )
     }
     else
     {
-        WriteErrorMessage( wxT( "This device doesn't support firmware updates.\n" ) );
+        WriteErrorMessage( wxString::Format( wxT( "Device %s doesn't support firmware updates.\n" ), ConvertedString( pDev->serial.read() ).c_str() ) );
         result = -3;
     }
     return result;
@@ -927,6 +991,17 @@ void DeviceConfigureFrame::OnUpdateDMABufferSize( wxCommandEvent& )
 }
 
 //-----------------------------------------------------------------------------
+void DeviceConfigureFrame::RefreshApplicationExitCode( const int result )
+//-----------------------------------------------------------------------------
+{
+    if( ( result != DeviceHandler::urOperationSuccessful ) &&
+        ( result != DeviceHandler::urFeatureUnsupported ) ) // this might be returned e.g. from 3rd party devices but during a script or command line based updates an should not be treated as an error
+    {
+        m_updateResult = result;
+    }
+}
+
+//-----------------------------------------------------------------------------
 int DeviceConfigureFrame::UpdateDMABufferSize( int deviceIndex )
 //-----------------------------------------------------------------------------
 {
@@ -942,11 +1017,10 @@ int DeviceConfigureFrame::UpdateDMABufferSize( int deviceIndex )
                 wxBusyCursor busyCursorScope;
                 pHandler->AttachParent( this );
                 result = pHandler->UpdatePermanentDMABufferSize( false );
-                //UpdateDeviceList();
             }
             else
             {
-                WriteErrorMessage( wxT( "This device doesn't support firmware updates.\n" ) );
+                WriteErrorMessage( wxString::Format( wxT( "Device %s doesn't support firmware updates.\n" ), ConvertedString( pDev->serial.read() ).c_str() ) );
                 result = -3;
             }
         }
@@ -984,7 +1058,7 @@ int DeviceConfigureFrame::UpdateKernelDriver( Device* pDev, bool boSilentMode )
     }
     else
     {
-        WriteErrorMessage( wxT( "This device doesn't support kernel driver updates.\n" ) );
+        WriteErrorMessage( wxString::Format( wxT( "Device %s doesn't support kernel driver updates.\n" ), ConvertedString( pDev->serial.read() ).c_str() ) );
         result = -3;
     }
     return result;

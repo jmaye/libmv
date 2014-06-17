@@ -225,7 +225,7 @@ public:
             m_ptrFileOperationExecute.call();
             std::streamsize result = static_cast<std::streamsize>( m_ptrFileOperationResult.read() );
             std::string bufS( m_ptrFileAccessBuffer.readBinary() );
-            memcpy( pBuf + bytesRead, bufS.c_str(), readSize );
+            memcpy( pBuf + bytesRead, bufS.c_str(), static_cast<size_t>( readSize ) );
             bytesRead += result;
             if( m_ptrFileOperationStatus.readS() != "Success" )
             {
@@ -345,7 +345,7 @@ public:
         m_file = pFileName;
         // allocate buffer according to fileinfo
         m_BufSize = ( std::streamsize )m_pAdapter->getBufSize( m_file, mode );
-        m_pBuffer = new char_type[m_BufSize / sizeof( char_type )];
+        m_pBuffer = new char_type[static_cast<size_t>( m_BufSize ) / sizeof( char_type )];
         // setg(buffer+pbSize, buffer+pbSize, buffer+pbSize);
         setg( m_pBuffer, m_pBuffer + m_BufSize, m_pBuffer + m_BufSize );
 #ifdef _MSC_VER
@@ -555,7 +555,7 @@ protected:
     {
         if( n < epptr() - pptr() )
         {
-            memcpy( pptr(), s, n * sizeof( char_type ) );
+            memcpy( pptr(), s, static_cast<size_t>( n ) * sizeof( char_type ) );
             pbump( static_cast<int>( n ) );
             return n;
         }

@@ -11,45 +11,34 @@ public:
     {
         Start( timeoutmsec );
     }
-    ~CTimeout( )
+    ~CTimeout() {}
+
+    void Start( const unsigned long timeout_ms )
     {
-        ;
-    }
-    void Start( unsigned long timeoutmsec )
-    {
-        start = clock( );
-        elapse_period = timeoutmsec * CLOCKS_PER_SEC / 1000;
-        if( elapse_period == 0 )
+        start_ = clock();
+        elapse_period_ = timeout_ms * CLOCKS_PER_SEC / 1000;
+        if( elapse_period_ == 0 )
         {
-            elapse_period = 1;
+            elapse_period_ = 1;
         }
-        end = start + elapse_period;
+        end_ = start_ + elapse_period_;
     }
-
-    unsigned char Elapsed( )
+    unsigned char Elapsed( void ) const
     {
-        return ( end < clock() );
+        return ( end_ < clock() );
     }
-
-    void WaitTimeout( unsigned long milliseconds )
+    void WaitTimeout( const unsigned long milliseconds ) const
     {
         wxMilliSleep( milliseconds );
     }
-
-    unsigned long Remain( )
+    unsigned long Remain( void ) const
     {
-        if( Elapsed( ) )
-        {
-            return 0;
-        }
-        else
-        {
-            return ( ( clock() - end ) * 1000 ) / CLOCKS_PER_SEC;
-        }
+        return Elapsed() ? 0 : ( ( clock() - end_ ) * 1000 ) / CLOCKS_PER_SEC;
     }
-
 private:
-    clock_t elapse_period, start, end;
+    clock_t elapse_period_;
+    clock_t start_;
+    clock_t end_;
 };
 
 #endif //TimeoutH

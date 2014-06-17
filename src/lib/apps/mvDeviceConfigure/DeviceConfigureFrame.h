@@ -42,6 +42,10 @@ public:
         return m_deviceHandlerFactory;
     }
     int UpdateDMABufferSize( int deviceIndex );
+    static int GetUpdateResult( void )
+    {
+        return m_updateResult;
+    }
 protected:
     // event handlers (these functions should _not_ be virtual)
     void OnHelp_About( wxCommandEvent& e );
@@ -72,10 +76,12 @@ protected:
     };
 private:
     void                                BuildList( void );
+    static void                         RefreshApplicationExitCode( const int result );
     int                                 SetID( Device* pDev, int newID );
     void                                UpdateDeviceList( void );
     int                                 UpdateFirmware( Device* pDev, bool boSilentMode );
     int                                 UpdateKernelDriver( Device* pDev, bool boSilentMode );
+    static int                          m_updateResult;
     mvIMPACT::acquire::DeviceManager    m_devMgr;
     DeviceListCtrl*                     m_pDevListCtrl;
     wxMenuItem*                         m_pMIActionSetID;
@@ -104,6 +110,7 @@ private:
             boUpdateKernelDriver_( false ), boUpdateFW_( false ),
             boSetDeviceID_( false ), deviceID_( -1 ) {}
     };
+    void GetConfigurationEntriesFromFile( const wxString& fileName );
     std::map<wxString, DeviceConfigurationData>::iterator GetConfigurationEntry( wxString& value );
     std::map<wxString, DeviceConfigurationData> m_devicesToConfigure;
     bool m_boPendingQuit;

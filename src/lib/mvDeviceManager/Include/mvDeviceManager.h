@@ -8,10 +8,6 @@
 #   include <stddef.h>
 #endif // #ifndef WRAP_ANY
 
-#ifdef DOTNET_ONLY_CODE
-#   include <string>
-#endif // #ifdef DOTNET_ONLY_CODE
-
 #include <DriverBase/Include/mvDriverBaseEnums.h>
 #include <mvPropHandling/Include/mvPropHandlingDatatypes.h>
 
@@ -19,12 +15,12 @@
 extern "C" {
 #endif // __cplusplus
 
-#if defined(WRAP_DOTNET) || defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
+#if defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
 namespace mvIMPACT
 {
 namespace acquire
 {
-#endif // #if defined(WRAP_DOTNET) || defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
+#endif // #if defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #   ifdef _WIN32
@@ -103,27 +99,9 @@ struct ChannelData
      *  structures this might e.g. be "R", "G" and "B".
      */
     char szChannelDesc[DEFAULT_STRING_SIZE_LIMIT];
-#ifdef DOTNET_ONLY_CODE
-    int getiChannelOffset( void ) const
-    {
-        return iChannelOffset;
-    }
-    int getiLinePitch( void ) const
-    {
-        return iLinePitch;
-    }
-    int getiPixelPitch( void ) const
-    {
-        return iPixelPitch;
-    }
-    std::string getszChannelDesc( void ) const
-    {
-        return std::string( szChannelDesc );
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 } ATTR_PACK;
 
-#if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY) && !defined(DOTNET_ONLY_CODE)
+#if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY)
 typedef struct ChannelData ChannelData;
 #endif // DOXYGEN_SHOULD_SKIP_THIS && WARP_ANY
 
@@ -191,40 +169,6 @@ struct ImageBuffer
     int iChannelCount;
     /// \brief A pointer to an array of channel specific image data.
     ChannelData* pChannels;
-#ifdef DOTNET_ONLY_CODE
-    int getiBytesPerPixel( void ) const
-    {
-        return iBytesPerPixel;
-    }
-    int getiHeight( void ) const
-    {
-        return iHeight;
-    }
-    int getiWidth( void ) const
-    {
-        return iWidth;
-    }
-    TImageBufferPixelFormat getPixelFormat( void ) const
-    {
-        return pixelFormat;
-    }
-    int getiSize( void ) const
-    {
-        return iSize;
-    }
-    unsigned char* getvpData( void ) const
-    {
-        return ( unsigned char* )vpData;
-    }
-    int getiChannelCount( void ) const
-    {
-        return iChannelCount;
-    }
-    ChannelData* getChannel( unsigned int index ) const
-    {
-        return &pChannels[index];
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 } ATTR_PACK;
 
 #if !defined(DOXYGEN_CPP_DOCUMENTATION) && !defined(WRAP_ANY)
@@ -365,20 +309,6 @@ struct EventData
      *  parameter is not supported, it will be 0.
      */
     unsigned int timestamp_highPart;
-#ifdef DOTNET_ONLY_CODE
-    unsigned int getCount( void ) const
-    {
-        return count;
-    }
-    unsigned int getTimestamp_lowPart( void ) const
-    {
-        return timestamp_lowPart;
-    }
-    unsigned int getTimestamp_highPart( void ) const
-    {
-        return timestamp_highPart;
-    }
-#endif // #ifdef DOTNET_ONLY_CODE
 } ATTR_PACK;
 
 //-----------------------------------------------------------------------------
@@ -473,7 +403,7 @@ typedef int HLIST;
 /// \brief A type for handles bound to an unspecified object.
 typedef int HOBJ;
 
-#if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY) && !defined(DOTNET_ONLY_CODE)
+#if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY)
 typedef struct EventData EventData;
 typedef struct ImageBuffer ImageBuffer;
 typedef struct RequestInfo RequestInfo;
@@ -481,7 +411,7 @@ typedef struct RequestResult RequestResult;
 typedef enum TImageRequestParam TImageRequestParam;
 typedef enum TImpactBufferFlag TImpactBufferFlag;
 typedef enum TLibraryQuery TLibraryQuery;
-#endif // #if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY) && !defined(DOTNET_ONLY_CODE)
+#endif // #if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY)
 
 #if !defined(DOXYGEN_CPP_DOCUMENTATION) && !defined(WRAP_ANY)
 
@@ -937,10 +867,10 @@ MVDMR_API TPROPHANDLING_ERROR DMR_CALL OBJ_FreeSMemory( char* pBuffer );
 #pragma pack(pop) // restore previous structure alignment
 #endif
 
-#if defined(WRAP_DOTNET) || defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
+#if defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
 } // namespace acquire
 } // namespace mvIMPACT
-#endif // #if defined(WRAP_DOTNET) || defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
+#endif // #if defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
 
 #ifdef __cplusplus
 }

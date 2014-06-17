@@ -1,5 +1,6 @@
 #include <limits>
 #include <algorithm>
+#include <functional>
 #include "PropData.h"
 #include "PropGridFrameBase.h"
 #include "ValuesFromUserDlg.h"

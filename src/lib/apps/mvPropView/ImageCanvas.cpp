@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "ImageCanvas.h"
 #include "PropViewFrame.h"
 #include <wx/dcbuffer.h>

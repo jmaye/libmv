@@ -336,6 +336,8 @@ private:
     DeviceMap                           m_devices;
     InterfaceInfo                       m_interfaceInfo[DetectedDeviceInfo::MAX_INTERFACE_COUNT];
     wxDynamicLibrary                    m_TLILib;
+    PGCInitLib                          m_pGCInitLib;
+    PGCCloseLib                         m_pGCCloseLib;
     PTLOpen                             m_pTLOpen;
     PTLClose                            m_pTLClose;
     PTLUpdateInterfaceList              m_pTLUpdateInterfaceList;

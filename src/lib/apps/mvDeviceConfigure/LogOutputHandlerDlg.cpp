@@ -75,6 +75,7 @@ LogOutputHandlerDlg::LogOutputHandlerDlg( wxWindow* pParent, DeviceManager& devM
     boldFont.SetPointSize( 10 );
     boldFont.SetUnderlined( true );
     boldStyle.SetFont( boldFont );
+    boldStyle.SetTextColour( wxColour( 0, 0, 0 ) );
     WriteLogMessage( wxT( "Use the 'Load' button to load an existing configuration.\n" ) );
     WriteLogMessage( wxT( "Use the 'Save' button to store the current configuration to disc.\n" ) );
     WriteLogMessage( wxT( "\n" ) );

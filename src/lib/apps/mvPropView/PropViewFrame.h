@@ -108,6 +108,7 @@ protected:
     void OnCBInfoPlotDifferences( wxCommandEvent& );
     void OnClose( wxCloseEvent& e );
     void OnContinuousRecording( wxCommandEvent& e );
+    void OnDetailedRequestInformation( wxCommandEvent& e );
     void OnDevComboTextChanged( wxCommandEvent& )
     {
         UpdateDeviceFromComboBox();
@@ -386,7 +387,6 @@ private:
         iapLAST
     };
     //-----------------------------------------------------------------------------
-    // IDs for the controls and the menu commands
     enum TMenuItem
     //-----------------------------------------------------------------------------
     {
@@ -422,6 +422,7 @@ private:
         miCapture_Recording_SetupSequenceSize,
         miCapture_Recording_SetupHardDiscRecording,
         miCapture_SetupCaptureQueueDepth,
+        miCapture_DetailedRequestInformation,
         miCapture_CaptureSettings_CreateCaptureSetting,
         miCapture_CaptureSettings_CaptureSettingHierarchy,
         miCapture_CaptureSettings_AssignToDisplays,
@@ -527,8 +528,11 @@ private:
         TFileFormat fileFormat_;
         explicit HardDiscRecordingParameters() : boActive_( false ), targetDirectory_(), fileFormat_( ffBMP ) {}
     };
+
+    typedef std::vector<RequestData> RequestInfoContainer;
+    typedef std::map<std::string, int> ProductFirmwareTable;
+
     ImageAnalysisPlotControls           m_ImageAnalysisPlots[iapLAST];
-    wxScrolledWindow* CreateImageAnalysisPlotControls( wxWindow* pParent, int windowIDOffset );
     bool                                m_boCloseDeviceInProgress;
     bool                                m_boFindFeatureMatchCaseActive;
     bool                                m_boDisplayWindowMaximized;
@@ -541,12 +545,10 @@ private:
     wxTextAttr                          m_errorStyle;
     bool                                m_boSelectedDeviceSupportsMultiFrame;
     bool                                m_boSelectedDeviceSupportsSingleFrame;
-    typedef std::vector<RequestData> RequestInfoContainer;
     RequestInfoContainer                m_CurrentRequestDataContainer;
     int                                 m_CurrentImageAnalysisControlIndex;
     unsigned int                        m_DeviceListChangedCounter;
     unsigned int                        m_DeviceCount;
-    typedef std::map<std::string, int> ProductFirmwareTable;
     ProductFirmwareTable                m_ProductFirmwareTable;
     int                                 m_HorizontalSplitterPos;
     int                                 m_NoteBook_ToolTipSplitterPos;
@@ -573,7 +575,7 @@ private:
     wxComboBox*                         m_pUserExperienceCombo;
     MonitorDisplay*                     m_pMonitorImage;
     WizardLUTControl*                   m_pLUTControlDlg;
-    WizardColorCorrection*      m_pColorCorrectionDlg;
+    WizardColorCorrection*              m_pColorCorrectionDlg;
     wxSplitterWindow*                   m_pHorizontalSplitter;
     PlotCanvasInfo*                     m_pInfoPlotArea;
     wxComboBox*                         m_pInfoPlotSelectionCombo;
@@ -608,6 +610,7 @@ private:
     wxMenuItem*                         m_pMICapture_Recording_SetupSequenceSize;
     wxMenuItem*                         m_pMICapture_Recording_SetupHardDiscRecording;
     wxMenuItem*                         m_pMICapture_SetupCaptureQueueDepth;
+    wxMenuItem*                         m_pMICapture_DetailedRequestInformation;
     wxMenuItem*                         m_pMICapture_CaptureSettings_CreateCaptureSetting;
     wxMenuItem*                         m_pMICapture_CaptureSettings_CaptureSettingHierarchy;
     wxMenuItem*                         m_pMICapture_CaptureSettings_AssignToDisplays;
@@ -655,6 +658,7 @@ private:
     DevicePropertyHandler::TViewMode    m_ViewMode;
     wxString                            m_defaultDeviceInterfaceLayout;
     HardDiscRecordingParameters         m_HardDiscRecordingParameters;
+
     void                                Abort( void );
     void                                Acquire( void );
     void                                AddListControlToAboutNotebook( wxNotebook* pNotebook, const wxString& pageTitle, bool boSelectPage, const wxString& col0, const wxString& col1, const std::vector<std::pair<wxString, wxString> >& v );
@@ -682,10 +686,12 @@ private:
     {
         boShow ? pToolBar->Show() : pToolBar->Hide();
     }
+    wxScrolledWindow*                   CreateImageAnalysisPlotControls( wxWindow* pParent, int windowIDOffset );
     void                                CreateLeftToolBar( void );
     void                                CreateUpperToolBar( void );
     void                                Deinit( void );
     PlotCanvasImageAnalysis*            DeselectAnalysisPlot( void );
+    void                                DestroyAdditionalDialogs( void );
     template<typename _Ty>
     void                                DestroyDialog( _Ty** ppDialog );
     void                                DisplaySettingLoadSaveErrorMessage( const wxString& msgPrefix, int originalErrorCode );

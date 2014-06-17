@@ -107,21 +107,15 @@ public:
     }
 };
 
-#ifdef _WIN32
-#   define DECLARE_GENTL_PRODUCER_LIB_NAMES \
-    const wxString libName(wxT("mvGenTLProducer.cti")); \
-    const wxString deprecatedLibName(wxT("mvTLIClientGigE.cti"));
-#else
-#   define DECLARE_GENTL_PRODUCER_LIB_NAMES \
-    const wxString libName(wxT("libmvGenTLProducer.so")); \
-    const wxString deprecatedLibName(wxT("libmvTLIClientGigE.so"));
-#endif
-
 //-----------------------------------------------------------------------------
 inline wxString LoadGenTLProducer( wxDynamicLibrary& lib )
 //-----------------------------------------------------------------------------
 {
-    DECLARE_GENTL_PRODUCER_LIB_NAMES
+#ifdef _WIN32
+    const wxString libName( wxT( "mvGenTLProducer.cti" ) );
+#else
+    const wxString libName( wxT( "libmvGenTLProducer.so" ) );
+#endif
 
     wxString message;
     // when we e.g. trying to load a shared library that cannot be found the result can
@@ -130,12 +124,7 @@ inline wxString LoadGenTLProducer( wxDynamicLibrary& lib )
     lib.Load( libName, wxDL_VERBATIM );
     if( !lib.IsLoaded() )
     {
-        message = wxString::Format( wxT( "Could not connect to '%s'. Will try to connect to the deprecated '%s' library instead.\n\n" ), libName.c_str(), deprecatedLibName.c_str() );
-        lib.Load( deprecatedLibName, wxDL_VERBATIM );
-        if( !lib.IsLoaded() )
-        {
-            message.Append( wxString::Format( wxT( "Connecting to '%s' however did fail as well. Check if your installation.\n\n" ), deprecatedLibName.c_str() ) );
-        }
+        message = wxString::Format( wxT( "Could not connect to '%s'. Check your installation.\n\n" ), libName.c_str() );
     }
     return message;
 }

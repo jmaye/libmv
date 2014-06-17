@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "ImageCanvas.h"
 #include "PlotCanvasImageAnalysis.h"
 #include "PropViewFrame.h"
@@ -46,6 +47,7 @@ BEGIN_EVENT_TABLE( ImageCanvas, DrawingCanvas )
     EVT_MENU( miPopUpScalerMode_Cubic, ImageCanvas::OnPopUp_ScalingMode_Changed )
     EVT_MENU( miPopUpSetShiftValue, ImageCanvas::OnPopUpSetShiftValue )
     EVT_MENU( miPopUpShowRequestInfoOverlay, ImageCanvas::OnPopUpShowRequestInfoOverlay )
+    EVT_MENU( miPopUpSelectRequestInfoOverlayColor, ImageCanvas::OnPopUpSelectRequestInfoOverlayColor )
     EVT_MENU( miPopUpShowPerformanceWarnings, ImageCanvas::OnPopUpShowPerformanceWarnings )
     EVT_MENU( miPopUpShowImageModificationsWarning, ImageCanvas::OnPopUpShowImageModificationsWarning )
 
@@ -160,7 +162,7 @@ void ImageCanvas::BlitInfoStrings( wxPaintDC& dc, double scaleFactor, int bmpSca
         std::vector<wxString>::size_type vSize = m_infoStringsOverlay.size();
         for( std::vector<wxString>::size_type i = 0; i < vSize; i++ )
         {
-            dc.SetTextForeground( wxColour( 128, 128, 0 ) );
+            dc.SetTextForeground( m_InfoOverlayColor );
             dc.SetPen( *wxGREEN );
             static const wxString SPECIAL_DISPLAY_INFO_TOKEN( wxT( "_PVDI_" ) );
             int displayInfoPos = m_infoStringsOverlay[i].Find( SPECIAL_DISPLAY_INFO_TOKEN.c_str() );
@@ -725,6 +727,7 @@ void ImageCanvas::IncreaseSkippedCounter( size_t count )
 void ImageCanvas::Init( const wxWindow* const pApp )
 //-----------------------------------------------------------------------------
 {
+    m_InfoOverlayColor = wxColour( 128, 128, 0 );
     m_boRefreshInProgress = false;
     m_pActiveAnalysisPlot = 0;
     m_boAOIDragInProgress = false;
@@ -1048,6 +1051,7 @@ void ImageCanvas::OnRightUp( wxMouseEvent& e )
             menu.Append( miPopUpSetShiftValue, wxT( "Set Bit Shift Value" ), wxT( "Allows to define a custom shift value for the display of multibyte pixel data. This defines which 8 bits from a multibyte pixel will be displayed" ) );
             menu.AppendSeparator();
             menu.Append( miPopUpShowRequestInfoOverlay, wxT( "Request Info Overlay" ), wxT( "If active the various information returned together with the image will be displayed as an overlay in the main display area(This will cost some additional CPU time)" ), wxITEM_CHECK )->Check( InfoOverlayActive() );
+            menu.Append( miPopUpSelectRequestInfoOverlayColor, wxT( "Select Request Info Overlay Color" ), wxT( "Select Request Info Overlay Color" ) );
             menu.Append( miPopUpShowPerformanceWarnings, wxT( "Performance Warning Overlay" ), wxT( "If active various information will be blitted on top of the image in the main display area to inform e.g. about possible performance losses" ), wxITEM_CHECK )->Check( GetPerformanceWarningOutput() );
             menu.Append( miPopUpShowImageModificationsWarning, wxT( "Warn On Modifictions Applied To The Image By The Display (By An Overlay)" ), wxT( "If active a message will be blitted on top of the image in the main display area to inform e.g. about data modifications applied to the image by the display module" ), wxITEM_CHECK )->Check( GetImageModificationWarningOutput() );
             PopupMenu( &menu );

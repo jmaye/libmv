@@ -73,7 +73,7 @@ int DeviceHandlerHYPERION::UpdatePermanentDMABufferSize( bool /*boSilentMode*/ )
             }
             else
             {
-                result = -4;
+                result = urOperationCanceled;
                 pParent_->WriteLogMessage( wxT( "Operation canceled by the user.\n" ) );
             }
         }
@@ -86,12 +86,12 @@ int DeviceHandlerHYPERION::UpdatePermanentDMABufferSize( bool /*boSilentMode*/ )
                                              ConvertedString( e.getErrorString() ).c_str(),
                                              ConvertedString( e.getErrorCodeAsString() ).c_str() ) );
             }
-            result = -urDeviceAccessError;
+            result = urDeviceAccessError;
         }
     }
     else
     {
-        result = -urDeviceAccessError;
+        result = urDeviceAccessError;
     }
     return result;
 }
@@ -163,7 +163,7 @@ int DeviceHandlerHYPERION::UpdateFirmware( bool boSilentMode )
                     {
                         pParent_->WriteErrorMessage( wxString::Format( wxT( "ERROR! The new firmware could not be verified(result: %d).\n" ), writeResult ) );
                     }
-                    result =  urDeviceAccessError;
+                    result = urDeviceAccessError;
                 }
                 else if( pParent_ )
                 {

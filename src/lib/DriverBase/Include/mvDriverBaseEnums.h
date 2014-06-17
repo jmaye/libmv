@@ -65,22 +65,22 @@
 #   endif // device specific documentation macros
 #endif // #if defined(DEVICE_SPECIFIC_DOCUMENTATION_ONLY)
 
-#if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY) && !defined(WRAP_DOTNET)
+#if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY)
 #   ifndef MV_CUSTOM_DEVICE_INTERFACE_LAYOUTS
 #       define MV_CUSTOM_DEVICE_INTERFACE_LAYOUTS
 #   endif
-#endif // #if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY) && !defined(WRAP_DOTNET)
+#endif // #if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY)
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-#if defined(WRAP_DOTNET) || defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
+#if defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
 namespace mvIMPACT
 {
 namespace acquire
 {
-#endif // #if defined(WRAP_DOTNET) || defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
+#endif // #if defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
 
 #include <DriverBase/Include/mvVersionInfo.h>
 
@@ -1844,9 +1844,9 @@ enum TDeviceImageTrigger
 enum TDeviceInterfaceLayout
 //-----------------------------------------------------------------------------
 {
-#if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY) && !defined(WRAP_DOTNET)
+#if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY)
     MV_CUSTOM_DEVICE_INTERFACE_LAYOUTS
-#endif // #if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY) && !defined(WRAP_DOTNET)
+#endif // #if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY)
     /// \brief A device specific interface shall be used(<b>deprecated</b> for all GenICam compliant devices).
     /**
      *  For most devices supported by this SDK this will be the only interface layout
@@ -2503,12 +2503,12 @@ enum TDMR_ERROR // no_property_type
     DMR_ACQUISITION_ENGINE_BUSY = -2145,
     // If new error codes must be added this happens HERE!
     // When adding a new value here NEVER forget to update the internal string AND/OR exception table!
-#if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY) && !defined(WRAP_DOTNET)
+#if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY)
     /// \brief Needed for compile time checks for invalid error code values
     DMR_PSEUDO_LAST_ASSIGNED_ERROR_CODE,
     /// \brief A dummy constant to mark the last valid error code for device and device manager related errors.
     DMR_LAST_ASSIGNED_ERROR_CODE = DMR_PSEUDO_LAST_ASSIGNED_ERROR_CODE - 2,
-#endif // #if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY) && !defined(WRAP_DOTNET)
+#endif // #if !defined(DOXYGEN_SHOULD_SKIP_THIS) && !defined(WRAP_ANY)
     /// \brief Defines the last valid error code value for device and device manager related errors.
     DMR_LAST_VALID_ERROR_CODE = -2199
 };
@@ -4652,10 +4652,10 @@ typedef enum TWhiteBalanceCalibrationMode TWhiteBalanceCalibrationMode;
 typedef enum TWhiteBalanceParameter TWhiteBalanceParameter;
 #endif // DOXYGEN_SHOULD_SKIP_THIS && WRAP_ANY
 
-#if defined(WRAP_DOTNET) || defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
+#if defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
 } // namespace acquire
 } // namespace mvIMPACT
-#endif // #if defined(WRAP_DOTNET) || defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
+#endif // #if defined(MVIMPACT_ACQUIRE_H_) || defined(DOXYGEN_CPP_DOCUMENTATION)
 
 #ifdef __cplusplus
 }

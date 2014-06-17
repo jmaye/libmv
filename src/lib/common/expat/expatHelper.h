@@ -31,7 +31,7 @@ bool ParseXMLFromFile( CExpatImpl<_Ty>& parser, FILE* fp )
         return false;
     }
 
-    const size_t bytesRead = fread( pszBuffer, 1, fileSize, fp );
+    const size_t bytesRead = fread( pszBuffer, 1, static_cast<size_t>( fileSize ), fp );
     pszBuffer[bytesRead] = '\0'; // make this a well terminated string!
     return parser.ParseBuffer( static_cast<int>( bytesRead ), true );
 }
