@@ -1,3 +1,9 @@
+libmv (2.8-35) precise; urgency=low
+
+  * pthread linking 
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Tue, 29 Jul 2014 14:10:46 +0200
+
 libmv (2.8-34) precise; urgency=low
 
   * trusty build 

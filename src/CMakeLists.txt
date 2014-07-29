@@ -10,6 +10,10 @@ endif()
 remake_find_package(wxWidgets COMPONENTS base core adv)
 remake_find_library(fltk FL/Fl.H libfltk1-dev)
 #remake_find_package(FLTK)
+remake_find_package(Threads)
+if(NOT ${CMAKE_USE_PTHREADS_INIT})
+  message(FATAL_ERROR "Missing POSIX thread support!")
+endif(NOT ${CMAKE_USE_PTHREADS_INIT})
 
 remake_include(${wxWidgets_INCLUDE_DIRS} ${FLTK_HEADERS})
 

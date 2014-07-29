@@ -1,1 +1,2 @@
-remake_add_executables(LINK ${MVDEVICEMANAGER_LIBRARY})
+remake_add_executables(LINK ${CMAKE_THREAD_LIBS_INIT}
+  ${MVDEVICEMANAGER_LIBRARY})
