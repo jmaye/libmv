@@ -698,14 +698,21 @@ void FindFeatureDlg::OnFeatureListDblClick( wxCommandEvent& e )
 }
 
 //-----------------------------------------------------------------------------
-void FindFeatureDlg::SelectFeatureInPropertyGrid( int selection )
+void FindFeatureDlg::SelectFeatureInPropertyGrid( const wxString& selection )
 //-----------------------------------------------------------------------------
 {
-    NameToFeatureMap::const_iterator it = nameToFeatureMap_.find( pLBFeatureList_->GetString( selection ) );
+    NameToFeatureMap::const_iterator it = nameToFeatureMap_.find( selection );
     if( it != nameToFeatureMap_.end() )
     {
         pParent_->SelectPropertyInPropertyGrid( it->second );
     }
+}
+
+//-----------------------------------------------------------------------------
+void FindFeatureDlg::SelectFeatureInPropertyGrid( const int selection )
+//-----------------------------------------------------------------------------
+{
+    SelectFeatureInPropertyGrid( pLBFeatureList_->GetString( selection ) );
 }
 
 //-----------------------------------------------------------------------------

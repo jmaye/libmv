@@ -74,6 +74,40 @@ public:
     }
 };
 
+//------------------------------------------------------------------------------
+class ProgressBarEraseFlashThread : public wxThread
+//------------------------------------------------------------------------------
+{
+    mvIMPACT::acquire::GenICam::FileAccessControl    fac_;
+    int*                                             pFileOperationExecuteResult_;
+protected:
+    void* Entry()
+    {
+        // erase the flash before downloading the new firmware
+        fac_.fileSelector.writeS( "DeviceFirmware" );
+        fac_.fileOperationSelector.writeS( "Delete" );
+        *pFileOperationExecuteResult_ = fac_.fileOperationExecute.call();
+        return 0;
+    }
+public:
+    explicit ProgressBarEraseFlashThread( mvIMPACT::acquire::GenICam::FileAccessControl& fac, int* pFileOperationExecuteResult ) : wxThread( wxTHREAD_JOINABLE ), fac_( fac ), pFileOperationExecuteResult_( pFileOperationExecuteResult ) {}
+};
+
+//------------------------------------------------------------------------------
+class ProgressBarWaitForCloseThread : public wxThread
+//------------------------------------------------------------------------------
+{
+    mvIMPACT::acquire::GenICam::ODevFileStream* pUploadFile_;
+protected:
+    void* Entry()
+    {
+        pUploadFile_->close();
+        return 0;
+    }
+public:
+    explicit ProgressBarWaitForCloseThread(  mvIMPACT::acquire::GenICam::ODevFileStream* pUploadFile ) : wxThread( wxTHREAD_JOINABLE ), pUploadFile_( pUploadFile ) {}
+};
+
 //-----------------------------------------------------------------------------
 class SystemSettingsGenTL : public SystemSettings
 //-----------------------------------------------------------------------------
@@ -311,28 +345,26 @@ int DeviceHandlerBlueDevice::CheckForIncompatibleFirmwareVersions_BlueCOUGAR_X( 
 DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueCOUGAR_X( bool boSilentMode, const wxString& serial, const char* pBuf, const size_t bufSize )
 //-----------------------------------------------------------------------------
 {
-    static const int MAX_UPDATE_TIME_SECONDS = 300; // 5 minutes
-    static const int UPDATE_THREAD_PROGRESS_INTERVAL_SECONDS = 5;
+    static const int MAX_UPDATE_TIME_MILLISECONDS = 180000; // 3 minutes
+    static const int UPDATE_THREAD_PROGRESS_INTERVAL_MILLISECONDS = 100;
     TUpdateResult result = urOperationSuccessful;
     {
         UpdateFeatures uf( pDev_ );
         if( uf.transferBuffer_.isValid() )
         {
             uf.transferBuffer_.writeBinary( std::string( pBuf, bufSize ) );
-            wxProgressDialog progressDlg( wxT( "Applying Firmware Update" ),
-                                          wxEmptyString,
-                                          MAX_UPDATE_TIME_SECONDS, // range
-                                          pParent_,     // parent
-                                          wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_ELAPSED_TIME | wxPD_ESTIMATED_TIME | wxPD_REMAINING_TIME );
+            wxProgressDialog dlg( wxT( "Applying Firmware Update" ),
+                                  wxT( "This may take several minutes..." ),
+                                  MAX_UPDATE_TIME_MILLISECONDS, // range
+                                  pParent_,     // parent
+                                  wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_ELAPSED_TIME );
             UpdateThreadBlueCOUGAR_X updateThread( uf );
             updateThread.Create();
             updateThread.Run();
-            int elapsedUpdateTime = 0;
             while( updateThread.IsRunning() )
             {
-                wxSleep( UPDATE_THREAD_PROGRESS_INTERVAL_SECONDS );
-                elapsedUpdateTime += UPDATE_THREAD_PROGRESS_INTERVAL_SECONDS;
-                progressDlg.Update( elapsedUpdateTime );
+                wxMilliSleep( UPDATE_THREAD_PROGRESS_INTERVAL_MILLISECONDS );
+                dlg.Pulse();
             }
             updateThread.Wait();
             int updateFirmwareCallResult = updateThread.getUpdateResult();
@@ -417,10 +449,26 @@ DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueFOX3(
     mvIMPACT::acquire::GenICam::FileAccessControl fac( pDev_ );
     int fileOperationExecuteResult = DMR_NO_ERROR;
 
-    // erase the flash before downloading the new firmware
-    fac.fileSelector.writeS( "DeviceFirmware" );
-    fac.fileOperationSelector.writeS( "Delete" );
-    fileOperationExecuteResult = fac.fileOperationExecute.call();
+    static const int MAX_UPDATE_TIME_MILLISECONDS = 40000;
+    static const int UPDATE_THREAD_PROGRESS_INTERVAL_MILLISECONDS = 100;
+
+    wxProgressDialog dlg( wxT( "Flash Erase" ),
+                          wxT( "Erasing flash memory..." ),
+                          MAX_UPDATE_TIME_MILLISECONDS, // range
+                          pParent_,     // parent
+                          wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_ELAPSED_TIME );
+
+    ProgressBarEraseFlashThread updateThread( fac, &fileOperationExecuteResult );
+    updateThread.Create();
+    updateThread.Run();
+    while( updateThread.IsRunning() )
+    {
+        wxMilliSleep( UPDATE_THREAD_PROGRESS_INTERVAL_MILLISECONDS );
+        dlg.Pulse();
+    }
+    updateThread.Wait();
+    dlg.Update( MAX_UPDATE_TIME_MILLISECONDS );
+
     if( static_cast<TDMR_ERROR>( fileOperationExecuteResult ) != DMR_NO_ERROR )
     {
         MessageToUser( wxT( "Warning" ), wxString::Format( wxT( "Failed to erase flash memory for firmware image on device %s. Error reported from driver: %d(%s)." ), ConvertedString( serial ).c_str(), fileOperationExecuteResult, ConvertedString( ImpactAcquireException::getErrorCodeAsString( fileOperationExecuteResult ) ).c_str() ), boSilentMode, wxOK | wxICON_INFORMATION );
@@ -440,7 +488,7 @@ DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueFOX3(
             oss << std::setw( 8 ) << std::setfill( '0' ) << bytesWritten << '/'
                 << std::setw( 8 ) << std::setfill( '0' ) << bytesToWriteTotal;
             wxProgressDialog dlg( wxT( "Applying Firmware Update" ),
-                                  wxString::Format( wxT( "%s bytes written" ), ConvertedString( oss.str() ).c_str() ),
+                                  wxString::Format( wxT( "Applying Firmware Update(%s bytes written)" ), ConvertedString( oss.str() ).c_str() ),
                                   bytesToWriteTotal, // range
                                   pParent_,          // parent
                                   wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_ELAPSED_TIME | wxPD_ESTIMATED_TIME | wxPD_REMAINING_TIME );
@@ -452,7 +500,7 @@ DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueFOX3(
                 std::ostringstream progress;
                 progress << std::setw( 8 ) << std::setfill( '0' ) << bytesWritten << '/'
                          << std::setw( 8 ) << std::setfill( '0' ) << bytesToWriteTotal;
-                dlg.Update( bytesWritten, wxString::Format( wxT( "%s bytes written" ), ConvertedString( progress.str() ).c_str() ) );
+                dlg.Update( bytesWritten, wxString::Format( wxT( "Applying Firmware Update(%s bytes written)" ), ConvertedString( progress.str() ).c_str() ) );
             }
             if( !uploadFile.good() )
             {
@@ -466,12 +514,26 @@ DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueFOX3(
             MessageToUser( wxT( "Warning" ), wxString::Format( wxT( "Failed to open firmware file on device %s." ), ConvertedString( serial ).c_str() ), boSilentMode, wxOK | wxICON_INFORMATION );
             return urFileIOError;
         }
-        uploadFile.close();
+
+        wxProgressDialog closeDlg( wxT( "Processing Firmware Update" ),
+                                   wxT( "Please wait...                         " ),
+                                   MAX_UPDATE_TIME_MILLISECONDS, // range
+                                   pParent_,     // parent
+                                   wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_ELAPSED_TIME );
+
+        ProgressBarWaitForCloseThread updateThread2( &uploadFile );
+        updateThread2.Create();
+        updateThread2.Run();
+        while( updateThread2.IsRunning() )
+        {
+            wxMilliSleep( UPDATE_THREAD_PROGRESS_INTERVAL_MILLISECONDS );
+            closeDlg.Pulse();
+        }
+        updateThread2.Wait();
+        closeDlg.Update( MAX_UPDATE_TIME_MILLISECONDS );
+
     }
 
-    // activate the firmware
-    fac.fileOperationSelector.writeS( "MvFlashWrite" );
-    fileOperationExecuteResult = fac.fileOperationExecute.call();
     if( static_cast<TDMR_ERROR>( fileOperationExecuteResult ) != DMR_NO_ERROR )
     {
         MessageToUser( wxT( "Warning" ), wxString::Format( wxT( "Activating the firmware downloaded to device %s failed. Error reported from driver: %d(%s). Please power-cycle the device now, update the device list and re-try to update the firmware." ), ConvertedString( serial ).c_str(), fileOperationExecuteResult, ConvertedString( ImpactAcquireException::getErrorCodeAsString( fileOperationExecuteResult ) ).c_str() ), boSilentMode, wxOK | wxICON_INFORMATION );
@@ -500,7 +562,7 @@ DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueFOX3(
         else
         {
             wxProgressDialog dlgProgress( wxT( "Verifying Firmware Image" ),
-                                          wxString::Format( wxT( "%08d/%08d bytes read" ), 0, static_cast<int>( bufSize ) ),
+                                          wxString::Format( wxT( "Verifying Firmware Image(%08d/%08d bytes read)" ), 0, static_cast<int>( bufSize ) ),
                                           static_cast<int>( bufSize ), // range
                                           pParent_, // parent
                                           wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_ELAPSED_TIME | wxPD_ESTIMATED_TIME | wxPD_REMAINING_TIME );
@@ -513,7 +575,7 @@ DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueFOX3(
                 std::ostringstream progress;
                 progress << std::setw( 8 ) << std::setfill( '0' ) << bytesRead << '/'
                          << std::setw( 8 ) << std::setfill( '0' ) << bufSize;
-                dlgProgress.Update( static_cast<int>( bytesRead ), wxString::Format( wxT( "%s bytes read" ), ConvertedString( progress.str() ).c_str() ) );
+                dlgProgress.Update( static_cast<int>( bytesRead ), wxString::Format( wxT( "Verifying Firmware Image(%s bytes read)" ), ConvertedString( progress.str() ).c_str() ) );
             }
             downloadFile.close();
             if( downloadFile.fail() )
@@ -978,7 +1040,7 @@ int DeviceHandlerBlueDevice::UpdateCOUGAR_SDevice( bool boSilentMode )
 }
 
 //-----------------------------------------------------------------------------
-int DeviceHandlerBlueDevice::UpdateCOUGAR_XAndFOX3Device( bool boSilentMode )
+int DeviceHandlerBlueDevice::UpdateCOUGAR_XAndFOX3Device( bool boSilentMode, bool boPersistentUserSets )
 //-----------------------------------------------------------------------------
 {
     ConvertedString serial( pDev_->serial.read() );
@@ -1133,6 +1195,11 @@ int DeviceHandlerBlueDevice::UpdateCOUGAR_XAndFOX3Device( bool boSilentMode )
         return urOperationCanceled;
     }
 
+    if( boPersistentUserSets )
+    {
+        UserSetBackup();
+    }
+
     try
     {
         switch( product_ )
@@ -1160,6 +1227,11 @@ int DeviceHandlerBlueDevice::UpdateCOUGAR_XAndFOX3Device( bool boSilentMode )
         result = urDeviceAccessError;
     }
 
+    if( boPersistentUserSets == true )
+    {
+        UserSetRestore();
+    }
+
     if( result == urOperationSuccessful )
     {
         MessageToUser( wxT( "Information" ), wxT( "The Firmware has been updated. The new Firmware is active now and the device can be used again by other applications." ), boSilentMode, wxOK | wxICON_INFORMATION );
@@ -1174,7 +1246,7 @@ int DeviceHandlerBlueDevice::UpdateCOUGAR_XAndFOX3Device( bool boSilentMode )
 }
 
 //-----------------------------------------------------------------------------
-int DeviceHandlerBlueDevice::UpdateFirmware( bool boSilentMode )
+int DeviceHandlerBlueDevice::UpdateFirmware( bool boSilentMode, bool boPersistentUserSets )
 //-----------------------------------------------------------------------------
 {
     ConvertedString serial( pDev_->serial.read() );
@@ -1194,7 +1266,7 @@ int DeviceHandlerBlueDevice::UpdateFirmware( bool boSilentMode )
     else if( ( product_ == pgBlueCOUGAR_X ) ||
              ( product_ == pgBlueFOX3 ) )
     {
-        return UpdateCOUGAR_XAndFOX3Device( boSilentMode );
+        return UpdateCOUGAR_XAndFOX3Device( boSilentMode, boPersistentUserSets );
     }
     else
     {
@@ -1440,7 +1512,6 @@ int DeviceHandlerBlueDevice::UploadFile( const wxString& fullPath, const wxStrin
         }
         return urDeviceAccessError;
     }
-
     try
     {
         UpdateFeatures uf( pDev_ );
@@ -1472,3 +1543,131 @@ int DeviceHandlerBlueDevice::UploadFile( const wxString& fullPath, const wxStrin
     pDev_->close();
     return result;
 }
+
+//-----------------------------------------------------------------------------
+void DeviceHandlerBlueDevice::UserSetBackup( void )
+//-----------------------------------------------------------------------------
+{
+//#ifdef __linux__
+//    temporaryFolder_ = wxT( "/tmp" );
+//#elif defined __WIN32__
+//    wxGetEnv( "TEMP", &temporaryFolder_ );
+//#else
+//    temporaryFolder_ = firmwareUpdateFolder_;
+//#endif
+//    numberOfUserSets_ = 0;
+//    if( pDev_->isOpen() )
+//    {
+//        pDev_->close();
+//    }
+//    pDev_->interfaceLayout.write( dilGenICam );
+//    pDev_->open();
+//    FunctionInterface fi( pDev_ );
+//    mvIMPACT::acquire::GenICam::UserSetControl usc( pDev_ );
+//    const unsigned int userSetCnt = usc.userSetSelector.dictSize() ;
+//    // As of now, the Default Userset will not be touched, thus the number of UserSets to be saved will be dictSize-1.
+//    wxProgressDialog dlg( wxT( "Backing up UserSet settings" ),
+//                          wxT( "                                                       " ),
+//                          userSetCnt - 1 , // range
+//                          pParent_,     // parent
+//                          wxPD_AUTO_HIDE | wxPD_APP_MODAL );
+//    for( unsigned int i = 0; i < userSetCnt; i++ )
+//    {
+//        wxString currentUserSetString = usc.userSetSelector.getTranslationDictString( i );
+//        if( currentUserSetString == "Default" )
+//        {
+//            continue;
+//        }
+//        usc.userSetSelector.writeS( currentUserSetString.wx_str() );
+//        wxString FQPath = temporaryFolder_ + "/" + pDev_->serial.readS() + "-" + currentUserSetString;
+//        dlg.Update( i , wxString::Format( wxT( "Backing up %s..." ), currentUserSetString.c_str() ) );
+//        TDMR_ERROR result = DMR_NO_ERROR;
+//        try
+//        {
+//            result = static_cast<TDMR_ERROR>( usc.userSetLoad.call() );
+//        }
+//        catch ( const ImpactAcquireException& e )
+//        {
+//            result = static_cast<TDMR_ERROR>( e.getErrorCode() );
+//        }
+//        if( result == DMR_NO_ERROR )
+//        {
+//            fi.saveSetting( FQPath.wx_str(), sfFile, sUser );
+//            ++numberOfUserSets_;
+//        }
+//    }
+//    pDev_->close();
+//    if( pDev_->family.readS() == "mvBlueCOUGAR" )
+//    {
+//        pDev_->interfaceLayout.write( dilDeviceSpecific );
+//    }
+}
+
+//-----------------------------------------------------------------------------
+void DeviceHandlerBlueDevice::UserSetRestore( void )
+//-----------------------------------------------------------------------------
+{
+//    if( pDev_->isOpen() )
+//    {
+//        pDev_->close();
+//    }
+//    pDev_->interfaceLayout.write( dilGenICam );
+//    pDev_->open();
+//    FunctionInterface fi( pDev_ );
+//    mvIMPACT::acquire::GenICam::UserSetControl usc( pDev_ );
+//    const unsigned int userSetCnt = usc.userSetSelector.dictSize() ;
+
+//    wxProgressDialog dlg( wxT( "Restoring UserSet settings" ),
+//                          wxT( "                                                       " ),
+//                          numberOfUserSets_, // range
+//                          pParent_,     // parent
+//                          wxPD_AUTO_HIDE | wxPD_APP_MODAL );
+
+//    int numberOfFilesRestored = 0;
+//    for( unsigned int i = 0; i < userSetCnt; i++ )
+//    {
+//        wxString currentUserSetString = usc.userSetSelector.getTranslationDictString( i );
+//        if( currentUserSetString == "Default" )
+//        {
+//            continue;
+//        }
+//        if( numberOfFilesRestored == numberOfUserSets_ )
+//        {
+//            break;
+//        }
+//        usc.userSetSelector.writeS( currentUserSetString.wx_str() );
+//        wxString FQPath = temporaryFolder_ + "/" + pDev_->serial.readS() + "-" + currentUserSetString + ".xml";
+//        dlg.Update( numberOfFilesRestored + 1 , wxString::Format( wxT( "Restoring %s..." ), currentUserSetString.c_str() ) );
+//        if( fi.loadSetting( FQPath.wx_str(), sfFile, sUser ) == DMR_NO_ERROR )
+//        {
+//            try
+//            {
+//                usc.userSetSave.call();
+//            }
+//            catch( const ImpactAcquireException& e )
+//            {
+//                if( pParent_ )
+//                {
+//                    pParent_->WriteLogMessage( wxString::Format( wxT( "Failed to restore %s! Error:%s" ), currentUserSetString.c_str(), e.getErrorCodeAsString().c_str() ) );
+//                }
+//            }
+//            wxRemoveFile( FQPath );
+//            ++numberOfFilesRestored;
+//        }
+//    }
+//    try
+//    {
+//        usc.userSetSelector.writeS( usc.userSetDefaultSelector.readS() );
+//        usc.userSetLoad.call();
+//    }
+//    catch( const ImpactAcquireException& e )
+//    {
+//        if( pParent_ )
+//        {
+//            pParent_->WriteLogMessage( wxString::Format( wxT( "Failed to set UserSetSelector to the UserSet specified in UserSetDefaultSelector ! Error:%s" ), e.getErrorCodeAsString().c_str() ) );
+//        }
+//    }
+//    pDev_->close();
+}
+
+

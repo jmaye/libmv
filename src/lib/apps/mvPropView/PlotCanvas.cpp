@@ -1,5 +1,27 @@
 #include "PlotCanvas.h"
 
+//-----------------------------------------------------------------------------
+bool DoTextsOverlap( int xPos1, wxCoord textWidth1, int xPos2, wxCoord textWidth2 )
+//-----------------------------------------------------------------------------
+{
+    if( xPos1 == xPos2 )
+    {
+        return true;
+    }
+    if( ( xPos1 < xPos2 ) &&
+        ( xPos1 + ( textWidth1 + textWidth2 ) / 2 ) >= xPos2 )
+    {
+        return true;
+    }
+    if( ( xPos1 > xPos2 ) &&
+        ( xPos2 + ( textWidth1 + textWidth2 ) / 2 ) >= xPos1 )
+    {
+        return true;
+    }
+
+    return false;
+}
+
 //=============================================================================
 //================= Implementation PlotCanvas =================================
 //=============================================================================
@@ -58,15 +80,32 @@ void PlotCanvas::DrawMarkerLines( wxPaintDC& dc, const wxCoord w, const wxCoord 
     unsigned int from = 0, to = 0;
     const unsigned int XMarkerStepWidth = GetXMarkerParameters( from, to );
     wxCoord textWidth;
-    for( unsigned int i = to; i > from; )
-        //for( unsigned int i=from; i<to; i+=XMarkerStepWidth )
+    int xPosPrev = 0;
+    wxCoord textWidthPrev = 0;
+    for( unsigned int i = to; i >= from; )
     {
         const int xPos = static_cast<int>( borderWidth + ( ( i - from ) * scaleX ) );
         dc.DrawLine( xPos, markerStartHeight, xPos, markerEndHeight );
         const wxString XMarkerString( wxString::Format( wxT( "%d" ), i ) );
         dc.GetTextExtent( XMarkerString, &textWidth, 0 );
-        dc.DrawText( XMarkerString, static_cast<int>( xPos - ( textWidth / 2 ) ), h - borderWidth + 3 );
-        i = ( i > XMarkerStepWidth ) ? i - XMarkerStepWidth : 0;
+        if( ( xPosPrev == 0 ) || ( DoTextsOverlap( xPos, textWidth, xPosPrev, textWidthPrev ) == false ) )
+        {
+            dc.DrawText( XMarkerString, static_cast<int>( xPos - ( textWidth / 2 ) ), h - borderWidth + 3 );
+        }
+        xPosPrev = xPos;
+        textWidthPrev = textWidth;
+        if( i == from )
+        {
+            break;
+        }
+        if( ( i > XMarkerStepWidth ) && ( ( i - XMarkerStepWidth ) > from ) )
+        {
+            i = ( ( i % XMarkerStepWidth ) == 0 ) ? i - XMarkerStepWidth : ( i / XMarkerStepWidth ) * XMarkerStepWidth;
+        }
+        else
+        {
+            i = from;
+        }
     }
 
     // markers for y-axis
@@ -90,6 +129,31 @@ void PlotCanvas::DrawProfileLine( wxPaintDC& dc, int h, int startOffset, double 
                      static_cast<int>( lowerStart - ( saveAssign( pData[i + 1] - static_cast<int>( from ), 0, maxY ) * scaleY ) ) );
     }
     dc.SetPen( wxNullPen );
+}
+
+//-----------------------------------------------------------------------------
+unsigned int PlotCanvas::GetXMarkerStepWidth( const unsigned int from, const unsigned int to )
+//-----------------------------------------------------------------------------
+{
+    if( ( to - from ) < 16 )
+    {
+        return 1;
+    }
+
+    // X marker width for value ranges
+    // 5 bit and smaller: 4
+    // 6 bit: 8
+    // 7 bit: 16
+    // 8 bit: 32
+    // etc.
+    unsigned int XMarkerStepWidth = 4;
+    unsigned int i = to - from;
+    while( i > 32 )
+    {
+        i /= 2;
+        XMarkerStepWidth *= 2;
+    }
+    return XMarkerStepWidth;
 }
 
 //-----------------------------------------------------------------------------

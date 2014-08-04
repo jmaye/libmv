@@ -32,7 +32,7 @@ protected:
     virtual unsigned int    GetXMarkerParameters( unsigned int& from, unsigned int& to ) const;
     virtual void            UpdateInternalData( void );
 private:
-    typedef double plot_datatype;
+    typedef double plot_data_type;
 
     //-----------------------------------------------------------------------------
     enum TPlotSelection
@@ -44,15 +44,15 @@ private:
         psLAST
     };
 
-    TPlotSelection              m_SelectedPlot;
-    std::deque<plot_datatype>** m_ppPlotValues;
-    std::vector<plot_datatype>  m_CurrentMaxPlotValues;
-    std::vector<plot_datatype>  m_CurrentMinPlotValues;
-    size_t                      m_PlotCount;
-    int                         m_CurrentMaxPlotValue;
-    int                         m_CurrentMinPlotValue;
+    TPlotSelection               m_SelectedPlot;
+    std::deque<plot_data_type>** m_ppPlotValues;
+    std::vector<plot_data_type>  m_CurrentMaxPlotValues;
+    std::vector<plot_data_type>  m_CurrentMinPlotValues;
+    size_t                       m_PlotCount;
+    int                          m_CurrentMaxPlotValue;
+    int                          m_CurrentMinPlotValue;
 
-    bool                        RefreshPlotData( void );
+    bool                         RefreshPlotData( void );
 };
 
 #endif // PlotCanvasIntensityH

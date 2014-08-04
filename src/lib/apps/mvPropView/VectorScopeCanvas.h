@@ -52,30 +52,36 @@ class VectorScopeCanvas : public PlotCanvasImageAnalysis
         rcMagenta,
         rcLAST
     };
-    DataPoint*          m_pDataBuffer;
-    DataPoint           m_ReferencePoints[6];
-    unsigned int        m_MaxPixelValue;
+    DataPoint*              m_pDataBuffer;
+    DataPoint               m_ReferencePoints[6];
+    unsigned int            m_MaxPixelValue;
 protected:
-    virtual void        CreateGridCustom( void );
-    void                DeallocateDataBuffer( void );
-    void                InitReferencePoints( int bitShift );
-    virtual void        OnPaintCustom( wxPaintDC& dc );
-    void                PrepareDataBuffer( bool boFormatChanged );
+    virtual void            CreateGridCustom( void );
+    void                    DeallocateDataBuffer( void );
+    virtual unsigned int    GetXMarkerParameters( unsigned int& from, unsigned int& to ) const
+    {
+        from = 0;
+        to = 0;
+        return 1;
+    }
+    void                    InitReferencePoints( int bitShift );
+    virtual void            OnPaintCustom( wxPaintDC& dc );
+    void                    PrepareDataBuffer( bool boFormatChanged );
     template<typename _Ty>
-    void                ProcessMonoPackedData( const ImageBuffer* pIB, DataPoint* p, const int bitShift, _Ty pixelAccessFn );
+    void                    ProcessMonoPackedData( const ImageBuffer* pIB, DataPoint* p, const int bitShift, _Ty pixelAccessFn );
     template<typename _Ty>
-    void                ProcessYUVData( const ImageBuffer* pIB, DataPoint* p, const int bitShift );
+    void                    ProcessYUVData( const ImageBuffer* pIB, DataPoint* p, const int bitShift );
     template<typename _Ty>
-    void                ProcessUYVData( const ImageBuffer* pIB, DataPoint* p, const int bitShift );
-    virtual void        UpdateGrid( void );
+    void                    ProcessUYVData( const ImageBuffer* pIB, DataPoint* p, const int bitShift );
+    virtual void            UpdateGrid( void );
 public:
-    explicit            VectorScopeCanvas() {}
-    explicit            VectorScopeCanvas( wxWindow* parent, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition,
-                                           const wxSize& size = wxDefaultSize, long style = wxSUNKEN_BORDER,
-                                           const wxString& name = wxT( "Vector Scope" ), bool boActive = false );
+    explicit                VectorScopeCanvas() {}
+    explicit                VectorScopeCanvas( wxWindow* parent, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition,
+            const wxSize& size = wxDefaultSize, long style = wxSUNKEN_BORDER,
+            const wxString& name = wxT( "Vector Scope" ), bool boActive = false );
     ~VectorScopeCanvas();
-    virtual wxString    GetGridValue( int row, int col ) const;
-    virtual void        RefreshData( const RequestData& data, int x = -1, int y = -1, int w = -1, int h = -1, bool boForceRefresh = false );
+    virtual wxString        GetGridValue( int row, int col ) const;
+    virtual void            RefreshData( const RequestData& data, int x = -1, int y = -1, int w = -1, int h = -1, bool boForceRefresh = false );
 };
 
 #endif // VectorScopeCanvasH

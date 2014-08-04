@@ -48,8 +48,8 @@ unsigned int WizardLUTCanvas::GetXMarkerParameters( unsigned int& from, unsigned
 //-----------------------------------------------------------------------------
 {
     from = 0;
-    to = maxOutputValue_;
-    return ( ( to - from ) < 6 ) ? ( to - from ) : ( to - from ) / 6;
+    to = static_cast<unsigned int>( lut_.size() );
+    return GetXMarkerStepWidth( from, to );
 }
 
 //-----------------------------------------------------------------------------
@@ -236,7 +236,7 @@ WizardLUTControl::WizardLUTControl( wxWindow* pParent, const wxString& title, mv
     {
         WriteErrorMessage( wxString::Format( wxT( "%s(%d): Internal error: LUT '%s' not found in cache.\n" ), ConvertedString( __FUNCTION__ ).c_str(), __LINE__, pCBLUTSelection_->GetValue().c_str() ) );
     }
-    UpdateDisplay( true );
+    UpdateDisplay();
 }
 
 //-----------------------------------------------------------------------------
@@ -450,7 +450,7 @@ void WizardLUTControl::OnBtnGamma( wxCommandEvent& )
         activeLUT_ = oldLUT;
     }
     AddLUTToCache( pCBLUTSelection_->GetValue(), activeLUT_, true );
-    UpdateDisplay( true );
+    UpdateDisplay();
 }
 
 //-----------------------------------------------------------------------------
@@ -491,7 +491,7 @@ void WizardLUTControl::OnBtnImport( wxCommandEvent& )
             WriteErrorMessage( msg );
         }
         delete [] pBuf;
-        UpdateDisplay( true );
+        UpdateDisplay();
     }
     else
     {
@@ -524,7 +524,7 @@ void WizardLUTControl::OnBtnInvert( wxCommandEvent& )
     {
         WriteErrorMessage( wxString::Format( wxT( "%s(%d): Internal error: %s(%s) while trying to invert LUT.\n" ), ConvertedString( __FUNCTION__ ).c_str(), __LINE__, ConvertedString( ex.getErrorString() ).c_str(), ConvertedString( ex.getErrorCodeAsString() ).c_str() ) );
     }
-    UpdateDisplay( true );
+    UpdateDisplay();
 }
 
 //-----------------------------------------------------------------------------
@@ -532,29 +532,40 @@ void WizardLUTControl::OnBtnSynchronize( wxCommandEvent& )
 //-----------------------------------------------------------------------------
 {
     wxArrayString syncChoices;
-    syncChoices.Add( wxT( "Device -> Cache" ) );
-    syncChoices.Add( wxT( "Cache -> Device" ) );
-    const wxString syncSelection = ::wxGetSingleChoice( wxT( "Please select the direction of the synchronization" ), wxT( "LUT Control: Synchronize" ), syncChoices, this );
+    syncChoices.Add( wxT( "Cache -> Device (uploads LUT data to the device)" ) );
+    syncChoices.Add( wxT( "Device -> Cache (downloads LUT data from the device)" ) );
+    const wxString syncSelection = ::wxGetSingleChoice( wxT( "Please select the direction of the synchronization.\n\n" \
+                                   "As reading a LUT from a device as well as writing a LUT to a device\n" \
+                                   "takes some time this is not always done automatically but must be explicitly\n" \
+                                   "triggered from this dialog. When a LUT has been configured using this wizard\n" \
+                                   "the 'Cache -> Device' option must be selected for transferring the new LUT\n" \
+                                   "data to the device. To read back the current LUT settings that are effective\n" \
+                                   "on the device the 'Device -> Cache' option must be selected." ),
+                                   wxT( "LUT Control: Synchronize" ), syncChoices, this );
     if( syncSelection == wxEmptyString )
     {
         WriteLogMessage( wxT( "LUT synchronization canceled by user.\n" ) );
         return;
     }
 
-    wxArrayString LUTChoices;
-    if( lutCnt_ > 2 )
+    wxString LUTSelection = lutSelectorEntries_[0];
+    if( lutCnt_ > 1 )
     {
-        LUTChoices.Add( wxT( "All" ) );
-    }
-    for( size_t i = 0; i < lutCnt_; i++ )
-    {
-        LUTChoices.Add( lutSelectorEntries_[i] );
-    }
-    const wxString LUTSelection = ::wxGetSingleChoice( wxT( "Please select which LUT(s) you want to synchronize" ), wxT( "LUT Control: Synchronize" ), LUTChoices, this );
-    if( LUTSelection == wxEmptyString )
-    {
-        WriteLogMessage( wxT( "LUT synchronization canceled by user.\n" ) );
-        return;
+        wxArrayString LUTChoices;
+        if( lutCnt_ > 2 )
+        {
+            LUTChoices.Add( wxT( "All" ) );
+        }
+        for( size_t i = 0; i < lutCnt_; i++ )
+        {
+            LUTChoices.Add( lutSelectorEntries_[i] );
+        }
+        LUTSelection = ::wxGetSingleChoice( wxT( "Please select which LUT(s) you want to synchronize" ), wxT( "LUT Control: Synchronize" ), LUTChoices, this );
+        if( LUTSelection == wxEmptyString )
+        {
+            WriteLogMessage( wxT( "LUT synchronization canceled by user.\n" ) );
+            return;
+        }
     }
 
     if( LUTSelection == wxT( "All" ) )
@@ -563,14 +574,7 @@ void WizardLUTControl::OnBtnSynchronize( wxCommandEvent& )
         const LUTMap::iterator itEND = lutMap_.end();
         while( it != itEND )
         {
-            if( syncSelection == syncChoices[0] )
-            {
-                ReadLUTFromDevice( it->first, it->second.lut_ );
-            }
-            else
-            {
-                WriteLUTToDevice( it->first, it->second.lut_ );
-            }
+            SynchronizeLUT( syncSelection == syncChoices[0], it->first, it->second.lut_ );
             ++it;
         }
     }
@@ -583,17 +587,10 @@ void WizardLUTControl::OnBtnSynchronize( wxCommandEvent& )
         }
         else
         {
-            if( syncSelection == syncChoices[0] )
-            {
-                ReadLUTFromDevice( it->first, it->second.lut_ );
-            }
-            else
-            {
-                WriteLUTToDevice( it->first, it->second.lut_ );
-            }
+            SynchronizeLUT( syncSelection == syncChoices[0], it->first, it->second.lut_ );
         }
     }
-    UpdateDisplay( true );
+    UpdateDisplay();
 }
 
 //-----------------------------------------------------------------------------
@@ -644,7 +641,7 @@ void WizardLUTControl::OnGammaParameterChanged( wxCommandEvent& )
 //-----------------------------------------------------------------------------
 {
     CalculateGammaLUT( activeLUT_, gammaData_ );
-    UpdateDisplay( true );
+    UpdateDisplay();
 }
 
 //-----------------------------------------------------------------------------
@@ -652,7 +649,7 @@ void WizardLUTControl::OnNBDisplayMethodPageChanged( wxNotebookEvent& )
 //-----------------------------------------------------------------------------
 {
     displayMethod_ = static_cast<TDisplayMethod>( pNBDisplayMethod_->GetSelection() );
-    UpdateDisplay( true );
+    UpdateDisplay();
 }
 
 //-----------------------------------------------------------------------------
@@ -669,7 +666,7 @@ void WizardLUTControl::ReadLUTFromDevice( const wxString& LUTSelectorValue, vect
         const int lutSize = lc_.LUTIndex.getMaxValue() + 1;
         lut.resize( static_cast<vector<int>::size_type>( lutSize ) );
         wxProgressDialog dlg( wxString::Format( wxT( "Reading LUT '%s' from device" ), LUTSelectorValue.c_str() ),
-                              wxString::Format( wxT( "%05d/%05d elements read" ), 0, lutSize ),
+                              wxString::Format( wxT( "Reading LUT '%s' from device(%05d/%05d elements read)" ), LUTSelectorValue.c_str(), 0, lutSize ),
                               lutSize,  // range
                               this,     // parent
                               wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_ELAPSED_TIME | wxPD_ESTIMATED_TIME | wxPD_REMAINING_TIME );
@@ -679,7 +676,7 @@ void WizardLUTControl::ReadLUTFromDevice( const wxString& LUTSelectorValue, vect
             lut[i] = static_cast<int>( lc_.LUTValue.read() );
             if( i % 50 == 0 )
             {
-                dlg.Update( i, wxString::Format( wxT( "%05d/%05d elements read" ), i, lutSize ) );
+                dlg.Update( i, wxString::Format( wxT( "Reading LUT '%s' from device(%05d/%05d elements read)" ), LUTSelectorValue.c_str(), i, lutSize ) );
             }
         }
 
@@ -719,7 +716,7 @@ void WizardLUTControl::SetGridValueFormatString( const wxString& gridValueFormat
 {
     m_GridValueFormatString = gridValueFormatString;
     WriteLogMessage( wxString::Format( wxT( "Grid value format string set to '%s'.\n" ), gridValueFormatString.c_str() ) );
-    UpdateDisplay( true );
+    UpdateDisplay();
 }
 
 //-----------------------------------------------------------------------------
@@ -741,7 +738,37 @@ void WizardLUTControl::SetupLUTEnable( void )
 }
 
 //-----------------------------------------------------------------------------
-void WizardLUTControl::UpdateDisplay( bool boEraseBackground )
+void WizardLUTControl::SynchronizeLUT( const bool boCacheToDevice, const wxString& LUTSelectorValue, std::vector<int>& lut )
+//-----------------------------------------------------------------------------
+{
+    if( boCacheToDevice == true )
+    {
+        WriteLUTToDevice( LUTSelectorValue, lut );
+    }
+    else
+    {
+        ReadLUTFromDevice( LUTSelectorValue, lut );
+    }
+}
+
+//-----------------------------------------------------------------------------
+void WizardLUTControl::UpdateDialog( void )
+//-----------------------------------------------------------------------------
+{
+    try
+    {
+        ReadLUTFromDevice( pCBLUTSelection_->GetValue(), activeLUT_ );
+        pCBEnable_->SetValue( lc_.LUTEnable.read() == bTrue );
+        UpdateDisplay();
+    }
+    catch( const ImpactAcquireException& e )
+    {
+        WriteErrorMessage( wxString::Format( wxT( "%s(%d): Internal error: %s(%s) while trying to deal with LUT data.\n" ), ConvertedString( __FUNCTION__ ).c_str(), __LINE__, ConvertedString( e.getErrorString() ).c_str(), ConvertedString( e.getErrorCodeAsString() ).c_str() ) );
+    }
+}
+
+//-----------------------------------------------------------------------------
+void WizardLUTControl::UpdateDisplay( bool boEraseBackground /* = true */ )
 //-----------------------------------------------------------------------------
 {
     switch( displayMethod_ )
@@ -806,7 +833,7 @@ void WizardLUTControl::WriteLUTToDevice( const wxString& LUTSelectorValue, vecto
             }
         }
         wxProgressDialog dlg( wxString::Format( wxT( "Writing data to LUT '%s' of device" ), LUTSelectorValue.c_str() ),
-                              wxString::Format( wxT( "%05d/%05d elements written" ), 0, lutSize ),
+                              wxString::Format( wxT( "Writing data to LUT '%s' of device(%05d/%05d elements written)" ), LUTSelectorValue.c_str(), 0, lutSize ),
                               lutSize,  // range
                               this,     // parent
                               wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_ELAPSED_TIME | wxPD_ESTIMATED_TIME | wxPD_REMAINING_TIME );
@@ -816,7 +843,7 @@ void WizardLUTControl::WriteLUTToDevice( const wxString& LUTSelectorValue, vecto
             lc_.LUTValue.write( static_cast<int>( lut[i] ) );
             if( i % 50 == 0 )
             {
-                dlg.Update( i, wxString::Format( wxT( "%05d/%05d elements written" ), i, lutSize ) );
+                dlg.Update( i, wxString::Format( wxT( "Writing data to LUT '%s' of device(%05d/%05d elements written)" ), LUTSelectorValue.c_str(), i, lutSize ) );
             }
         }
         AddLUTToCache( LUTSelectorValue, lut, false );
@@ -826,7 +853,7 @@ void WizardLUTControl::WriteLUTToDevice( const wxString& LUTSelectorValue, vecto
     {
         WriteErrorMessage( wxString::Format( wxT( "%s(%d): Internal error: %s(%s) while trying to deal with LUT data.\n" ), ConvertedString( __FUNCTION__ ).c_str(), __LINE__, ConvertedString( e.getErrorString() ).c_str(), ConvertedString( e.getErrorCodeAsString() ).c_str() ) );
     }
-    UpdateDisplay( true );
+    UpdateDisplay();
 }
 
 //=============================================================================

@@ -262,7 +262,15 @@ void PropGridFrameBase::OnPopUpPropRestoreDefault( wxCommandEvent& )
         }
         else
         {
-            comp.restoreDefault();
+            try
+            {
+                comp.restoreDefault();
+            }
+            catch( const ImpactAcquireException& e )
+            {
+                wxMessageDialog errorDlg( NULL, wxString::Format( wxT( "Failed to restore the default for feature '%s'(Error: %s)" ), ConvertedString( comp.name() ).c_str(), ConvertedString( e.getErrorCodeAsString() ).c_str() ), wxT( "Error" ), wxOK | wxICON_INFORMATION );
+                errorDlg.ShowModal();
+            }
         }
         GetPropertyGrid()->ClearModifiedStatus( id );
     }
@@ -637,6 +645,7 @@ bool PropGridFrameBase::SelectPropertyInPropertyGrid( PropData* pPropData )
                 {
                     ExpandPropertyRecursively( wxPGIdToPtr( id )->GetParent()->GetId() );
                 }
+                pGrid->Expand( id );
                 return pGrid->SelectProperty( id, true );
             }
         }

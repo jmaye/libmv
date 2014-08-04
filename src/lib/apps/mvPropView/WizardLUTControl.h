@@ -119,7 +119,8 @@ class WizardLUTControl : public OkAndCancelDlg, public DataGridDataProvider
     void ConfigureAllLUTs( bool boEnable );
     void ReadLUTFromDevice( const wxString& LUTSelectorValue, std::vector<int>& lut );
     void SetupLUTEnable( void );
-    void UpdateDisplay( bool boEraseBackground );
+    void SynchronizeLUT( const bool boCacheToDevice, const wxString& LUTSelectorValue, std::vector<int>& lut );
+    void UpdateDisplay( bool boEraseBackground = true );
     void WriteErrorMessage( const wxString& msg )
     {
         WriteLogMessage( msg, errorStyle_ );
@@ -164,6 +165,7 @@ public:
     virtual wxString    GetGridValue( int row, int col ) const;
     virtual void        SetGridValue( int row, int col, const wxString& value );
     virtual void        SetGridValueFormatString( const wxString& gridValueFormatString );
+    void                UpdateDialog( void );
 };
 
 //-----------------------------------------------------------------------------

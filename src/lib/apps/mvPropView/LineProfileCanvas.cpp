@@ -73,7 +73,7 @@ double LineProfileCanvas::GetScaleY( wxCoord h ) const
 void LineProfileCanvas::OnPaintCustom( wxPaintDC& dc )
 //-----------------------------------------------------------------------------
 {
-    wxCoord xOffset( 80 ), yOffset( 1 ), w( 0 ), h( 0 );
+    wxCoord yOffset( 1 ), w( 0 ), h( 0 );
     dc.GetSize( &w, &h );
     const double scaleX = static_cast<double>( w - 2 * GetBorderWidth() ) / static_cast<double>( ( GetDataCount() == 0 ) ? 1 : GetDataCount() - 1 );
     const double scaleY = GetScaleY( h );
@@ -81,8 +81,11 @@ void LineProfileCanvas::OnPaintCustom( wxPaintDC& dc )
     unsigned int from, to;
     GetDrawRange( &from, &to );
     const int borderWidth = GetBorderWidth();
-    dc.DrawText( wxString::Format( wxT( "%d" ), to ), borderWidth / 2, yOffset );
-    dc.DrawText( wxString::Format( wxT( "%d" ), from ), borderWidth / 2, h - borderWidth + 3 );
+    const wxString YMarkerString( wxString::Format( wxT( "Draw Range(absolute): %d / %d, " ), from, to ) );
+    wxCoord xOffset;
+    dc.GetTextExtent( YMarkerString, &xOffset, 0 );
+    xOffset += borderWidth / 2;
+    dc.DrawText( YMarkerString, borderWidth / 2, yOffset );
     if( m_boUnsupportedPixelFormat )
     {
         dc.SetTextForeground( *wxRED );

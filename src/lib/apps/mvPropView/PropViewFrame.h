@@ -695,6 +695,7 @@ private:
     template<typename _Ty>
     void                                DestroyDialog( _Ty** ppDialog );
     void                                DisplaySettingLoadSaveErrorMessage( const wxString& msgPrefix, int originalErrorCode );
+    void                                ExpandPropertyTreeToDeviceSettings( void );
     int                                 GetAnalysisControlIndex( void ) const;
     int                                 GetAnalysisControlIndex( int windowID ) const
     {
@@ -705,12 +706,14 @@ private:
     {
         return m_pDevCombo->GetValue().BeforeFirst( wxT( ' ' ) );
     }
+    int                                 LoadDeviceSetting( FunctionInterface* pFI, const std::string& name, const TStorageFlag flags, const TScope scope );
     mvIMPACT::acquire::TImageBufferPixelFormat PixelFormatFromString( const wxString& value );
     void                                ReEnableSingleCapture( void );
     void                                RefreshCurrentPixelData( void );
     void                                RefreshDisplays( bool boEraseBackground );
     template<class _Ty> void            RegisterAnalysisPlot( int index, wxWindowID id, wxWindowID gridID, const wxColour& AOIColour );
     wxRect                              RestoreConfiguration( const unsigned int displayCount, double& splitterRatio );
+    int                                 SaveDeviceSetting( FunctionInterface* pFI, const std::string& name, const TStorageFlag flags, const TScope scope );
     void                                SaveImage( const wxString& filenameAndPath, TFileFormat fileFilterIndex );
     void                                SearchAndSelectImageCanvas( ImageCanvas* pImageCanvas );
     void                                SelectImageCanvas( int index );
@@ -729,6 +732,7 @@ private:
     void                                UpdateDeviceInterfaceLayouts( void );
     void                                UpdateDeviceList( void );
     void                                UpdateInfoPlotCombo( void );
+    void                                UpdateLUTWizardAfterLoadSetting( const int result );
     void                                UpdatePropGridSplitter( void );
     void                                UpdatePropGridViewMode( void );
     void                                UpdateSettingTable( void );

@@ -8550,6 +8550,33 @@ public:
     {
         return DMR_ImageRequestConfigure( m_pRefData->m_pDevice->hDrv(), pRequest->getNumber(), 0, 0 );
     }
+    /// \brief Returns the number of \b mvIMPACT::acquire::Request objects in the result queue .
+    /**
+     *  This functions queries the number of \b mvIMPACT::acquire::Request objects currently in the result queue
+     *
+     *  \sa
+     *  \b mvIMPACT::acquire::FunctionInterface::acquisitionStart, \n
+     *  \b mvIMPACT::acquire::FunctionInterface::acquisitionStop, \n
+     *  \b mvIMPACT::acquire::FunctionInterface::imageRequestReset, \n
+     *  \b mvIMPACT::acquire::Request::unlock, \n
+     *  \b mvIMPACT::acquire::FunctionInterface::imageRequestUnlock, \n
+     *  \b mvIMPACT::acquire::FunctionInterface::imageRequestResultQueueElementCount, \n
+     *  \b mvIMPACT::acquire::FunctionInterface::imageRequestWaitFor \n
+     *  \b mvIMPACT::acquire::Request::configure, \n
+     *  \b mvIMPACT::acquire::FunctionInterface::imageRequestConfigure
+     *  \return
+     *  - The number of \b mvIMPACT::acquire::Request objects in the result queue if successful.
+     *  - \b mvIMPACT::acquire::DMR_INVALID_QUEUE_SELECTION if the selected result queue does not exist.
+     *  - A negative error code of type \b mvIMPACT::acquire::TDMR_ERROR otherwise.
+     */
+    int imageRequestResultQueueElementCount(
+        /// [in] The result queue to be queried.
+        int queueNr = 0 ) const
+    {
+        int resultQueueElements;
+        TDMR_ERROR result = DMR_ImageRequestResultQueueElementCount( m_pRefData->m_pDevice->hDrv(), queueNr, &resultQueueElements );
+        return ( result != DMR_NO_ERROR ) ? static_cast<int>( result ) : resultQueueElements;
+    }
     /// \brief Deletes all requests currently queued for the specified \b mvIMPACT::acquire::ImageRequestControl
     /**
      *  This function will terminate all running image acquisitions associated with the queue
@@ -8607,7 +8634,8 @@ public:
      *  \b mvIMPACT::acquire::FunctionInterface::imageRequestReset, \n
      *  \b mvIMPACT::acquire::Request::unlock, \n
      *  \b mvIMPACT::acquire::FunctionInterface::imageRequestUnlock, \n
-     *  \b mvIMPACT::acquire::FunctionInterface::imageRequestWaitFor \n
+     *  \b mvIMPACT::acquire::FunctionInterface::imageRequestResultQueueElementCount, \n
+     *  \b mvIMPACT::acquire::FunctionInterface::imageRequestWaitFor, \n
      *  \b mvIMPACT::acquire::Request::configure, \n
      *  \b mvIMPACT::acquire::FunctionInterface::imageRequestConfigure
      *  \return
@@ -8666,6 +8694,7 @@ public:
      *  \b mvIMPACT::acquire::FunctionInterface::imageRequestReset, \n
      *  \b mvIMPACT::acquire::FunctionInterface::imageRequestSingle, \n
      *  \b mvIMPACT::acquire::FunctionInterface::imageRequestWaitFor, \n
+     *  \b mvIMPACT::acquire::FunctionInterface::imageRequestResultQueueElementCount, \n
      *  \b mvIMPACT::acquire::FunctionInterface::imageRequestConfigure, \n
      *  \b mvIMPACT::acquire::Request::configure
      *  \return
@@ -8696,8 +8725,9 @@ public:
      *
      *  \sa
      *  \b mvIMPACT::acquire::Request::unlock, \n
-     *     mvIMPACT::acquire::FunctionInterface::imageRequestUnlock, \n
-     *     mvIMPACT::acquire::FunctionInterface::getRequest
+     *  \b mvIMPACT::acquire::FunctionInterface::imageRequestUnlock, \n
+     *  \b mvIMPACT::acquire::FunctionInterface::imageRequestResultQueueElementCount, \n
+     *  \b mvIMPACT::acquire::FunctionInterface::getRequest
      *  \return If the return value is positive, the return value is the request number of the
      *  image request in the interface's internal array of image requests. In this case the user
      *  can call \b mvIMPACT::acquire::FunctionInterface::getRequest to get access to the
@@ -8865,6 +8895,8 @@ public:
      *  specified. It's not allowed to combine \b mvIMPACT::acquire::sfFile and
      *  \b mvIMPACT::acquire::sfNative for this operation.
      *
+     *  \warning Since mvIMPACT Acquire 2.9.0 storing and loading of camera settings in a XML file for the \b mvIMPACT::acquire::dilGenICam interface layout has been updated. As a result XML files created with mvIMPACT Acquire 2.9.0 or later it will \b only be readable on systems with mvIMPACT Acquire 2.9.0 or later also. Systems with mvIMPACT Acquire versions older than 2.9.0 will \b not be able to load a XML file created with version 2.9.0 or later! However, XML files created on systems with earlier versions of mvIMPACT Acquire will still be readable on all systems.<TABLE><TR><TH>mvIMPACT Acquire Version<TH>Loading a XML settings file created with<br>mvIMPACT Acquire version earlier than 2.9.0<TH>Loading a XML settings file created with<br>mvIMPACT Acquire version 2.9.0 or later <TR><TH> earlier than 2.9.0<TD> YES <TD> NO <TR><TH> 2.9.0 or later<TD> YES <TD> YES</TABLE>
+     *
      *  \sa
      *  \b mvIMPACT::acquire::FunctionInterface::saveSetting.
      *  \return
@@ -8887,6 +8919,8 @@ public:
      *  This function will try to load the settings from a default location. This function
      *  can only succeed if a setting has been stored previously by a call to
      *  \b mvIMPACT::acquire::FunctionInterface::saveSettingToDefault.
+     *
+     *  \warning There has been an incompatible change when loading settings in Version 2.9.0 mvIMPACT Acquire. See <b>mvIMPACT::acquire::FunctionInterface::loadSetting</b> for details.
      *
      *  \return
      *  - \b mvIMPACT::acquire::DMR_NO_ERROR if successful.
@@ -8919,6 +8953,8 @@ public:
      *  specified. Both flags can be combined. In that case the same setting will be stored in a
      *  file \b AND in a platform specific location if these location differ (platform dependent!).
      *
+     *  \warning There has been an incompatible change when loading settings in Version 2.9.0 mvIMPACT Acquire. See <b>mvIMPACT::acquire::FunctionInterface::loadSetting</b> for details.
+     *
      *  \return
      *  - \b mvIMPACT::acquire::DMR_NO_ERROR if successful.
      *  - A negative error code of type \b mvIMPACT::acquire::TDMR_ERROR or \b mvIMPACT::acquire::TPROPHANDLING_ERROR otherwise.
@@ -8938,6 +8974,9 @@ public:
     /**
      *  Under Windows&copy; this will be in the Registry. A setting contains all the values set
      *  for properties that control the overall way an image is acquired( e.g. the exposure time, etc.).
+     *
+     *  \warning There has been an incompatible change when loading settings in Version 2.9.0 mvIMPACT Acquire. See <b>mvIMPACT::acquire::FunctionInterface::loadSetting</b> for details.
+     *
      *  \return
      *  - \b mvIMPACT::acquire::DMR_NO_ERROR if successful.
      *  - A negative error code of type \b mvIMPACT::acquire::TDMR_ERROR or \b mvIMPACT::acquire::TPROPHANDLING_ERROR otherwise.
@@ -9220,7 +9259,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-/// \brief Properties to define the result images format.
+/// \brief Properties to define the format of resulting images.
 /**
  *  This class provides properties allowing the user to define how the resulting
  *  image should be created. Things like the width and height of the captured image
@@ -9302,6 +9341,184 @@ public:
      *  Please see remarks under \b mvIMPACT::acquire::ImageDestination::scalerMode.
      */
     PropertyI imageHeight;
+    PYTHON_ONLY( %mutable; )
+};
+
+//-----------------------------------------------------------------------------
+/// \brief Properties to configure which informations shall be attached to the resulting images.
+/**
+ *  This class provides properties allowing the user to define which additional information
+ *  shall be attached to the resulting images. For example some devices can transmit the state
+ *  of the digital I/Os at the time the exposure of an image has been started. Some information
+ *  will always be attached to the resulting images other information will only be available
+ *  if it has been explicitly enabled before.
+ *
+ *  \if DOXYGEN_CPP_DOCUMENTATION
+ *
+ *  \b EXAMPLE:
+ *
+ *  Enable the transmission of the \c LineStatusAll information in device interface layout
+ *  <b>mvIMPACT::acquire::dilDeviceSpecific</b>:
+ *
+ * \code
+ *  //-----------------------------------------------------------------------------
+ *  void fn( Device* pDev )
+ *  //-----------------------------------------------------------------------------
+ *  {
+ *     RequestInfoConfiguration ric( pDev );
+ *     if( ric.lineStatusAll.isValid() == false )
+ *     {
+ *        // feature not supported
+ *        return;
+ *     }
+ *     ric.lineStatusAll.write( bTrue );
+ *     Request* pRequest = captureAnImage( pDev );
+ *     printf( "%s: 0x%08x\n", pRequest->chunkLineStatusAll.name.c_str(), static_cast<int>(pRequest->chunkLineStatusAll.read()) );
+ *  }
+ * \endcode
+ *  \endif
+ */
+class RequestInfoConfiguration : public ComponentCollection
+//-----------------------------------------------------------------------------
+{
+public:
+    /// brief Constructs a new \b mvIMPACT::acquire::RequestInfoConfiguration object.
+    explicit RequestInfoConfiguration(
+        /// [in] A pointer to a \b mvIMPACT::acquire::Device object obtained from a \b mvIMPACT::acquire::DeviceManager object.
+        Device* pDev,
+        /// [in] The name of the driver internal setting to access with this instance.
+        /// A list of valid setting names can be obtained by a call to
+        /// \b mvIMPACT::acquire::FunctionInterface::getAvailableSettings, new
+        /// settings can be created with the function
+        /// \b mvIMPACT::acquire::FunctionInterface::createSetting
+        const std::string& settingName = "Base" ) : ComponentCollection( pDev ), frameNr(), timeStamp_us(), settingUsed(),
+        exposeStart_us(), exposeTime_us(), gain_dB(), videoChannel(), missingData_pc(), transferDelay_us(),
+        imageAverage(), IOStatesAtExposureStart(), triggerCounterAcquisitionStart(), triggerCounterFrameStart(),
+        lineCounter(), userData(), lineStatusAll()
+    {
+        DeviceComponentLocator locator( pDev, dltSetting, settingName );
+        locator.bindSearchBase( locator.searchbase_id(), "RequestInfo" );
+        m_hRoot = locator.searchbase_id();
+        locator.bindComponent( frameNr, "FrameNr" );
+        locator.bindComponent( timeStamp_us, "TimeStamp_us" );
+        locator.bindComponent( settingUsed, "SettingUsed" );
+        locator.bindComponent( frameID, "FrameID" );
+        locator.bindComponent( exposeStart_us, "ExposeStart_us" );
+        locator.bindComponent( exposeTime_us, "ExposeTime_us" );
+        locator.bindComponent( gain_dB, "Gain_dB" );
+        locator.bindComponent( videoChannel, "VideoChannel" );
+        locator.bindComponent( missingData_pc, "MissingData_pc" );
+        locator.bindComponent( transferDelay_us, "TransferDelay_us" );
+        locator.bindComponent( imageAverage, "ImageAverage" );
+        locator.bindComponent( IOStatesAtExposureStart, "IOStatesAtExposureStart" );
+        locator.bindComponent( triggerCounterAcquisitionStart, "TriggerCounterAcquisitionStart" );
+        locator.bindComponent( triggerCounterFrameStart, "TriggerCounterFrameStart" );
+        locator.bindComponent( lineCounter, "LineCounter" );
+        locator.bindComponent( userData, "UserData" );
+        locator.bindComponent( lineStatusAll, "LineStatusAll" );
+    }
+    PYTHON_ONLY( %immutable; )
+    /// \brief An enumerated integer property which can be used to configure whether the frame number information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     */
+    PropertyIBoolean frameNr;
+    /// \brief An enumerated integer property which can be used to configure whether the time stamp(us) information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     */
+    PropertyIBoolean timeStamp_us;
+    /// \brief An enumerated integer property which can be used to configure whether the 'setting used' information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     */
+    PropertyIBoolean settingUsed;
+    /// \brief An enumerated integer property which can be used to configure whether the frame ID information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     */
+    PropertyIBoolean frameID;
+    /// \brief An enumerated integer property which can be used to configure whether the exposure start(us) information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     */
+    PropertyIBoolean exposeStart_us;
+    /// \brief An enumerated integer property which can be used to configure whether the exposure time(us) information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     */
+    PropertyIBoolean exposeTime_us;
+    /// \brief An enumerated integer property which can be used to configure whether the gain(dB) information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     */
+    PropertyIBoolean gain_dB;
+    /// \brief An enumerated integer property which can be used to configure whether the video channel information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     */
+    PropertyIBoolean videoChannel;
+    /// \brief An enumerated integer property which can be used to configure whether the missing data information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     */
+    PropertyIBoolean missingData_pc;
+    /// \brief An enumerated integer property which can be used to configure whether the transfer delay(us) information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     *  \note
+     *  - This feature currently is only available for \b mvBlueFOX devices
+     */
+    PropertyIBoolean transferDelay_us;
+    /// \brief An enumerated integer property which can be used to configure whether the image average information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     *  \note
+     *  - This feature currently is only available for \b mvBlueFOX devices
+     */
+    PropertyIBoolean imageAverage;
+    /// \brief An enumerated integer property which can be used to configure whether the I/O states at exposure start information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     *  \note
+     *  - This feature currently is only available for \b mvBlueFOX devices
+     */
+    PropertyIBoolean IOStatesAtExposureStart;
+    /// \brief An enumerated integer property which can be used to configure whether the trigger counter at acquisition start information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     *  \note
+     *  - This feature currently is only available for \b mvHYPERION devices
+     */
+    PropertyIBoolean triggerCounterAcquisitionStart;
+    /// \brief An enumerated integer property which can be used to configure whether the trigger counter at frame start information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     *  \note
+     *  - This feature currently is only available for \b mvHYPERION devices
+     */
+    PropertyIBoolean triggerCounterFrameStart;
+    /// \brief An enumerated integer property which can be used to configure whether the line counter information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     *  \note
+     *  - This feature currently is only available for \b mvTITAN-CL, \b mvGAMMA-CL and \b mvTITAN-DIG devices
+     */
+    PropertyIBoolean lineCounter;
+    /// \brief An enumerated integer property which can be used to configure whether the user data information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     *  \note
+     *  - This feature currently is only available for \b mvVirtual, \b mvBlueCOUGAR-P and \b mvBlueLYNX-M7 devices
+     */
+    PropertyIBoolean userData;
+    /// \brief An enumerated integer property which can be used to configure whether the line status all information shall be attached to the resulting \b mvIMPACT::acquire::Request objects.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     *  \note
+     *  - This feature may be available for GenICam compliant devices
+     */
+    PropertyIBoolean lineStatusAll;
     PYTHON_ONLY( %mutable; )
 };
 

@@ -716,7 +716,8 @@ MVDMR_API TDMR_ERROR DMR_CALL DMR_ImageRequestReset( HDRV hDrv, int requestCtrl,
 MVDMR_API TDMR_ERROR DMR_CALL DMR_ImageRequestSingle( HDRV hDrv, int requestCtrl, int* pRequestUsed );
 MVDMR_API TDMR_ERROR DMR_CALL DMR_ImageRequestUnlock( HDRV hDrv, int requestNr );
 MVDMR_API TDMR_ERROR DMR_CALL DMR_ImageRequestConfigure( HDRV hDrv, int requestNr, int reserved, void* pReserved );
-MVDMR_API TDMR_ERROR DMR_CALL DMR_ImageRequestWaitFor( HDRV hDrv, int timeout_ms, int queueNr, int* requestNr );
+MVDMR_API TDMR_ERROR DMR_CALL DMR_ImageRequestWaitFor( HDRV hDrv, int timeout_ms, int queueNr, int* pRequestNr );
+MVDMR_API TDMR_ERROR DMR_CALL DMR_ImageRequestResultQueueElementCount( HDRV hDrv, int queueNr, int* pResultQueueElements );
 MVDMR_API TDMR_ERROR DMR_CALL DMR_GetImageRequestBuffer( HDRV hDrv, int requestNr, ImageBuffer** ppBuffer );
 // functions only needed to query certain information from other languages such as VB.
 MVDMR_API TDMR_ERROR DMR_CALL DMR_GetImageRequestBufferData( HDRV hDrv, int requestNr, int* pBytesPerPixel, int* pChannelCount, int* pHeight, int* pWidth, int* pSize, TImageBufferPixelFormat* pPixelFormat, void** ppData );

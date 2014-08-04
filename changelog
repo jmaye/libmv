@@ -1,3 +1,9 @@
+libmv (2.10-36) precise; urgency=low
+
+  * upstream version 2.10 
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Mon, 04 Aug 2014 12:01:22 +0200
+
 libmv (2.8-35) precise; urgency=low
 
   * pthread linking 

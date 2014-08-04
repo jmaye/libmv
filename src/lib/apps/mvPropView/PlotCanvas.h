@@ -48,12 +48,8 @@ protected:
     {
         return 1.0;
     }
-    virtual unsigned int    GetXMarkerParameters( unsigned int& from, unsigned int& to ) const
-    {
-        from = 0;
-        to = 0;
-        return 1;
-    }
+    virtual unsigned int    GetXMarkerParameters( unsigned int& from, unsigned int& to ) const = 0;
+    static unsigned int     GetXMarkerStepWidth( const unsigned int from, const unsigned int to );
     virtual void            OnPaint( wxPaintEvent& );
 public:
     explicit                PlotCanvas() {}

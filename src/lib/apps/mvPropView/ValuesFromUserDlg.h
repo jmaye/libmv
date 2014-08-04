@@ -220,7 +220,8 @@ class FindFeatureDlg : public OkAndCancelDlg
     {
         UpdateFeatureList();
     }
-    void SelectFeatureInPropertyGrid( int selection );
+    void SelectFeatureInPropertyGrid( const wxString& selection );
+    void SelectFeatureInPropertyGrid( const int selection );
     void UpdateFeatureList( void );
 public:
     explicit FindFeatureDlg( PropGridFrameBase* pParent, const NameToFeatureMap& nameToFeatureMap, const bool boMatchCaseActive );

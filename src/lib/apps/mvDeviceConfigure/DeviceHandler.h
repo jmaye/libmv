@@ -42,7 +42,7 @@ public:
     {
         return false;
     }
-    virtual int UpdateFirmware( bool boSilentMode );
+    virtual int UpdateFirmware( bool boSilentMode, bool boPersistentUserSets );
     virtual int UpdateKernelDriver( bool boSilentMode );
     virtual int UpdatePermanentDMABufferSize( bool /*boSilentMode*/ )
     {

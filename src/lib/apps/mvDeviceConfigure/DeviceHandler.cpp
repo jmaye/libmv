@@ -58,7 +58,7 @@ bool DeviceHandler::GetIDFromUser( long& newID, const long minValue, const long 
 }
 
 //-----------------------------------------------------------------------------
-int DeviceHandler::UpdateFirmware( bool /*boSilentMode*/ )
+int DeviceHandler::UpdateFirmware( bool /*boSilentMode*/, bool /*boPersistentUserSets*/ )
 //-----------------------------------------------------------------------------
 {
     if( pParent_ )

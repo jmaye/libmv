@@ -1104,7 +1104,7 @@ unsigned int HistogramCanvas::GetXMarkerParameters( unsigned int& from, unsigned
 //-----------------------------------------------------------------------------
 {
     GetDrawRange( &from, &to );
-    return ( ( to - from ) < 6 ) ? ( to - from ) : ( to - from ) / 6;
+    return GetXMarkerStepWidth( from, to );
 }
 
 //-----------------------------------------------------------------------------

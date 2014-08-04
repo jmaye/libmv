@@ -16,7 +16,7 @@ PlotCanvasInfo::PlotCanvasInfo( wxWindow* parent, wxWindowID id /* = -1 */, cons
                                 const wxString& name /* = "info plot" */, bool boActive /* = false */ )
     : PlotCanvas( parent, id, pos, size, style, name, boActive ),
       m_HistoryDepth( 20 ), m_ppPlotValues( 0 ), m_CurrentMaxPlotValues(), m_CurrentMinPlotValues(), m_CurrentPlotValues(),
-      m_CurrentMaxPlotValue( numeric_limits<plot_datatype>::min() ), m_CurrentMinPlotValue( numeric_limits<plot_datatype>::max() ),
+      m_CurrentMaxPlotValue( numeric_limits<plot_data_type>::min() ), m_CurrentMinPlotValue( numeric_limits<plot_data_type>::max() ),
       m_boPlotDifferences( false )
 //-----------------------------------------------------------------------------
 {
@@ -40,16 +40,16 @@ void PlotCanvasInfo::AllocateDataBuffer( unsigned int plotCount )
 {
     DeallocateDataBuffer();
     m_PlotCount = plotCount;
-    m_ppPlotValues = new std::deque<plot_datatype>* [m_PlotCount];
+    m_ppPlotValues = new std::deque<plot_data_type>* [m_PlotCount];
     m_CurrentMaxPlotValues.resize( m_PlotCount );
     m_CurrentMinPlotValues.resize( m_PlotCount );
     m_CurrentPlotValues.resize( m_PlotCount );
     m_PlotIdentifiers.resize( m_PlotCount );
     for( unsigned int i = 0; i < m_PlotCount; i++ )
     {
-        m_ppPlotValues[i] = new std::deque<plot_datatype>();
-        m_CurrentMaxPlotValues[i] = numeric_limits<plot_datatype>::min();
-        m_CurrentMinPlotValues[i] = numeric_limits<plot_datatype>::max();
+        m_ppPlotValues[i] = new std::deque<plot_data_type>();
+        m_CurrentMaxPlotValues[i] = numeric_limits<plot_data_type>::min();
+        m_CurrentMinPlotValues[i] = numeric_limits<plot_data_type>::max();
         m_CurrentPlotValues[i] = 0;
     }
 }
@@ -69,11 +69,11 @@ void PlotCanvasInfo::ClearCache_Internal( void )
     for( unsigned int i = 0; i < m_PlotCount; i++ )
     {
         m_ppPlotValues[i]->clear();
-        m_CurrentMaxPlotValues[i] = numeric_limits<plot_datatype>::min();
-        m_CurrentMinPlotValues[i] = numeric_limits<plot_datatype>::max();
+        m_CurrentMaxPlotValues[i] = numeric_limits<plot_data_type>::min();
+        m_CurrentMinPlotValues[i] = numeric_limits<plot_data_type>::max();
     }
-    m_CurrentMaxPlotValue = numeric_limits<plot_datatype>::min();
-    m_CurrentMinPlotValue = numeric_limits<plot_datatype>::max();
+    m_CurrentMaxPlotValue = numeric_limits<plot_data_type>::min();
+    m_CurrentMinPlotValue = numeric_limits<plot_data_type>::max();
     Refresh( true );
 }
 
@@ -177,17 +177,17 @@ void PlotCanvasInfo::RefreshData( const RequestInfoData& infoData, bool boForceR
     PlotHashTable::const_iterator it = m_PlotHashTable.find( infoData.settingUsed );
     unsigned int index = ( it == m_PlotHashTable.end() ) ? 0 : it->second;
 
-    plot_datatype value;
+    plot_data_type value;
     switch( infoData.plotValue.type )
     {
     case ctPropInt:
-        value = static_cast<plot_datatype>( infoData.plotValue.value.intRep   );
+        value = static_cast<plot_data_type>( infoData.plotValue.value.intRep   );
         break;
     case ctPropInt64:
-        value = static_cast<plot_datatype>( infoData.plotValue.value.int64Rep );
+        value = static_cast<plot_data_type>( infoData.plotValue.value.int64Rep );
         break;
     case ctPropFloat:
-        value = static_cast<plot_datatype>( infoData.plotValue.value.doubleRep );
+        value = static_cast<plot_data_type>( infoData.plotValue.value.doubleRep );
         break;
     default:
         return;

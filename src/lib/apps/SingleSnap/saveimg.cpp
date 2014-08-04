@@ -43,7 +43,7 @@ int writeFile( const unsigned char* pData, const unsigned long ulWidth, const un
         {
             if( ( retCount = fwrite( pData, 1, iImageFileSize, pF ) ) != iImageFileSize )
             {
-                fprintf( stderr, "*** %s - only %zd bytes written to file %s\n", __FUNCTION__, retCount, pFileName );
+                fprintf( stderr, "*** %s - only %lu bytes written to file %s\n", __FUNCTION__, static_cast<unsigned long>( retCount ), pFileName );
             }
             else
             {
@@ -56,8 +56,8 @@ int writeFile( const unsigned char* pData, const unsigned long ulWidth, const un
             {
                 if( ( retCount = fwrite( pData + y * ulPitch, 1, iLineBytes, pF ) ) != iLineBytes )
                 {
-                    fprintf( stderr, "*** %s - only %zd from %d bytes written to file %s\n",
-                             __FUNCTION__, retCount, iLineBytes, pFileName );
+                    fprintf( stderr, "*** %s - only %lu from %d bytes written to file %s\n",
+                             __FUNCTION__, static_cast<unsigned long>( retCount ), iLineBytes, pFileName );
                     err = 1;
                     break;
                 }

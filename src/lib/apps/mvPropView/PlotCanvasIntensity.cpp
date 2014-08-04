@@ -11,7 +11,7 @@ PlotCanvasIntensity::PlotCanvasIntensity( wxWindow* parent, wxWindowID id /* = -
         const wxSize& size /* = wxDefaultSize */, long style /* = wxSUNKEN_BORDER */, const wxString& name /* = "Intensity Plot" */, bool boActive /* = true */ )
     : HistogramCanvasPixel( parent, wxT( "IntensityPlot" ), id, pos, size, style, name, boActive ), m_SelectedPlot( psAverageIntensity ),
       m_ppPlotValues( 0 ), m_CurrentMaxPlotValues(), m_CurrentMinPlotValues(),
-      m_CurrentMaxPlotValue( std::numeric_limits<plot_datatype>::min() ), m_CurrentMinPlotValue( std::numeric_limits<plot_datatype>::max() )
+      m_CurrentMaxPlotValue( std::numeric_limits<plot_data_type>::min() ), m_CurrentMinPlotValue( std::numeric_limits<plot_data_type>::max() )
 //-----------------------------------------------------------------------------
 {
     m_plotFeatures.insert( pfHistoryDepth );
@@ -35,14 +35,14 @@ void PlotCanvasIntensity::CustomAlloc( int channelCount )
 //-----------------------------------------------------------------------------
 {
     m_PlotCount = channelCount;
-    m_ppPlotValues = new std::deque<plot_datatype>* [m_PlotCount];
+    m_ppPlotValues = new std::deque<plot_data_type>* [m_PlotCount];
     m_CurrentMaxPlotValues.resize( m_PlotCount );
     m_CurrentMinPlotValues.resize( m_PlotCount );
     for( unsigned int i = 0; i < m_PlotCount; i++ )
     {
-        m_ppPlotValues[i] = new std::deque<plot_datatype>();
-        m_CurrentMaxPlotValues[i] = std::numeric_limits<plot_datatype>::min();
-        m_CurrentMinPlotValues[i] = std::numeric_limits<plot_datatype>::max();
+        m_ppPlotValues[i] = new std::deque<plot_data_type>();
+        m_CurrentMaxPlotValues[i] = std::numeric_limits<plot_data_type>::min();
+        m_CurrentMinPlotValues[i] = std::numeric_limits<plot_data_type>::max();
     }
 }
 
@@ -99,7 +99,7 @@ wxString PlotCanvasIntensity::GetGridValue( int row, int col ) const
     {
         return ( row == 0 ) ? wxT( "Timeline Steps" ) : wxString::Format( wxT( "%d" ), row - 1 );
     }
-    else if( m_ppPlotValues && ( col > 0 ) && ( row >= 0 ) && ( col <= m_ChannelCount ) && ( static_cast<std::deque<plot_datatype>::size_type>( row ) <= m_ppPlotValues[col - 1]->size() ) )
+    else if( m_ppPlotValues && ( col > 0 ) && ( row >= 0 ) && ( col <= m_ChannelCount ) && ( static_cast<std::deque<plot_data_type>::size_type>( row ) <= m_ppPlotValues[col - 1]->size() ) )
     {
         return ( row == 0 ) ? m_Pens[col - 1].description_ : wxString::Format( GetGridValueFormatString().c_str(), ( *m_ppPlotValues[col - 1] )[row - 1] );
     }
@@ -165,7 +165,7 @@ void PlotCanvasIntensity::OnPaintCustom( wxPaintDC& dc )
             dc.SetPen( wxNullPen );
         }
         // info in the top left corner
-        DrawInfoString( dc, wxString::Format( wxT( "%s: max: %.2f, min: %.2f : " ), m_Pens[i].description_.c_str(), m_CurrentMaxPlotValues[i], ( m_CurrentMinPlotValues[i] == std::numeric_limits<plot_datatype>::max() ) ? 0. : m_CurrentMinPlotValues[i] ), xOffset, 1, *( m_Pens[i].pColour_ ) );
+        DrawInfoString( dc, wxString::Format( wxT( "%s: max: %.2f, min: %.2f : " ), m_Pens[i].description_.c_str(), m_CurrentMaxPlotValues[i], ( m_CurrentMinPlotValues[i] == std::numeric_limits<plot_data_type>::max() ) ? 0. : m_CurrentMinPlotValues[i] ), xOffset, 1, *( m_Pens[i].pColour_ ) );
     }
 }
 
@@ -211,14 +211,14 @@ bool PlotCanvasIntensity::RefreshPlotData( void )
         }
     }
 
-    plot_datatype maxVal = *( std::max_element( m_CurrentMaxPlotValues.begin(), m_CurrentMaxPlotValues.end() ) );
+    plot_data_type maxVal = *( std::max_element( m_CurrentMaxPlotValues.begin(), m_CurrentMaxPlotValues.end() ) );
     if( m_CurrentMaxPlotValue != maxVal )
     {
         m_CurrentMaxPlotValue = maxVal;
         boFullUpdate = true;
     }
 
-    plot_datatype minVal = *( std::min_element( m_CurrentMinPlotValues.begin(), m_CurrentMinPlotValues.end() ) );
+    plot_data_type minVal = *( std::min_element( m_CurrentMinPlotValues.begin(), m_CurrentMinPlotValues.end() ) );
     if( m_CurrentMinPlotValue != minVal )
     {
         m_CurrentMinPlotValue = minVal;
@@ -259,11 +259,11 @@ void PlotCanvasIntensity::SetPlotSelection( const wxString& plotName )
     for( unsigned int i = 0; i < m_PlotCount; i++ )
     {
         m_ppPlotValues[i]->clear();
-        m_CurrentMaxPlotValues[i] = std::numeric_limits<plot_datatype>::min();
-        m_CurrentMinPlotValues[i] = std::numeric_limits<plot_datatype>::max();
+        m_CurrentMaxPlotValues[i] = std::numeric_limits<plot_data_type>::min();
+        m_CurrentMinPlotValues[i] = std::numeric_limits<plot_data_type>::max();
     }
-    m_CurrentMaxPlotValue = std::numeric_limits<plot_datatype>::min();
-    m_CurrentMinPlotValue = std::numeric_limits<plot_datatype>::max();
+    m_CurrentMaxPlotValue = std::numeric_limits<plot_data_type>::min();
+    m_CurrentMinPlotValue = std::numeric_limits<plot_data_type>::max();
     UpdateAnalysisOutput( true );
 }
 

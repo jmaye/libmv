@@ -106,6 +106,7 @@ BEGIN_EVENT_TABLE( DeviceConfigureFrame, wxFrame )
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
     EVT_MENU( miSettings_CPUIdleStatesEnabled, DeviceConfigureFrame::OnSettings_CPUIdleStatesEnabled )
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
+    EVT_MENU( miSettings_KeepUserSetSettingsAfterFirmwareUpdate, DeviceConfigureFrame::OnSettings_KeepUserSetSettingsAfterFirmwareUpdate )
     EVT_TIMER( wxID_ANY, DeviceConfigureFrame::OnTimer )
 END_EVENT_TABLE()
 
@@ -151,7 +152,7 @@ int DeviceConfigureFrame::m_updateResult = 0;
 DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint& pos, const wxSize& size, int argc, wxChar** argv )
     : wxFrame( ( wxFrame* )NULL, wxID_ANY, title, pos, size ),
       m_pDevListCtrl( 0 ), m_pLogWindow( 0 ), m_lastDevMgrChangedCount( numeric_limits<unsigned int>::max() ),
-      m_customFirmwarePath(), m_IPv4Mask(), m_boPendingQuit( false )
+      m_customFirmwarePath(), m_IPv4Mask(), m_boPendingQuit( false ), m_boUserSetPersistence( true )
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
       , m_boChangeProcessorIdleStates( false ), m_boEnableIdleStates( false )
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
@@ -171,8 +172,9 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
             CTRL+F : Update Firmware
         ALT+CTRL+F : Set Friendly Name
             CTRL+I : Enable/Disable CPU idle states
+            CTRL+P : Enable/Disable Persistent UserSet Settings
             CTRL+K : Update Kernel Driver
-            CTRL+P : Update Permanent DMA Buffer
+            CTRL+D : Update Permanent DMA Buffer
             CTRL+R : Register All Devices(for DirectShow)
             CTRL+S : Set ID
             CTRL+U : Unregister All Devices(for DirectShow)
@@ -211,14 +213,17 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
     pMenuBar->Append( menuDirectShow, wxT( "&DirectShow" ) );
     m_DSDevMgr.create( this );
 #endif // #ifdef BUILD_WITH_DIRECT_SHOW_SUPPORT
-#ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
     wxMenu* pMenuSettings = new wxMenu;
+    m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate = pMenuSettings->Append( miSettings_KeepUserSetSettingsAfterFirmwareUpdate, wxT( "&Persistent UserSet Settings\tCTRL+P" ), wxT( "" ), wxITEM_CHECK );
+    m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->Check( true );
+#ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
     m_pMISettings_CPUIdleStatesEnabled = pMenuSettings->Append( miSettings_CPUIdleStatesEnabled, wxT( "CPU &Idle States Enabled\tCTRL+I" ), wxT( "" ), wxITEM_CHECK );
     bool boValue = false;
     GetPowerState( boValue );
     m_pMISettings_CPUIdleStatesEnabled->Check( boValue );
-    pMenuBar->Append( pMenuSettings, wxT( "&Settings" ) );
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
+    m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->Check( m_boUserSetPersistence );
+    pMenuBar->Append( pMenuSettings, wxT( "&Settings" ) );
     pMenuBar->Append( pMenuHelp, wxT( "&Help" ) );
     // ... and attach this menu bar to the frame
     SetMenuBar( pMenuBar );
@@ -325,6 +330,21 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
             {
                 m_boPendingQuit = true;
             }
+            else if( key == wxT( "set_userset_persistence" ) || key == wxT( "sup" ) )
+            {
+                unsigned long conversionResult = 0;
+                if( value.ToULong( &conversionResult ) )
+                {
+                    if( conversionResult != 0 )
+                    {
+                        m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->Check( true );
+                    }
+                    else
+                    {
+                        m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->Check( false );
+                    }
+                }
+            }
             else
             {
                 commandLineErrors.push_back( wxString::Format( wxT( "%s: Invalid command line parameter: '%s'.\n" ), ConvertedString( __FUNCTION__ ).c_str(), param.c_str() ) );
@@ -343,16 +363,17 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
     boldStyle.SetFont( boldFont );
     boldStyle.SetTextColour( wxColour( 0, 0, 0 ) );
     WriteLogMessage( wxT( "Available command line options:\n" ), boldStyle );
-    WriteLogMessage( wxT( "'setid'                     or 'id'   to update the firmware of one or many devices(syntax: 'id=<serial>.id' or 'id=<product>.id')\n" ) );
+    WriteLogMessage( wxT( "'setid'                     or 'id'   to update the firmware of one or many devices(syntax: 'id=<serial>.id' or 'id=<product>.id').\n" ) );
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
-    WriteLogMessage( wxT( "'set_processor_idle_states' or 'spis' to change the C1, C2 and C3 states for ALL processors in the current system(syntax: 'spis=1' or 'spis=0')\n" ) );
+    WriteLogMessage( wxT( "'set_processor_idle_states' or 'spis' to change the C1, C2 and C3 states for ALL processors in the current system(syntax: 'spis=1' or 'spis=0').\n" ) );
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
-    WriteLogMessage( wxT( "'update_fw'                 or 'ufw'  to update the firmware of one or many devices\n" ) );
+    WriteLogMessage( wxT( "'set_userset_persistence' or 'sup' to set the persistency of UserSet settings during firmware updates (syntax: 'sup=1' or 'sup=0').\n" ) );
+    WriteLogMessage( wxT( "'update_fw'                 or 'ufw'  to update the firmware of one or many devices.\n" ) );
     WriteLogMessage( wxT( "'update_fw_file'            or 'ufwf' to update the firmware of one or many devices. Pass a full path to a text file that contains a serial number or a product type per line.\n" ) );
-    WriteLogMessage( wxT( "'ipv4_mask'                           to specify an IPv4 address mask to use as a filter for the selected update operations\n" ) );
-    WriteLogMessage( wxT( "'fw_path'                             to specify a custom path for the firmware files\n" ) );
-    WriteLogMessage( wxT( "'update_kd'                 or 'ukd'  to update the kernel driver of one or many devices\n" ) );
-    WriteLogMessage( wxT( "'quit'                      or 'q'    to end the application automatically after all updates have been applied\n" ) );
+    WriteLogMessage( wxT( "'ipv4_mask'                           to specify an IPv4 address mask to use as a filter for the selected update operations.\n" ) );
+    WriteLogMessage( wxT( "'fw_path'                             to specify a custom path for the firmware files.\n" ) );
+    WriteLogMessage( wxT( "'update_kd'                 or 'ukd'  to update the kernel driver of one or many devices.\n" ) );
+    WriteLogMessage( wxT( "'quit'                      or 'q'    to end the application automatically after all updates have been applied.\n" ) );
     WriteLogMessage( wxT( "'*' can be used as a wildcard, devices will be searched by serial number AND by product. The application will first try to locate a device with a serial number matching the specified string and then (if no suitable device is found) a device with a matching product string.\n" ) );
     WriteLogMessage( wxT( "\n" ) );
     WriteLogMessage( wxT( "The number of commands that can be passed to the application is not limited.\n" ) );
@@ -782,7 +803,7 @@ void DeviceConfigureFrame::OnTimer( wxTimerEvent& e )
                     }
                     if( it->second.boUpdateFW_ )
                     {
-                        RefreshApplicationExitCode( UpdateFirmware( pDev, true ) );
+                        RefreshApplicationExitCode( UpdateFirmware( pDev, true, m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->IsChecked() ) );
                     }
                     ++i;
                 }
@@ -934,7 +955,7 @@ void DeviceConfigureFrame::UpdateDeviceList( void )
 }
 
 //-----------------------------------------------------------------------------
-int DeviceConfigureFrame::UpdateFirmware( Device* pDev, bool boSilentMode )
+int DeviceConfigureFrame::UpdateFirmware( Device* pDev, bool boSilentMode, bool boPersistentUserSets )
 //-----------------------------------------------------------------------------
 {
     int result = 0;
@@ -944,7 +965,7 @@ int DeviceConfigureFrame::UpdateFirmware( Device* pDev, bool boSilentMode )
         wxBusyCursor busyCursorScope;
         pHandler->AttachParent( this );
         pHandler->SetCustomFirmwarePath( m_customFirmwarePath );
-        result = pHandler->UpdateFirmware( boSilentMode );
+        result = pHandler->UpdateFirmware( boSilentMode, boPersistentUserSets );
         UpdateDeviceList();
     }
     else
@@ -965,7 +986,7 @@ int DeviceConfigureFrame::UpdateFirmware( int deviceIndex )
         Device* pDev = m_devMgr[deviceIndex];
         if( pDev )
         {
-            result = UpdateFirmware( pDev, false );
+            result = UpdateFirmware( pDev, false, m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->IsChecked() );
         }
         else
         {

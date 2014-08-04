@@ -1950,6 +1950,7 @@ void PropViewFrame::DisplaySettingLoadSaveErrorMessage( const wxString& msgPrefi
     if( originalErrorCode == PROPHANDLING_INCOMPATIBLE_COMPONENTS )
     {
         msg.append( wxString::Format( wxT( "\nPossible reason %d:\nThe selected setting is not compatible with the selected device. It might have been created using a different device family.\n" ), reasonIndex++ ) );
+        msg.append( wxString::Format( wxT( "\nPossible reason %d:\nThe selected setting is not compatible with the current driver version. It might have been created using a newer driver version that uses a different setting format.\n" ), reasonIndex++ ) );
     }
     if( originalErrorCode == DMR_EXECUTION_PROHIBITED )
     {
@@ -1978,6 +1979,21 @@ void PropViewFrame::EndFullScreenMode( void )
     {
         m_pMISettings_ToggleFullScreenMode->Check( false );
         ShowFullScreen( false );
+    }
+}
+
+//-----------------------------------------------------------------------------
+void PropViewFrame::ExpandPropertyTreeToDeviceSettings( void )
+//-----------------------------------------------------------------------------
+{
+    NameToFeatureMap::iterator itNameToFeature = GlobalDataStorage::Instance()->nameToFeatureMap_.find( wxT( "Setting/Base/Camera/GenICam" ) );
+    if( itNameToFeature == GlobalDataStorage::Instance()->nameToFeatureMap_.end() )
+    {
+        itNameToFeature = GlobalDataStorage::Instance()->nameToFeatureMap_.find( wxT( "Setting/Base/Camera" ) );
+    }
+    if( itNameToFeature != GlobalDataStorage::Instance()->nameToFeatureMap_.end() )
+    {
+        SelectPropertyInPropertyGrid( itNameToFeature->second );
     }
 }
 
@@ -2027,8 +2043,8 @@ bool PropViewFrame::LoadActiveDeviceFromFile( const wxString& path )
     m_pDevPropHandler->GetActiveDevice( &p );
     if( p )
     {
-        string pathANSI( path.mb_str() );
-        int result = p->loadSetting( pathANSI, sfDefault, sGlobal );
+        const string pathANSI( path.mb_str() );
+        const int result = LoadDeviceSetting( p, pathANSI, sfDefault, sGlobal );
         if( result == DMR_NO_ERROR )
         {
             UpdateSettingTable();
@@ -2045,6 +2061,18 @@ bool PropViewFrame::LoadActiveDeviceFromFile( const wxString& path )
         wxMessageBox( wxT( "You can only load a setting if the device currently selected has been initialised before." ), wxT( "Failed to load setting" ), wxOK | wxICON_INFORMATION, this );
     }
     return false;
+}
+
+//-----------------------------------------------------------------------------
+int PropViewFrame::LoadDeviceSetting( FunctionInterface* pFI, const std::string& name, const TStorageFlag flags, const TScope scope )
+//-----------------------------------------------------------------------------
+{
+    wxBusyCursor busyCursorScope;
+    wxStopWatch stopWatch;
+    const int result = pFI->loadSetting( name, flags, scope );
+    UpdateLUTWizardAfterLoadSetting( result );
+    WriteLogMessage( wxString::Format( wxT( "Loading a setting for device '%s' took %ld ms.\n" ), GetSelectedDeviceSerial().c_str(), stopWatch.Time() ) );
+    return result;
 }
 
 //-----------------------------------------------------------------------------
@@ -2398,8 +2426,8 @@ void PropViewFrame::OnExportActiveDevice( wxCommandEvent& )
         m_pDevPropHandler->GetActiveDevice( &p );
         if( p )
         {
-            string pathANSI( pathName.mb_str() );
-            int result = p->saveSetting( pathANSI, sfDefault, sGlobal );
+            const string pathANSI( pathName.mb_str() );
+            const int result = SaveDeviceSetting( p, pathANSI, sfDefault, sGlobal );
             if( result == DMR_NO_ERROR )
             {
                 WriteLogMessage( wxString::Format( wxT( "Successfully stored data to %s.\n" ), pathName.c_str() ) );
@@ -2821,8 +2849,8 @@ void PropViewFrame::OnLoadActiveDevice( wxCommandEvent& )
             wxSingleChoiceDialog dlg( this, wxT( "Please select the scope from where for this setting shall be imported.\nSystem wide settings can be used by every user logged on to this system,\nbut only certain users might be able to modify them." ), wxT( "Select the settings scope" ), choices );
             if( dlg.ShowModal() == wxID_OK )
             {
-                string serialANSI( GetSelectedDeviceSerial().mb_str() );
-                int result = p->loadSetting( serialANSI, sfNative, ( dlg.GetSelection() == 0 ) ? sUser : sGlobal );
+                const string serialANSI( GetSelectedDeviceSerial().mb_str() );
+                const int result = LoadDeviceSetting( p, serialANSI, sfNative, ( dlg.GetSelection() == 0 ) ? sUser : sGlobal );
                 if( result == DMR_NO_ERROR )
                 {
                     UpdateSettingTable();
@@ -2864,7 +2892,7 @@ void PropViewFrame::OnLoadCurrentProduct( wxCommandEvent& )
             wxSingleChoiceDialog dlg( this, wxT( "Please select the scope from where for this setting shall be imported.\nSystem wide settings can be used by every user logged on to this system,\nbut only certain users might be able to modify them." ), wxT( "Select the settings scope" ), choices );
             if( dlg.ShowModal() == wxID_OK )
             {
-                int result = p->loadSetting( pDev->product.read(), sfNative, ( dlg.GetSelection() == 0 ) ? sUser : sGlobal );
+                const int result = LoadDeviceSetting( p, pDev->product.read(), sfNative, ( dlg.GetSelection() == 0 ) ? sUser : sGlobal );
                 if( result == DMR_NO_ERROR )
                 {
                     UpdateSettingTable();
@@ -2889,7 +2917,11 @@ void PropViewFrame::OnLoadFromDefault( wxCommandEvent& )
         m_pDevPropHandler->GetActiveDevice( &p );
         if( p )
         {
-            int result = p->loadSettingFromDefault();
+            wxBusyCursor busyCursorScope;
+            wxStopWatch stopWatch;
+            const int result = p->loadSettingFromDefault();
+            UpdateLUTWizardAfterLoadSetting( result );
+            WriteLogMessage( wxString::Format( wxT( "Loading a setting for device '%s' took %ld ms.\n" ), GetSelectedDeviceSerial().c_str(), stopWatch.Time() ) );
             if( result == DMR_NO_ERROR )
             {
                 UpdateSettingTable();
@@ -3216,8 +3248,8 @@ void PropViewFrame::OnSaveActiveDevice( wxCommandEvent& )
         wxSingleChoiceDialog dlg( this, wxT( "Please select the scope to which this setting shall be exported.\nPlease note that storing a setting for system wide usage might\nrequire certain user privileges not available to every user.\nSystem wide settings can be used by every user logged on to this system." ), wxT( "Select the settings scope" ), choices );
         if( dlg.ShowModal() == wxID_OK )
         {
-            string pathANSI( GetSelectedDeviceSerial().mb_str() );
-            int result = p->saveSetting( pathANSI, sfNative, ( dlg.GetSelection() == 0 ) ? sUser : sGlobal );
+            const string pathANSI( GetSelectedDeviceSerial().mb_str() );
+            const int result = SaveDeviceSetting( p, pathANSI, sfNative, ( dlg.GetSelection() == 0 ) ? sUser : sGlobal );
             if( result == DMR_NO_ERROR )
             {
                 WriteLogMessage( wxString::Format( wxT( "Successfully stored current settings with %s scope for device %s.\n" ), ( dlg.GetSelection() == 0 ) ? wxT( "user specific" ) : wxT( "global" ), m_pDevCombo->GetValue().c_str() ) );
@@ -3244,7 +3276,7 @@ void PropViewFrame::OnSaveCurrentProduct( wxCommandEvent& )
         wxSingleChoiceDialog dlg( this, wxT( "Please select the scope to which this setting shall be exported.\nPlease note that storing a setting for system wide usage might\nrequire certain user privileges not available to every user.\nSystem wide settings can be used by every user logged on to this system." ), wxT( "Select the settings scope" ), choices );
         if( dlg.ShowModal() == wxID_OK )
         {
-            int result = p->saveSetting( pDev->product.read(), sfNative, ( dlg.GetSelection() == 0 ) ? sUser : sGlobal );
+            const int result = SaveDeviceSetting( p, pDev->product.read(), sfNative, ( dlg.GetSelection() == 0 ) ? sUser : sGlobal );
             if( result == DMR_NO_ERROR )
             {
                 WriteLogMessage( wxString::Format( wxT( "Successfully stored current settings with %s scope for product range %s.\n" ), ( dlg.GetSelection() == 0 ) ? wxT( "user specific" ) : wxT( "global" ), ConvertedString( pDev->product.read() ).c_str() ) );
@@ -3374,7 +3406,10 @@ void PropViewFrame::OnSaveToDefault( wxCommandEvent& )
     m_pDevPropHandler->GetActiveDevice( &p );
     if( p )
     {
-        int result = p->saveSettingToDefault();
+        wxBusyCursor busyCursorScope;
+        wxStopWatch stopWatch;
+        const int result = p->saveSettingToDefault();
+        WriteLogMessage( wxString::Format( wxT( "Saving a setting for device '%s' took %ld ms.\n" ), GetSelectedDeviceSerial().c_str(), stopWatch.Time() ) );
         if( result == DMR_NO_ERROR )
         {
             WriteLogMessage( wxT( "Successfully stored current settings for the current device to the default location.\n" ) );
@@ -3969,6 +4004,17 @@ wxRect PropViewFrame::RestoreConfiguration( const unsigned int displayCount, dou
 }
 
 //-----------------------------------------------------------------------------
+int PropViewFrame::SaveDeviceSetting( FunctionInterface* pFI, const std::string& name, const TStorageFlag flags, const TScope scope )
+//-----------------------------------------------------------------------------
+{
+    wxBusyCursor busyCursorScope;
+    wxStopWatch stopWatch;
+    const int result = pFI->saveSetting( name, flags, scope );
+    WriteLogMessage( wxString::Format( wxT( "Saving a setting for device '%s' took %ld ms.\n" ), GetSelectedDeviceSerial().c_str(), stopWatch.Time() ) );
+    return result;
+}
+
+//-----------------------------------------------------------------------------
 void PropViewFrame::SaveImage( const wxString& filenameAndPath, TFileFormat fileFilterIndex )
 //-----------------------------------------------------------------------------
 {
@@ -4481,6 +4527,7 @@ void PropViewFrame::ToggleCurrentDevice( void )
                     m_pDevPropHandler->OpenDriver( deviceSerial, this, static_cast<unsigned int>( m_pDisplayAreas.size() ) );
                     WriteLogMessage( wxString::Format( wxT( "Opening device '%s' took %ld ms.\n" ), ConvertedString( pDev->serial.read() ).c_str(), stopWatch.Time() ) );
                     UpdateInfoPlotCombo();
+                    ExpandPropertyTreeToDeviceSettings();
                     m_pInfoPlotArea->ClearCache();
                 }
                 catch( const ImpactAcquireException& )
@@ -4953,6 +5000,16 @@ void PropViewFrame::UpdateInfoPlotCombo( void )
 }
 
 //-----------------------------------------------------------------------------
+void PropViewFrame::UpdateLUTWizardAfterLoadSetting( const int result )
+//-----------------------------------------------------------------------------
+{
+    if( ( m_pLUTControlDlg != 0 ) && ( result == DMR_NO_ERROR ) )
+    {
+        m_pLUTControlDlg->UpdateDialog();
+    }
+}
+
+//-----------------------------------------------------------------------------
 void PropViewFrame::UpdatePropGridSplitter( void )
 //-----------------------------------------------------------------------------
 {
@@ -5194,7 +5251,7 @@ void PropViewFrame::Wizard_FileAccessControl( bool boUpload )
                                         oss << setw( 8 ) << setfill( '0' ) << bytesWritten << '/'
                                             << setw( 8 ) << setfill( '0' ) << bytesToWriteTotal;
                                         wxProgressDialog dlg( wxString::Format( wxT( "Uploading file '%s' to file selector entry '%s' on device" ), fileDlg.GetPath().c_str(), fileNameDevice.c_str() ),
-                                                              wxString::Format( wxT( "%s bytes written" ), ConvertedString( oss.str() ).c_str() ),
+                                                              wxString::Format( wxT( "Uploading file '%s' to file selector entry '%s' on device(%s bytes written)" ), fileDlg.GetPath().c_str(), fileNameDevice.c_str(), ConvertedString( oss.str() ).c_str() ),
                                                               bytesToWriteTotal, // range
                                                               this,              // parent
                                                               wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_ELAPSED_TIME | wxPD_ESTIMATED_TIME | wxPD_REMAINING_TIME );
@@ -5206,7 +5263,7 @@ void PropViewFrame::Wizard_FileAccessControl( bool boUpload )
                                             ostringstream progress;
                                             progress << setw( 8 ) << setfill( '0' ) << bytesWritten << '/'
                                                      << setw( 8 ) << setfill( '0' ) << bytesToWriteTotal;
-                                            dlg.Update( bytesWritten, wxString::Format( wxT( "%s bytes written" ), ConvertedString( progress.str() ).c_str() ) );
+                                            dlg.Update( bytesWritten, wxString::Format( wxT( "Uploading file '%s' to file selector entry '%s' on device(%s bytes written)" ), fileDlg.GetPath().c_str(), fileNameDevice.c_str(), ConvertedString( progress.str() ).c_str() ) );
                                         }
                                         if( file.good() )
                                         {
@@ -5254,7 +5311,7 @@ void PropViewFrame::Wizard_FileAccessControl( bool boUpload )
                                 memset( pBuf, 0, fileSize );
                                 wxFileOffset bytesRead = 0;
                                 wxProgressDialog dlgProgress( wxString::Format( wxT( "Downloading file '%s' from device '%s' into RAM" ), fileNameDevice.c_str(), ConvertedString( pDev->serial.read() ).c_str() ),
-                                                              wxString::Format( wxT( "%08d/%08d bytes read" ), 0, fileSize ),
+                                                              wxString::Format( wxT( "Downloading file '%s' from device '%s' into RAM(%08d/%08d bytes read)" ), fileNameDevice.c_str(), ConvertedString( pDev->serial.read() ).c_str(), 0, fileSize ),
                                                               fileSize, // range
                                                               this,     // parent
                                                               wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_ELAPSED_TIME | wxPD_ESTIMATED_TIME | wxPD_REMAINING_TIME );
@@ -5266,7 +5323,7 @@ void PropViewFrame::Wizard_FileAccessControl( bool boUpload )
                                     ostringstream progress;
                                     progress << setw( 8 ) << setfill( '0' ) << bytesRead << '/'
                                              << setw( 8 ) << setfill( '0' ) << fileSize;
-                                    dlgProgress.Update( bytesRead, wxString::Format( wxT( "%s bytes read" ), ConvertedString( progress.str() ).c_str() ) );
+                                    dlgProgress.Update( bytesRead, wxString::Format( wxT( "Downloading file '%s' from device '%s' into RAM(%s bytes read)" ), fileNameDevice.c_str(), ConvertedString( pDev->serial.read() ).c_str(), ConvertedString( progress.str() ).c_str() ) );
                                 }
                                 if( file.good() )
                                 {

@@ -1358,6 +1358,8 @@ enum TClampMode
  *  - 0x0014: ev2 EV76C570 sensor
  *  - 0x0015: Aptina AR0331 sensor
  *  - 0x0016: Sony ICX204 sensor
+ *  - 0x0017: Sony IMX174 sensor
+ *  - 0x0018: Sony ICX834 and ICX834_2T sensors
  *  - ...
  *  - 0x1000: User defined correction matrix
  *  - 0x2000: Driver automatically selects the matching sensor matrix if available
@@ -1408,6 +1410,10 @@ enum TColorTwistInputCorrectionMatrixMode
     cticmmBlueCOUGAR_Xx04aC_WPPLS   = 0x00020000 | 0x10000000 | 0x0013,
     /// \brief The WPPLS correction matrix for mvBlueCOUGAR-Xx04eC devices.
     cticmmBlueCOUGAR_Xx04eC_WPPLS   = 0x00020000 | 0x10000000 | 0x0014,
+    /// \brief The WPPLS correction matrix for mvBlueCOUGAR-XDx04dC devices.
+    cticmmBlueCOUGAR_XDx04dC_WPPLS = 0x00030000 | 0x10000000 | 0x0017,
+    /// \brief The WPPLS correction matrix for mvBlueCOUGAR-XDx212C devices.
+    cticmmBlueCOUGAR_XDx212C_WPPLS = 0x00030000 | 0x10000000 | 0x0018,
     /// \brief The WPPLS correction matrix for mvBlueCOUGAR-XDx24aC and mvBlueCOUGAR-XDx24bC devices.
     cticmmBlueCOUGAR_XDx24aC_WPPLS  = 0x00030000 | 0x10000000 | 0x000e,
     /// \brief The WPPLS correction matrix for mvBlueCOUGAR-XDx26C and mvBlueCOUGAR-XDx26aC devices.
@@ -3649,18 +3655,6 @@ enum TImageRequestControlMode
 };
 
 //-----------------------------------------------------------------------------
-/// \brief Defines Image Result Configuration.
-/// \ingroup DeviceSpecificInterface
-enum TImageResultConfiguration
-//-----------------------------------------------------------------------------
-{
-    /// \brief Result is switched off.
-    ircOff = 0,
-    /// \brief Result is switched on.
-    ircOn
-};
-
-//-----------------------------------------------------------------------------
 /// \brief Defines the type of camera sensor.
 /// \ingroup DeviceSpecificInterface
 enum TInfoSensorColorMode
@@ -4615,7 +4609,6 @@ typedef enum TImageBufferPixelFormat TImageBufferPixelFormat;
 typedef enum TImageDestinationPixelFormat TImageDestinationPixelFormat;
 typedef enum TImageProcessingFilter TImageProcessingFilter;
 typedef enum TImageRequestControlMode TImageRequestControlMode;
-typedef enum TImageResultConfiguration TImageResultConfiguration;
 typedef enum TInfoSensorColorMode TInfoSensorColorMode;
 typedef enum TInfoSensorColorPattern TInfoSensorColorPattern;
 typedef enum TInfoSensorType TInfoSensorType;

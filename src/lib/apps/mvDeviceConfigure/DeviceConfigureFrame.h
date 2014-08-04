@@ -79,7 +79,7 @@ private:
     static void                         RefreshApplicationExitCode( const int result );
     int                                 SetID( Device* pDev, int newID );
     void                                UpdateDeviceList( void );
-    int                                 UpdateFirmware( Device* pDev, bool boSilentMode );
+    int                                 UpdateFirmware( Device* pDev, bool boSilentMode, bool boPersistentUserSets );
     int                                 UpdateKernelDriver( Device* pDev, bool boSilentMode );
     static int                          m_updateResult;
     mvIMPACT::acquire::DeviceManager    m_devMgr;
@@ -114,6 +114,7 @@ private:
     std::map<wxString, DeviceConfigurationData>::iterator GetConfigurationEntry( wxString& value );
     std::map<wxString, DeviceConfigurationData> m_devicesToConfigure;
     bool m_boPendingQuit;
+    bool m_boUserSetPersistence;
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
     bool m_boChangeProcessorIdleStates;
     bool m_boEnableIdleStates;
@@ -168,13 +169,19 @@ private:
 public:
     int SetDSFriendlyName( int deviceIndex );
 #endif // #ifdef BUILD_WITH_DIRECT_SHOW_SUPPORT
-#ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
+
     //-----------------------------------------------------------------------------
     enum TMenuItem_Settings
     //-----------------------------------------------------------------------------
     {
-        miSettings_CPUIdleStatesEnabled = miCOMMON_LAST + 100
+        miSettings_KeepUserSetSettingsAfterFirmwareUpdate = miCOMMON_LAST + 100
+#ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
+                , miSettings_CPUIdleStatesEnabled
+#endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
     };
+
+    wxMenuItem*                         m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate;
+#ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
     wxMenuItem*                         m_pMISettings_CPUIdleStatesEnabled;
     void OnSettings_CPUIdleStatesEnabled( wxCommandEvent& e )
     {
@@ -199,6 +206,13 @@ public:
         }
     }
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
+    void OnSettings_KeepUserSetSettingsAfterFirmwareUpdate( wxCommandEvent& e )
+    {
+        if( wxMessageBox( wxString::Format( wxT( "Are you sure you want to %s persistent UserSet settings?\n If you select YES, all UserSet settings of a GenICam device \n will be %s every time you update its' firmware!" ), e.IsChecked() ? wxT( "enable" ) : wxT( "disable" ), e.IsChecked() ? wxT( "preserved" ) : wxT( "deleted" ) ), wxT( "UserSet settings and Firmware Update" ), wxYES_NO | wxNO_DEFAULT | wxICON_EXCLAMATION, this ) != wxYES )
+        {
+            m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->Check( !e.IsChecked() );
+        }
+    }
 };
 
 #endif // DeviceConfigureFrameH
