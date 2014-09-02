@@ -112,7 +112,7 @@ void DeviceHandlerHYPERION::SelectFlashAccess( enum eFlashSelect access )
 }
 
 //-----------------------------------------------------------------------------
-int DeviceHandlerHYPERION::UpdateFirmware( bool boSilentMode )
+int DeviceHandlerHYPERION::UpdateFirmware( bool boSilentMode, bool /*boPersistentUserSets*/ )
 //-----------------------------------------------------------------------------
 {
     int result = urOperationSuccessful;

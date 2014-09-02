@@ -4581,7 +4581,7 @@ bool PropViewFrame::UpdateAcquisitionModes( void )
     }
     if( acquisitionMode.isValid() )
     {
-        // this unfortunately is a design mistake we commited in the past. Depending on the
+        // this unfortunately is a design mistake we made in the past. Depending on the
         // interface layout the data type of 'AcquisitionMode' can differ.
         switch( acquisitionMode.type() )
         {
@@ -4644,7 +4644,6 @@ bool PropViewFrame::UpdateAcquisitionModes( void )
     {
         m_pAcquisitionModeCombo->Append( m_SingleFrameStr );
     }
-
 
     const wxString am( acquisitionMode.isValid() ? ConvertedString( acquisitionMode.readS() ) : m_ContinuousStr );
     if( am == m_ContinuousStr )

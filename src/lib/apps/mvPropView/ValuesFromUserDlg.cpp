@@ -429,7 +429,26 @@ void DetailedRequestInformationDlg::PopulateTreeCtrl( wxTreeCtrl* pTreeCtrl, wxT
         else if( itComponent.isProp() )
         {
             Property prop( itComponent );
-            pTreeCtrl->AppendItem( parent, wxString::Format( wxT( "%s: %s" ), ConvertedString( itComponent.name() ).c_str(), ConvertedString( prop.readS() ).c_str() ) );
+            wxString data = wxString::Format( wxT( "%s: " ), ConvertedString( itComponent.name() ).c_str() );
+            const unsigned int valCount = prop.valCount();
+            if( valCount > 1 )
+            {
+                data.Append( wxT( "[ " ) );
+                for( unsigned int i = 0; i < valCount; i++ )
+                {
+                    data.Append( ConvertedString( prop.readS( static_cast<int>( i ) ) ).c_str() );
+                    if( i < valCount - 1 )
+                    {
+                        data.Append( wxT( ", " ) );
+                    }
+                }
+                data.Append( wxT( " ]" ) );
+            }
+            else
+            {
+                data.Append( ConvertedString( prop.readS() ).c_str() );
+            }
+            pTreeCtrl->AppendItem( parent, data );
         }
         else
         {
@@ -839,6 +858,7 @@ DetailedFeatureInfoDlg::DetailedFeatureInfoDlg( wxWindow* pParent, Component com
         AddFeatureInfo( wxT( "Property Value(inc): " ), ConvertedString( prop.hasStepWidth() ? prop.readS( plStepWidth ) : string( "NOT DEFINED" ) ) );
         if( prop.hasDict() )
         {
+            const wxString formatString = ConvertedString( prop.stringFormatString() );
             if( type == ctPropInt )
             {
                 vector<pair<string, int> > dict;
@@ -846,7 +866,8 @@ DetailedFeatureInfoDlg::DetailedFeatureInfoDlg( wxWindow* pParent, Component com
                 vector<pair<string, int> >::size_type vSize = dict.size();
                 for( vector<pair<string, int> >::size_type i = 0; i < vSize; i++ )
                 {
-                    AddFeatureInfo( wxString::Format( wxT( "Property Translation Dictionary Entry[%d]: " ), i ), wxString::Format( wxT( "%s(%d)" ), ConvertedString( dict[i].first ).c_str(), dict[i].second ) );
+                    const wxString value = wxString::Format( formatString.c_str(), dict[i].second );
+                    AddFeatureInfo( wxString::Format( wxT( "Property Translation Dictionary Entry[%d]: " ), i ), wxString::Format( wxT( "%s(%s)" ), ConvertedString( dict[i].first ).c_str(), value.c_str() ) );
                 }
             }
             else if( type == ctPropInt64 )
@@ -856,7 +877,8 @@ DetailedFeatureInfoDlg::DetailedFeatureInfoDlg( wxWindow* pParent, Component com
                 vector<pair<string, int64_type> >::size_type vSize = dict.size();
                 for( vector<pair<string, int64_type> >::size_type i = 0; i < vSize; i++ )
                 {
-                    AddFeatureInfo( wxString::Format( wxT( "Property Translation Dictionary Entry[%d]: " ), i ), wxString::Format( wxT( "%s("MY_FMT_I64")" ), ConvertedString( dict[i].first ).c_str(), dict[i].second ) );
+                    const wxString value = wxString::Format( formatString.c_str(), dict[i].second );
+                    AddFeatureInfo( wxString::Format( wxT( "Property Translation Dictionary Entry[%d]: " ), i ), wxString::Format( wxT( "%s(%s)" ), ConvertedString( dict[i].first ).c_str(), value.c_str() ) );
                 }
             }
             else if( type == ctPropFloat )
@@ -866,7 +888,8 @@ DetailedFeatureInfoDlg::DetailedFeatureInfoDlg( wxWindow* pParent, Component com
                 vector<pair<string, double> >::size_type vSize = dict.size();
                 for( vector<pair<string, double> >::size_type i = 0; i < vSize; i++ )
                 {
-                    AddFeatureInfo( wxString::Format( wxT( "Property Translation Dictionary Entry[%d]: " ), i ), wxString::Format( wxT( "%s(%.6f)" ), ConvertedString( dict[i].first ).c_str(), dict[i].second ) );
+                    const wxString value = wxString::Format( formatString.c_str(), dict[i].second );
+                    AddFeatureInfo( wxString::Format( wxT( "Property Translation Dictionary Entry[%d]: " ), i ), wxString::Format( wxT( "%s(%s)" ), ConvertedString( dict[i].first ).c_str(), value.c_str() ) );
                 }
             }
         }

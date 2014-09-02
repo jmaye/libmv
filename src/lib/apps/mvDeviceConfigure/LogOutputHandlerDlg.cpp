@@ -3,8 +3,8 @@
 #include <common/expat/expatHelper.h>
 #include "LogOutputHandlerDlg.h"
 #include "LogOutputConfigurationDlg.h"
-#include "wx/ffile.h"
-#include "wx/splitter.h"
+#include <wx/ffile.h>
+#include <wx/splitter.h>
 
 using namespace std;
 using namespace mvIMPACT::acquire;

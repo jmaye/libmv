@@ -90,6 +90,7 @@ private:
     wxMenuItem*                         m_pMIActionUpdateDMABufferSize;
     wxMenuItem*                         m_pMIActionUpdateDeviceList;
     wxTextCtrl*                         m_pLogWindow;
+    wxString                            m_logFileName;
     wxTimer                             m_timer;
     wxTimer                             m_listUpdateTimer;
     unsigned int                        m_lastDevMgrChangedCount;
@@ -114,7 +115,6 @@ private:
     std::map<wxString, DeviceConfigurationData>::iterator GetConfigurationEntry( wxString& value );
     std::map<wxString, DeviceConfigurationData> m_devicesToConfigure;
     bool m_boPendingQuit;
-    bool m_boUserSetPersistence;
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
     bool m_boChangeProcessorIdleStates;
     bool m_boEnableIdleStates;

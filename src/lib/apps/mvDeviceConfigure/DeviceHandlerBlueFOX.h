@@ -19,7 +19,7 @@ public:
         return true;
     }
     virtual bool SupportsKernelDriverUpdate( bool& boNewerDriverAvailable, std::string& kernelDriverName );
-    virtual int UpdateFirmware( bool boSilentMode );
+    virtual int UpdateFirmware( bool boSilentMode, bool boPersistentUserSets );
     virtual int UpdateKernelDriver( bool boSilentMode );
 };
 

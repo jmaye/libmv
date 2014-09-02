@@ -16,13 +16,13 @@ bool DeviceHandlerBlueFOX::SupportsKernelDriverUpdate( bool& boNewerDriverAvaila
 }
 
 //-----------------------------------------------------------------------------
-int DeviceHandlerBlueFOX::UpdateFirmware( bool boSilentMode )
+int DeviceHandlerBlueFOX::UpdateFirmware( bool boSilentMode, bool /*boPersistentUserSets*/ )
 //-----------------------------------------------------------------------------
 {
     ConvertedString serial( pDev_->serial.read() );
-    if( MessageToUser( wxT( "Firmware Update" ), wxString::Format( wxT( "Are you sure you want to update the firmware of device %s?" ), serial.c_str() ), boSilentMode, wxNO_DEFAULT | wxYES_NO | wxICON_INFORMATION ) )
+    if( MessageToUser( wxT( "Firmware Update" ), wxString::Format( wxT( "Are you sure you want to update the firmware of device %s?" ), serial.c_str() ), boSilentMode, wxNO_DEFAULT | wxYES_NO | wxICON_INFORMATION ) &&
+        MessageToUser( wxT( "Information" ), wxT( "The firmware will now be updated. During this time(approx. 30 sec.) the application will not react. Please be patient." ), boSilentMode, wxOK | wxICON_INFORMATION ) )
     {
-        MessageToUser( wxT( "Information" ), wxT( "The firmware will now be updated. During this time(approx. 30 sec.) the application will not react. Please be patient." ), boSilentMode, wxOK | wxICON_INFORMATION );
         if( pParent_ )
         {
             pParent_->WriteLogMessage( wxString::Format( wxT( "Updating firmware of device %s. This might take some time. Please be patient.\n" ), serial.c_str() ) );

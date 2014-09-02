@@ -11,6 +11,7 @@
 #include <memory>
 #include <string>
 #include <wx/config.h>
+#include <wx/ffile.h>
 #include <wx/image.h>
 #include <wx/splitter.h>
 #include <wx/utils.h>
@@ -123,7 +124,7 @@ bool MyApp::OnInit()
 //-----------------------------------------------------------------------------
 {
     // Create the main application window
-    DeviceConfigureFrame* frame = new DeviceConfigureFrame( wxString::Format( wxT( "Configuration tool for MATRIX VISION GmbH devices(%s)" ), VERSION_STRING ), wxDefaultPosition, wxDefaultSize, argc, argv );
+    DeviceConfigureFrame* frame = new DeviceConfigureFrame( wxString::Format( wxT( "mvDeviceConfigure - Tool For %s Devices(Firmware Updates, Log-Output Configuration, etc.)(%s)" ), COMPANY_NAME, VERSION_STRING ), wxDefaultPosition, wxDefaultSize, argc, argv );
     frame->Show( true );
     SetTopWindow( frame );
     // success: wxApp::OnRun() will be called which will enter the main message
@@ -151,8 +152,8 @@ int DeviceConfigureFrame::m_updateResult = 0;
 //-----------------------------------------------------------------------------
 DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint& pos, const wxSize& size, int argc, wxChar** argv )
     : wxFrame( ( wxFrame* )NULL, wxID_ANY, title, pos, size ),
-      m_pDevListCtrl( 0 ), m_pLogWindow( 0 ), m_lastDevMgrChangedCount( numeric_limits<unsigned int>::max() ),
-      m_customFirmwarePath(), m_IPv4Mask(), m_boPendingQuit( false ), m_boUserSetPersistence( true )
+      m_pDevListCtrl( 0 ), m_pLogWindow( 0 ), m_logFileName(), m_lastDevMgrChangedCount( numeric_limits<unsigned int>::max() ),
+      m_customFirmwarePath(), m_IPv4Mask(), m_boPendingQuit( false )
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
       , m_boChangeProcessorIdleStates( false ), m_boEnableIdleStates( false )
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
@@ -171,7 +172,7 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
             CTRL+C : Configure Log Output
             CTRL+F : Update Firmware
         ALT+CTRL+F : Set Friendly Name
-            CTRL+I : Enable/Disable CPU idle states
+            CTRL+I : Enable/Disable CPU Idle states
             CTRL+P : Enable/Disable Persistent UserSet Settings
             CTRL+K : Update Kernel Driver
             CTRL+D : Update Permanent DMA Buffer
@@ -179,7 +180,7 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
             CTRL+S : Set ID
             CTRL+U : Unregister All Devices(for DirectShow)
                 F5 : Update Device List
-                F12: Online Documentation
+               F12 : Online Documentation
         ALT+     X : Exit
     */
 
@@ -215,14 +216,12 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
 #endif // #ifdef BUILD_WITH_DIRECT_SHOW_SUPPORT
     wxMenu* pMenuSettings = new wxMenu;
     m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate = pMenuSettings->Append( miSettings_KeepUserSetSettingsAfterFirmwareUpdate, wxT( "&Persistent UserSet Settings\tCTRL+P" ), wxT( "" ), wxITEM_CHECK );
-    m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->Check( true );
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
     m_pMISettings_CPUIdleStatesEnabled = pMenuSettings->Append( miSettings_CPUIdleStatesEnabled, wxT( "CPU &Idle States Enabled\tCTRL+I" ), wxT( "" ), wxITEM_CHECK );
     bool boValue = false;
     GetPowerState( boValue );
     m_pMISettings_CPUIdleStatesEnabled->Check( boValue );
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
-    m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->Check( m_boUserSetPersistence );
     pMenuBar->Append( pMenuSettings, wxT( "&Settings" ) );
     pMenuBar->Append( pMenuHelp, wxT( "&Help" ) );
     // ... and attach this menu bar to the frame
@@ -259,6 +258,12 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
 
     BuildList();
 
+    // restore previous state
+    const wxRect defaultRect( 0, 0, 640, 480 );
+    const wxRect rect = FramePositionStorage::Load( defaultRect );
+    wxConfigBase* pConfig = wxConfigBase::Get();
+    bool boUserSetPersistence = pConfig->Read( wxT( "/MainFrame/Settings/PersistentUserSetSettings" ), 1l ) != 0;
+
     wxString processedParameters;
     std::vector<wxString> commandLineErrors;
     for( int i = 1; i < argc; i++ )
@@ -285,9 +290,17 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
             {
                 m_customFirmwarePath = value;
             }
+            else if( ( key == wxT( "update_kd" ) ) || ( key == wxT( "ukd" ) ) )
+            {
+                GetConfigurationEntry( value )->second.boUpdateKernelDriver_ = true;
+            }
             else if( key == wxT( "ipv4_mask" ) )
             {
                 m_IPv4Mask = value.mb_str();
+            }
+            else if( ( key == wxT( "log_file" ) ) || ( key == wxT( "lf" ) ) )
+            {
+                m_logFileName = value;
             }
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
             else if( ( key == wxT( "set_processor_idle_states" ) ) || ( key == wxT( "spis" ) ) )
@@ -300,10 +313,6 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
                 }
             }
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
-            else if( ( key == wxT( "update_kd" ) ) || ( key == wxT( "ukd" ) ) )
-            {
-                GetConfigurationEntry( value )->second.boUpdateKernelDriver_ = true;
-            }
             else if( ( key == wxT( "setid" ) ) || ( key == wxT( "id" ) ) )
             {
                 wxString serial( value.BeforeFirst( wxT( '.' ) ) );
@@ -335,14 +344,8 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
                 unsigned long conversionResult = 0;
                 if( value.ToULong( &conversionResult ) )
                 {
-                    if( conversionResult != 0 )
-                    {
-                        m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->Check( true );
-                    }
-                    else
-                    {
-                        m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->Check( false );
-                    }
+                    // overwrite the value stored by the application (Registry on Windows, a .<nameOfTheApplication> file on other platforms
+                    boUserSetPersistence = ( conversionResult != 0 ) ? true : false;
                 }
             }
             else
@@ -367,12 +370,13 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
     WriteLogMessage( wxT( "'set_processor_idle_states' or 'spis' to change the C1, C2 and C3 states for ALL processors in the current system(syntax: 'spis=1' or 'spis=0').\n" ) );
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
-    WriteLogMessage( wxT( "'set_userset_persistence' or 'sup' to set the persistency of UserSet settings during firmware updates (syntax: 'sup=1' or 'sup=0').\n" ) );
+    WriteLogMessage( wxT( "'set_userset_persistence'   or 'sup'  to set the persistency of UserSet settings during firmware updates (syntax: 'sup=1' or 'sup=0').\n" ) );
     WriteLogMessage( wxT( "'update_fw'                 or 'ufw'  to update the firmware of one or many devices.\n" ) );
     WriteLogMessage( wxT( "'update_fw_file'            or 'ufwf' to update the firmware of one or many devices. Pass a full path to a text file that contains a serial number or a product type per line.\n" ) );
+    WriteLogMessage( wxT( "'update_kd'                 or 'ukd'  to update the kernel driver of one or many devices.\n" ) );
     WriteLogMessage( wxT( "'ipv4_mask'                           to specify an IPv4 address mask to use as a filter for the selected update operations.\n" ) );
     WriteLogMessage( wxT( "'fw_path'                             to specify a custom path for the firmware files.\n" ) );
-    WriteLogMessage( wxT( "'update_kd'                 or 'ukd'  to update the kernel driver of one or many devices.\n" ) );
+    WriteLogMessage( wxT( "'log_file'                  or 'lf'   to specify a log file storing the content of this text control upon application shutdown.\n" ) );
     WriteLogMessage( wxT( "'quit'                      or 'q'    to end the application automatically after all updates have been applied.\n" ) );
     WriteLogMessage( wxT( "'*' can be used as a wildcard, devices will be searched by serial number AND by product. The application will first try to locate a device with a serial number matching the specified string and then (if no suitable device is found) a device with a matching product string.\n" ) );
     WriteLogMessage( wxT( "\n" ) );
@@ -381,7 +385,7 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
     WriteLogMessage( wxT( "Usage examples:\n" ) );
     WriteLogMessage( wxT( "mvDeviceConfigure ufw=BF000666 (will update the firmware of a mvBlueFOX with the serial number BF000666)\n" ) );
     WriteLogMessage( wxT( "mvDeviceConfigure update_fw=BF* (will update the firmware of ALL mvBlueFOX devices in the current system)\n" ) );
-    WriteLogMessage( wxT( "mvDeviceConfigure update_fw=mvBlueFOX-2* (will update the firmware of ALL mvBlueFOX-2 devices in the current system.)\n" ) );
+    WriteLogMessage( wxT( "mvDeviceConfigure update_fw=mvBlueFOX-2* lf=output.txt quit (will update the firmware of ALL mvBlueFOX-2 devices in the current system, then will store a log file of the executed operations and afterwards will terminate the application.)\n" ) );
     WriteLogMessage( wxT( "mvDeviceConfigure setid=BF000666.5 (will assign the device ID '5' to a mvBlueFOX with the serial number BF000666)\n" ) );
     WriteLogMessage( wxT( "mvDeviceConfigure ufw=* (will update the firmware of every device in the system)\n" ) );
     WriteLogMessage( wxT( "mvDeviceConfigure ufw=BF000666 ufw=BF000667 (will update the firmware of 2 mvBlueFOX cameras)\n" ) );
@@ -433,6 +437,8 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
         WriteLogMessage( wxT( "\n" ) );
     }
 
+    m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->Check( boUserSetPersistence );
+
     if( !m_devicesToConfigure.empty() ||
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
         m_boChangeProcessorIdleStates ||
@@ -443,12 +449,9 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
         m_timer.Start( TIMER_PERIOD );
     }
 
-    wxRect defaultRect( 0, 0, 640, 480 );
     SetSizeHints( defaultRect.GetWidth(), defaultRect.GetHeight() );
     pPanel->SetSizer( pSizer );
 
-    // restore previous state
-    wxRect rect = FramePositionStorage::Load( defaultRect );
     SetSize( rect );
     UpdateMenu( -1 );
 
@@ -472,10 +475,25 @@ DeviceConfigureFrame::~DeviceConfigureFrame()
     {
         m_timer.Stop();
     }
+
+    if( !m_logFileName.IsEmpty() )
+    {
+        wxFFile file( m_logFileName, wxT( "w" ) );
+        if( file.IsOpened() )
+        {
+            file.Write( m_pLogWindow->GetValue() );
+        }
+        else
+        {
+            WriteErrorMessage( wxString::Format( wxT( "ERROR!!! Could not create log file '%s'.\n" ), m_logFileName.c_str() ) );
+        }
+    }
     // when we e.g. try to write config stuff on a read-only file system the result can
     // be an annoying message box. Therefore we switch off logging now, as otherwise higher level
     // clean up code might produce error messages
     wxLog::EnableLogging( false );
+    wxConfigBase* pConfig = wxConfigBase::Get();
+    pConfig->Write( wxT( "/MainFrame/Settings/PersistentUserSetSettings" ), m_pMISettings_KeepUserSetSettingsAfterFirmwareUpdate->IsChecked() );
 }
 
 //-----------------------------------------------------------------------------
@@ -709,7 +727,7 @@ void DeviceConfigureFrame::OnHelp_About( wxCommandEvent& )
     wxIcon icon( mvIcon_xpm );
     dlg.SetIcon( icon );
     pTopDownSizer = new wxBoxSizer( wxVERTICAL );
-    wxStaticText* pText = new wxStaticText( &dlg, wxID_ANY, wxString::Format( wxT( "Configuration tool for %s devices" ), COMPANY_NAME ) );
+    wxStaticText* pText = new wxStaticText( &dlg, wxID_ANY, wxString::Format( wxT( "mvDeviceConfigure - Tool For %s Devices(Firmware Updates, Log-Output Configuration, etc.)(%s)" ), COMPANY_NAME, VERSION_STRING ) );
     pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
     pText = new wxStaticText( &dlg, wxID_ANY, wxString::Format( wxT( "(C) 2005 - %s by %s" ), CURRENT_YEAR, COMPANY_NAME ) );
     pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );

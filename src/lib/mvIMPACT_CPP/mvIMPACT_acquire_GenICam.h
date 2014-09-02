@@ -121,7 +121,8 @@ public:
         mvDeviceSensorColorMode(),
         mvDeviceFPGAVersion(),
         mvDeviceFirmwareSource(),
-        mvDeviceProcessingUnit()
+        mvDeviceProcessingUnit(),
+        mvDevicePowerMode()
     {
         mvIMPACT::acquire::DeviceComponentLocator locator( pDev, mvIMPACT::acquire::dltSetting, settingName );
         locator.bindSearchBase( locator.searchbase_id(), "Camera/GenICam" );
@@ -170,6 +171,7 @@ public:
         locator.bindComponent( mvDeviceFPGAVersion, "mvDeviceFPGAVersion" );
         locator.bindComponent( mvDeviceFirmwareSource, "mvDeviceFirmwareSource" );
         locator.bindComponent( mvDeviceProcessingUnit, "mvDeviceProcessingUnit" );
+        locator.bindComponent( mvDevicePowerMode, "mvDevicePowerMode" );
     }
     PYTHON_ONLY( %immutable; )
     /// \brief Name of the manufacturer of the device.
@@ -398,6 +400,11 @@ public:
      *  The processing unit to activate for the selected processing unit.
      */
     PropertyI64 mvDeviceProcessingUnit;
+    /// \brief Selects the device power mode.
+    /**
+     *  Selects the device power mode.
+     */
+    PropertyI64 mvDevicePowerMode;
     PYTHON_ONLY( %mutable; )
 };
 

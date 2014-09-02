@@ -3137,6 +3137,44 @@ enum TImageBufferPixelFormat
     ibpfAuto = -1
 };
 
+//------------------------------------------------------------------------------
+/// \brief Valid image buffer format reinterpreter modes.
+/// \ingroup CommonInterface
+enum TImageBufferFormatReinterpreterMode // dotNETReplacement=ibpf;TImageBufferPixelFormat.ibpf
+//------------------------------------------------------------------------------
+{
+    /// \brief Reinterpret <b>mvIMPACT::acquire::ibpfMono8</b> as <b>mvIMPACT::acquire::ibpfRGB888Packed</b>.
+    /**
+     * This will effectively divide the width by 3 but preserve the original line pitch.
+     */
+    ibfrmMono8_To_RGB888Packed = ibpfMono8 << 16 | ibpfRGB888Packed,
+    /// \brief Reinterpret <b>mvIMPACT::acquire::ibpfMono8</b> as <b>mvIMPACT::acquire::ibpfBGR888Packed</b>.
+    /**
+     * This will effectively divide the width by 3 but preserve the original line pitch.
+     */
+    ibfrmMono8_To_BGR888Packed = ibpfMono8 << 16 | ibpfBGR888Packed,
+    /// \brief Reinterpret <b>mvIMPACT::acquire::ibpfMono10</b> as <b>mvIMPACT::acquire::ibpfRGB101010Packed</b>.
+    /**
+     * This will effectively divide the width by 3 but preserve the original line pitch.
+     */
+    ibfrmMono10_To_RGB101010Packed = ibpfMono10 << 16 | ibpfRGB101010Packed,
+    /// \brief Reinterpret <b>mvIMPACT::acquire::ibpfMono12</b> as <b>mvIMPACT::acquire::ibpfRGB121212Packed</b>.
+    /**
+     * This will effectively divide the width by 3 but preserve the original line pitch.
+     */
+    ibfrmMono12_To_RGB121212Packed = ibpfMono12 << 16 | ibpfRGB121212Packed,
+    /// \brief Reinterpret <b>mvIMPACT::acquire::ibpfMono14</b> as <b>mvIMPACT::acquire::ibpfRGB141414Packed</b>.
+    /**
+     * This will effectively divide the width by 3 but preserve the original line pitch.
+     */
+    ibfrmMono14_To_RGB141414Packed = ibpfMono14 << 16 | ibpfRGB141414Packed,
+    /// \brief Reinterpret <b>mvIMPACT::acquire::ibpfMono16</b> as <b>mvIMPACT::acquire::ibpfRGB161616Packed</b>.
+    /**
+     * This will effectively divide the width by 3 but preserve the original line pitch.
+     */
+    ibfrmMono16_To_RGB161616Packed = ibpfMono16 << 16 | ibpfRGB161616Packed
+};
+
 //-----------------------------------------------------------------------------
 /// \brief Defines the pixel format of the result image.
 /// \ingroup CommonInterface
@@ -4605,6 +4643,7 @@ typedef enum TFlatFieldFilterMode TFlatFieldFilterMode;
 typedef enum THWUpdateResult THWUpdateResult;
 typedef enum TI2COperationMode TI2COperationMode;
 typedef enum TI2COperationStatus TI2COperationStatus;
+typedef enum TImageBufferFormatReinterpreterMode TImageBufferFormatReinterpreterMode;
 typedef enum TImageBufferPixelFormat TImageBufferPixelFormat;
 typedef enum TImageDestinationPixelFormat TImageDestinationPixelFormat;
 typedef enum TImageProcessingFilter TImageProcessingFilter;

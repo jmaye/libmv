@@ -34,7 +34,7 @@
 #   else
 #       define MVIMPACT_DEPRECATED_CPP(FUNCTION) FUNCTION
 #   endif // compiler check
-#endif // #if !defined(MVIMPACT_DEPRECATED_CPP) && !defined(DOXYGEN_SHOULD_SKIP_THIS)
+#endif // #if !defined(MVIMPACT_DEPRECATED_CPP)
 
 #if !defined(DOXYGEN_SHOULD_SKIP_THIS)
 #   ifdef _MSC_VER // is Microsoft compiler?
@@ -3693,6 +3693,10 @@ PYTHON_ONLY( ENUM_PROPERTY( PropertyIHWUpdateResult, EnumPropertyI, mvIMPACT::ac
 typedef EnumPropertyI<TImageBufferPixelFormat> PropertyIImageBufferPixelFormat;
 PYTHON_ONLY( ENUM_PROPERTY( PropertyIImageBufferPixelFormat, EnumPropertyI, mvIMPACT::acquire::TImageBufferPixelFormat ) )
 
+/// \brief Defines a property for values defined by \b mvIMPACT::acquire::TImageBufferFormatReinterpreterMode
+typedef EnumPropertyI<TImageBufferFormatReinterpreterMode> PropertyIImageBufferFormatReinterpreterMode;
+PYTHON_ONLY( ENUM_PROPERTY( PropertyIImageBufferFormatReinterpreterMode, EnumPropertyI, mvIMPACT::acquire::TImageBufferFormatReinterpreterMode ) )
+
 /// \brief Defines a property for values defined by \b mvIMPACT::acquire::TImageDestinationPixelFormat
 typedef EnumPropertyI<TImageDestinationPixelFormat> PropertyIImageDestinationPixelFormat;
 PYTHON_ONLY( ENUM_PROPERTY( PropertyIImageDestinationPixelFormat, EnumPropertyI, mvIMPACT::acquire::TImageDestinationPixelFormat ) )
@@ -5572,7 +5576,7 @@ public:
  *  This class will grant access to any device installed on/in the
  *  current system. Whenever somewhere in the code a \b mvIMPACT::acquire::DeviceManager instance is
  *  created it can be used to access any device currently
- *  supported and available. \n \n This is the only class, which is allowed to
+ *  supported and available. \n \n This is the only class which is allowed to
  *  create instances of the class \b mvIMPACT::acquire::Device, which are needed to access a certain
  *  device.
  *
@@ -9376,6 +9380,14 @@ public:
  *     printf( "%s: 0x%08x\n", pRequest->chunkLineStatusAll.name.c_str(), static_cast<int>(pRequest->chunkLineStatusAll.read()) );
  *  }
  * \endcode
+ *
+ *  E.g. for the \b mvBlueCOUGAR-X/XD series possible \c LineStatusAll values are
+ *
+ *  - \b 0x11, Out0 and In0 on (Out0 needs to be connected with In0 for this to work)
+ *  - \b 0x33, Out0, Out1, In0 and In1 on (Out0 and Out1 need to be connected with In0 and In1 for this to work)
+ *  - \b 0x37, Out0, Out1, Out2, In0 and In1 on (Out0 and Out1 need to be connected with In0 and In1 for this to work)
+ *  - \b 0x3f, Out0, Out1, Out2, Out3, In0 and In1 on (Out0 and Out1 need to be connected with in0 and in1 for this to work)
+ *
  *  \endif
  */
 class RequestInfoConfiguration : public ComponentCollection
@@ -10029,6 +10041,13 @@ class ImageProcessing : public ComponentCollection
             locator.bindComponent( colorTwistResultingMatrixRow1, "ColorTwistResultingMatrixRow1" );
             locator.bindComponent( colorTwistResultingMatrixRow2, "ColorTwistResultingMatrixRow2" );
         }
+        locator.bindSearchBase( m_hRoot );
+        if( locator.findComponent( "FormatReinterpreter" ) != INVALID_ID )
+        {
+            locator.bindSearchBase( m_hRoot, "FormatReinterpreter" );
+            locator.bindComponent( formatReinterpreterEnable, "FormatReinterpreterEnable" );
+            locator.bindComponent( formatReinterpreterMode, "FormatReinterpreterMode" );
+        }
     }
     //-----------------------------------------------------------------------------
     void dealloc( void )
@@ -10066,7 +10085,8 @@ public:
         colorTwistEnable(), colorTwistRow0(), colorTwistRow1(), colorTwistRow2(),
         colorTwistOutputCorrectionMatrixEnable(), colorTwistOutputCorrectionMatrixMode(),
         colorTwistOutputCorrectionMatrixRow0(), colorTwistOutputCorrectionMatrixRow1(), colorTwistOutputCorrectionMatrixRow2(),
-        colorTwistResultingMatrixRow0(), colorTwistResultingMatrixRow1(), colorTwistResultingMatrixRow2()
+        colorTwistResultingMatrixRow0(), colorTwistResultingMatrixRow1(), colorTwistResultingMatrixRow2(),
+        formatReinterpreterEnable(), formatReinterpreterMode()
     {
         DeviceComponentLocator locator( pDev, dltSetting, settingName );
         m_pRefData = new ReferenceCountedData( pDev->hDrv(), locator.searchbase_id() );
@@ -10181,7 +10201,9 @@ public:
         colorTwistOutputCorrectionMatrixRow2( src.colorTwistOutputCorrectionMatrixRow2 ),
         colorTwistResultingMatrixRow0( src.colorTwistResultingMatrixRow0 ),
         colorTwistResultingMatrixRow1( src.colorTwistResultingMatrixRow1 ),
-        colorTwistResultingMatrixRow2( src.colorTwistResultingMatrixRow2 )
+        colorTwistResultingMatrixRow2( src.colorTwistResultingMatrixRow2 ),
+        formatReinterpreterEnable( src.formatReinterpreterEnable ),
+        formatReinterpreterMode( src.formatReinterpreterMode )
     {
         ++( m_pRefData->m_refCnt );
     }
@@ -10517,6 +10539,21 @@ public:
      *  Only active matrices will be used to calculate the resulting matrix.
      */
     PropertyF colorTwistResultingMatrixRow2;
+    /// \brief An enumerated integer property which can be used to enable/disable the format reinterpreter filter.
+    /**
+     *  This filter can be used if a device transmits data in a non-compliant or incorrect format. Using this filter the incoming
+     *  data will simply be treated as a different pixel format then. This will \b NOT copy or modify the pixel data but will only
+     *  adjust some of the elements describing the buffer (e.g. the pixel format and width). When e.g. setting this filter to treat
+     *  mono data as RGB data, this will result in buffers with a width divided by 3 but RGB pixels instead of mono pixel afterwards.
+     *
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TBoolean.
+     */
+    PropertyIBoolean formatReinterpreterEnable;
+    /// \brief An enumerated integer property which can be used to configure the format reinterpreter filter.
+    /**
+     *  Valid values for this property are defined by the enumeration \b mvIMPACT::acquire::TImageBufferFormatReinterpreterMode.
+     */
+    PropertyIImageBufferFormatReinterpreterMode formatReinterpreterMode;
     PYTHON_ONLY( %mutable; )
     /// \brief Sets the saturation by using the color twist matrix.
     /**

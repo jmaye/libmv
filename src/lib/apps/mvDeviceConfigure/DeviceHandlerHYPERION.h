@@ -19,7 +19,7 @@ public:
         return true;
     }
     virtual bool SupportsDMABufferSizeUpdate( int* pCurrentDMASize_kB = 0 );
-    virtual int UpdateFirmware( bool boSilentMode );
+    virtual int UpdateFirmware( bool boSilentMode, bool boPersistentUserSets );
     virtual int UpdatePermanentDMABufferSize( bool boSilentMode );
     enum eFlashSelect
     {

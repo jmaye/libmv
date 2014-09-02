@@ -53,7 +53,7 @@ class MyApp : public wxApp
 public:
     virtual bool OnInit()
     {
-        g_pFrame = new IPConfigureFrame( wxString::Format( wxT( "Configuration tool for GigE Vision(tm) devices(%s)" ), VERSION_STRING ), wxDefaultPosition, wxDefaultSize, argc, argv );
+        g_pFrame = new IPConfigureFrame( wxString::Format( wxT( "mvIPConfigure - Configuration Tool For Network Related Settings Of GigE Vision(tm) Devices(%s)" ), VERSION_STRING ), wxDefaultPosition, wxDefaultSize, argc, argv );
         g_pFrame->Show( true );
         SetTopWindow( g_pFrame );
         //Workaround for the refreshing of the Log wxTextCtrl
@@ -1301,7 +1301,7 @@ void IPConfigureFrame::OnHelp_About( wxCommandEvent& )
     dlg.SetIcon( icon );
 
     pTopDownSizer = new wxBoxSizer( wxVERTICAL );
-    wxStaticText* pText = new wxStaticText( &dlg, wxID_ANY, wxT( "Configuration tool for GigE Vision (tm) devices" ) );
+    wxStaticText* pText = new wxStaticText( &dlg, wxID_ANY, wxString::Format( wxT( "mvIPConfigure - Configuration Tool For Network Related Settings Of GigE Vision(tm) Devices(%s)" ), VERSION_STRING ) );
     pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
     pText = new wxStaticText( &dlg, wxID_ANY, wxString::Format( wxT( "(C) 2008 - %s by %s" ), CURRENT_YEAR, COMPANY_NAME ) );
     pTopDownSizer->Add( pText, 0, wxALL | wxALIGN_CENTER, 5 );
