@@ -1,3 +1,9 @@
+libmv (2.11-40) precise; urgency=low
+
+  * version bug
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Wed, 17 Sep 2014 16:34:18 +0200
+
 libmv (2.11-38) precise; urgency=low
 
   * upstream version 2.11
