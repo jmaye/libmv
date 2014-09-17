@@ -21,14 +21,14 @@
 /// }
 /// \endcode
 ///
-/// This will result in the following warning:
+/// The compiler will give you the following warning:
 ///
 /// \verbatim
 /// ISO C++ forbids casting between pointer-to-function and pointer-to-object
 /// \endverbatim
 ///
 /// That is true, but there is not other way to extract symbols from shared libraries.
-/// By using this template instead, gcc will be happy.
+/// By using this template instead, gcc will be happy and will you.
 ///
 /// \code
 /// void fn( void )

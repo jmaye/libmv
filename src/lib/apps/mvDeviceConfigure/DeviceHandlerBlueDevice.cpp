@@ -30,14 +30,14 @@ public:
                                       const wxPoint& pos = wxDefaultPosition,
                                       const wxSize& size = wxDefaultSize,
                                       long style = wxDEFAULT_DIALOG_STYLE,
-                                      const wxString& message = wxT(""),
+                                      const wxString& message = wxT( "" ),
                                       bool keepUserSets = true ) : wxDialog( parent, id, title, pos, size, style, wxT( "FirmwareUpdateConfirmationDialog" ) ), pCBKeepUserSetSettings_( 0 )
     {
         SetIcon( wxNullIcon );
         SetBackgroundColour( *wxWHITE );
         wxPanel* pPanel = new wxPanel( this, wxID_ANY );
 
-        pCBKeepUserSetSettings_ = new wxCheckBox( pPanel, wxID_ANY, wxT("Keep UserSet Settings(Takes longer but preserves UserSet settings stored on the device)") );
+        pCBKeepUserSetSettings_ = new wxCheckBox( pPanel, wxID_ANY, wxT( " Keep UserSet Settings(Takes longer but preserves UserSet settings stored on the device)" ) );
         wxButton* pBtnOk = new wxButton( pPanel, wxID_OK, wxT( "OK" ) );
         wxButton* pBtnCancel = new wxButton( pPanel, wxID_CANCEL, wxT( "Cancel" ) );
 
@@ -1608,13 +1608,13 @@ void DeviceHandlerBlueDevice::UserSetBackup( void )
                           wxPD_AUTO_HIDE | wxPD_APP_MODAL );
     for( unsigned int i = 0; i < userSetCnt; i++ )
     {
-        wxString currentUserSetString = wxString(usc.userSetSelector.getTranslationDictString( i ).c_str(), wxConvUTF8);
-        if( currentUserSetString == wxT("Default") )
+        wxString currentUserSetString( usc.userSetSelector.getTranslationDictString( i ).c_str(), wxConvUTF8 );
+        if( currentUserSetString == wxT( "Default" ) )
         {
             continue;
         }
-        usc.userSetSelector.writeS(std::string(currentUserSetString.mb_str()));
-        wxString FQPath = temporaryFolder_ + wxT("/") + wxString(pDev_->serial.readS().c_str(), wxConvUTF8) + wxT("-") + currentUserSetString;
+        usc.userSetSelector.writeS( std::string( currentUserSetString.mb_str() ) );
+        wxString FQPath = temporaryFolder_ + wxT( "/" ) + wxString( pDev_->serial.readS().c_str(), wxConvUTF8 ) + wxT( "-" ) + currentUserSetString;
         dlg.Update( i , wxString::Format( wxT( "Backing up %s..." ), currentUserSetString.c_str() ) );
         TDMR_ERROR result = DMR_NO_ERROR;
         try
@@ -1627,7 +1627,7 @@ void DeviceHandlerBlueDevice::UserSetBackup( void )
         }
         if( result == DMR_NO_ERROR )
         {
-            fi.saveSetting( std::string(FQPath.mb_str()), sfFile, sUser );
+            fi.saveSetting( std::string( FQPath.mb_str() ), sfFile, sUser );
             ++numberOfUserSets_;
         }
     }
@@ -1661,8 +1661,8 @@ void DeviceHandlerBlueDevice::UserSetRestore( void )
     int numberOfFilesRestored = 0;
     for( unsigned int i = 0; i < userSetCnt; i++ )
     {
-        wxString currentUserSetString = wxString(usc.userSetSelector.getTranslationDictString( i ).c_str(), wxConvUTF8);
-        if( currentUserSetString == wxT("Default") )
+        wxString currentUserSetString( usc.userSetSelector.getTranslationDictString( i ).c_str(), wxConvUTF8 );
+        if( currentUserSetString == wxT( "Default" ) )
         {
             continue;
         }
@@ -1670,10 +1670,10 @@ void DeviceHandlerBlueDevice::UserSetRestore( void )
         {
             break;
         }
-        usc.userSetSelector.writeS(std::string(currentUserSetString.mb_str()));
-        wxString FQPath = temporaryFolder_ + wxT("/") + wxString(pDev_->serial.readS().c_str(), wxConvUTF8) + wxT("-") + currentUserSetString + wxT(".xml");
+        usc.userSetSelector.writeS( std::string( currentUserSetString.mb_str() ) );
+        wxString FQPath = temporaryFolder_ + wxT( "/" ) + wxString( pDev_->serial.readS().c_str(), wxConvUTF8 ) + wxT( "-" ) + currentUserSetString + wxT( ".xml" );
         dlg.Update( numberOfFilesRestored + 1 , wxString::Format( wxT( "Restoring %s..." ), currentUserSetString.c_str() ) );
-        if( fi.loadSetting( std::string(FQPath.mb_str()), sfFile, sUser ) == DMR_NO_ERROR )
+        if( fi.loadSetting( std::string( FQPath.mb_str() ), sfFile, sUser ) == DMR_NO_ERROR )
         {
             try
             {

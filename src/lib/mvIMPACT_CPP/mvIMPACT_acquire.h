@@ -8899,7 +8899,16 @@ public:
      *  specified. It's not allowed to combine \b mvIMPACT::acquire::sfFile and
      *  \b mvIMPACT::acquire::sfNative for this operation.
      *
-     *  \warning Since mvIMPACT Acquire 2.9.0 storing and loading of camera settings in a XML file for the \b mvIMPACT::acquire::dilGenICam interface layout has been updated. As a result XML files created with mvIMPACT Acquire 2.9.0 or later it will \b only be readable on systems with mvIMPACT Acquire 2.9.0 or later also. Systems with mvIMPACT Acquire versions older than 2.9.0 will \b not be able to load a XML file created with version 2.9.0 or later! However, XML files created on systems with earlier versions of mvIMPACT Acquire will still be readable on all systems.<TABLE><TR><TH>mvIMPACT Acquire Version<TH>Loading a XML settings file created with<br>mvIMPACT Acquire version earlier than 2.9.0<TH>Loading a XML settings file created with<br>mvIMPACT Acquire version 2.9.0 or later <TR><TH> earlier than 2.9.0<TD> YES <TD> NO <TR><TH> 2.9.0 or later<TD> YES <TD> YES</TABLE>
+     *  \warning Since mvIMPACT Acquire 2.9.0 and again in version 2.11.0 storing and loading of camera settings in a XML file for the \b mvIMPACT::acquire::dilGenICam
+     *  interface layout has been updated. As a result XML files created with newer versions of mvIMPACT Acquire might \b not
+     *  be readable on systems with older version of mvIMPACT Acquire installed. XML files created on systems
+     *  with earlier versions of mvIMPACT Acquire will always be readable this or newer versions. See the following table for deatils.
+     *  <TABLE>
+     *    <TR><TH>mvIMPACT Acquire Version<TH>Loading a XML settings file created with mvIMPACT Acquire version &lt; 2.9.0<TH>Loading a XML settings file created with mvIMPACT Acquire version 2.9.0 - 2.10.1<TH>Loading a XML settings file created with mvIMPACT Acquire version 2.11.0 or later
+     *    <TR><TH> &lt; 2.9.0 <TD> YES <TD> NO <TD> NO
+     *    <TR><TH> 2.9.0 - 2.10.1 <TD> YES <TD> YES <TD> NO
+     *    <TR><TH> &gt;= 2.11.0 <TD> YES <TD> YES <TD> YES
+     *  </TABLE>
      *
      *  \sa
      *  \b mvIMPACT::acquire::FunctionInterface::saveSetting.
@@ -8924,7 +8933,7 @@ public:
      *  can only succeed if a setting has been stored previously by a call to
      *  \b mvIMPACT::acquire::FunctionInterface::saveSettingToDefault.
      *
-     *  \warning There has been an incompatible change when loading settings in Version 2.9.0 mvIMPACT Acquire. See <b>mvIMPACT::acquire::FunctionInterface::loadSetting</b> for details.
+     *  \warning There has been an incompatible change when loading settings in version 2.9.0 and 2.11.0 of mvIMPACT Acquire. See <b>mvIMPACT::acquire::FunctionInterface::loadSetting</b> for details.
      *
      *  \return
      *  - \b mvIMPACT::acquire::DMR_NO_ERROR if successful.
@@ -8957,7 +8966,7 @@ public:
      *  specified. Both flags can be combined. In that case the same setting will be stored in a
      *  file \b AND in a platform specific location if these location differ (platform dependent!).
      *
-     *  \warning There has been an incompatible change when loading settings in Version 2.9.0 mvIMPACT Acquire. See <b>mvIMPACT::acquire::FunctionInterface::loadSetting</b> for details.
+     *  \warning There has been an incompatible change when loading settings in version 2.9.0 and 2.11.0 of mvIMPACT Acquire. See <b>mvIMPACT::acquire::FunctionInterface::loadSetting</b> for details.
      *
      *  \return
      *  - \b mvIMPACT::acquire::DMR_NO_ERROR if successful.
@@ -8979,7 +8988,7 @@ public:
      *  Under Windows&copy; this will be in the Registry. A setting contains all the values set
      *  for properties that control the overall way an image is acquired( e.g. the exposure time, etc.).
      *
-     *  \warning There has been an incompatible change when loading settings in Version 2.9.0 mvIMPACT Acquire. See <b>mvIMPACT::acquire::FunctionInterface::loadSetting</b> for details.
+     *  \warning There has been an incompatible change when loading settings in version 2.9.0 and 2.11.0 of mvIMPACT Acquire. See <b>mvIMPACT::acquire::FunctionInterface::loadSetting</b> for details.
      *
      *  \return
      *  - \b mvIMPACT::acquire::DMR_NO_ERROR if successful.

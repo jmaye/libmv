@@ -480,6 +480,9 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
       m_defaultDeviceInterfaceLayout( wxT( "GenICam" ) ), m_HardDiscRecordingParameters()
 //-----------------------------------------------------------------------------
 {
+    // set the global Tooltip Delay ( ToolBar ToolTips however, still use a delay of their own... )
+    wxToolTip::SetDelay( 2000 );
+
     // sub menu 'Action -> Default Device Interface'
     wxMenu* pMenuActionDefaultDeviceInterface = new wxMenu;
     wxMenuItem* pMIAction_DefaultDeviceInterface_DeviceSpecific = pMenuActionDefaultDeviceInterface->Append( miAction_DefaultDeviceInterface_DeviceSpecific, wxT( "Device Specific\tF2" ), wxT( "" ), wxITEM_RADIO );
