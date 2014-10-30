@@ -7,6 +7,6 @@
 #define COMPANY_WEBSITE wxT("http://www.matrix-vision.com")
 #define COMPANY_SUPPORT_MAIL wxT("mailto:support@matrix-vision.com")
 #define CURRENT_YEAR wxT("2014")
-#define VERSION_STRING wxT("2.11.0.1358")
+#define VERSION_STRING wxT("2.11.2.1399")
 
 #endif // InfoH

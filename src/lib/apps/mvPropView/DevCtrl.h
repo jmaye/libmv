@@ -64,6 +64,7 @@ private:
     bool                                        m_boUseHexIndices;
     bool                                        m_boUseDisplayNames;
     bool                                        m_boUseSelectorGrouping;
+    static void                                 AddFeatureToSetIfValid( std::set<HOBJ>& s, Component& c );
     void                                        GetInterfaceClasses( const DeviceData* p, mvIMPACT::acquire::FunctionInterface** ppFI = 0, const mvIMPACT::acquire::Statistics** ppS = 0, CaptureThread** ppCT = 0 ) const;
     void                                        ReCreateDriverTrees( void );
     void                                        ReCreateFullTree( void );

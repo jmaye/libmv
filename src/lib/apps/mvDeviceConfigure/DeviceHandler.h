@@ -49,6 +49,7 @@ public:
         return urFeatureUnsupported;
     }
     virtual void SetCustomFirmwarePath( const wxString& /* customFirmwarePath */ ) {}
+    virtual void SetCustomGenICamFile( const wxString& /* customGenICamFile */ ) {}
     //-----------------------------------------------------------------------------
     enum TUpdateResult
     //-----------------------------------------------------------------------------

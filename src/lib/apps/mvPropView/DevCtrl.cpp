@@ -69,6 +69,16 @@ DevicePropertyHandler::~DevicePropertyHandler()
 }
 
 //-----------------------------------------------------------------------------
+void DevicePropertyHandler::AddFeatureToSetIfValid( set<HOBJ>& s, Component& c )
+//-----------------------------------------------------------------------------
+{
+    if( c.isValid() )
+    {
+        s.insert( c.hObj() );
+    }
+}
+
+//-----------------------------------------------------------------------------
 void DevicePropertyHandler::CheckForWizards( mvIMPACT::acquire::Device* pDev, DeviceData* pDevData )
 //-----------------------------------------------------------------------------
 {
@@ -81,6 +91,7 @@ void DevicePropertyHandler::CheckForWizards( mvIMPACT::acquire::Device* pDev, De
             fac.fileOperationSelector.isValid() && fac.fileOperationStatus.isValid() && fac.fileSelector.isValid() )
         {
             set<HOBJ> s;
+            s.insert( fac.fileAccessBuffer.parent().hObj() );
             s.insert( fac.fileAccessBuffer.hObj() );
             s.insert( fac.fileAccessLength.hObj() );
             s.insert( fac.fileAccessOffset.hObj() );
@@ -94,20 +105,47 @@ void DevicePropertyHandler::CheckForWizards( mvIMPACT::acquire::Device* pDev, De
             pDevData->supportedWizards.insert( make_pair( wFileAccessControl, s ) );
         }
 
-        // check for SFNC compliant LUT Control
-        mvIMPACT::acquire::GenICam::LUTControl lc( pDev );
-        if( lc.LUTEnable.isValid() && lc.LUTIndex.isValid() &&
-            lc.LUTValue.isValid() )
         {
-            set<HOBJ> s;
-            s.insert( lc.LUTEnable.hObj() );
-            s.insert( lc.LUTIndex.hObj() );
-            if( lc.LUTSelector.isValid() )
+            // check for SFNC compliant LUT Control
+            mvIMPACT::acquire::GenICam::LUTControl lc( pDev );
+            if( lc.LUTEnable.isValid() && lc.LUTIndex.isValid() &&
+                lc.LUTValue.isValid() )
             {
-                s.insert( lc.LUTSelector.hObj() );
+                set<HOBJ> s;
+                s.insert( lc.LUTEnable.parent().hObj() );
+                s.insert( lc.LUTEnable.hObj() );
+                s.insert( lc.LUTIndex.hObj() );
+                AddFeatureToSetIfValid( s, lc.LUTSelector );
+                s.insert( lc.LUTValue.hObj() );
+                pDevData->supportedWizards.insert( make_pair( wLUTControl, s ) );
             }
-            s.insert( lc.LUTValue.hObj() );
-            pDevData->supportedWizards.insert( make_pair( wLUTControl, s ) );
+        }
+
+        {
+            // check for 'mvLensControl category
+            try
+            {
+                mvIMPACT::acquire::GenICam::mvLensControl lc( pDev );
+                if( lc.mvDriveSelector.isValid() )
+                {
+                    set<HOBJ> s;
+                    s.insert( lc.mvDriveSelector.parent().hObj() );
+                    s.insert( lc.mvDriveSelector.hObj() );
+                    AddFeatureToSetIfValid( s, lc.mvDriveBackward );
+                    AddFeatureToSetIfValid( s, lc.mvDriveDuration );
+                    AddFeatureToSetIfValid( s, lc.mvDriveForward );
+                    AddFeatureToSetIfValid( s, lc.mvDriveLevel );
+                    AddFeatureToSetIfValid( s, lc.mvIrisMode );
+                    AddFeatureToSetIfValid( s, lc.mvIrisSignalLevelMax );
+                    AddFeatureToSetIfValid( s, lc.mvIrisSignalLevelMin );
+                    AddFeatureToSetIfValid( s, lc.mvIrisType );
+                    pDevData->supportedWizards.insert( make_pair( wLensControl, s ) );
+                }
+            }
+            catch( const ImpactAcquireException& )
+            {
+                // creating this object in case the category is not supported will raise an exception. This is intended!!!
+            }
         }
     }
     // check for mvIMPACT Acquire compliant color twist filter
@@ -129,6 +167,7 @@ void DevicePropertyHandler::CheckForWizards( mvIMPACT::acquire::Device* pDev, De
         ip.colorTwistResultingMatrixRow2.isValid() )
     {
         set<HOBJ> s;
+        s.insert( ip.colorTwistEnable.parent().hObj() );
         s.insert( ip.colorTwistInputCorrectionMatrixEnable.hObj() );
         s.insert( ip.colorTwistInputCorrectionMatrixMode.hObj() );
         s.insert( ip.colorTwistInputCorrectionMatrixRow0.hObj() );
@@ -318,6 +357,10 @@ EDisplayFlags DevicePropertyHandler::GetDisplayFlags( void ) const
     if( m_boUseSelectorGrouping )
     {
         flags = EDisplayFlags( flags | dfSelectorGrouping );
+    }
+    if( m_viewMode == vmDeveloper )
+    {
+        flags = EDisplayFlags( flags | dfDontUseFriendlyNamesForMethods );
     }
     return flags;
 }

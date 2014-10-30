@@ -36,7 +36,8 @@ enum WXDLLIMPEXP_PG EDisplayFlags
     dfHexIndices = 0x2,
     dfDisplayInvisibleComponents = 0x4,
     dfDisplayNames = 0x8,
-    dfSelectorGrouping = 0x10
+    dfSelectorGrouping = 0x10,
+    dfDontUseFriendlyNamesForMethods = 0x20
 };
 
 //------------------------------------------------------------------------------
@@ -54,7 +55,7 @@ class PropTree
     const EDisplayFlags                     m_flags;
 
     wxString                                BuildFullFeatureName( Component comp ) const;
-    wxPGId                                  CreateGridProperty( mvIMPACT::acquire::HOBJ hObj, wxPGId parentProp, int index = -1, bool* boModified = 0, const char* pTitle = 0 ) const;
+    wxPGId                                  CreateGridProperty( mvIMPACT::acquire::HOBJ hObj, wxPGId parentProp, int index = -1, bool* pboModified = 0, const char* pTitle = 0 ) const;
     void                                    Delete( void );
     void                                    RemoveFromGlobalNameToFeatureMap( PropData* pPropData ) const;
     void                                    UpdateGridPropsRecursively( mvIMPACT::acquire::ComponentIterator iter, wxPGId prop, bool boForceRedraw ) const;

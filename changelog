@@ -1,3 +1,9 @@
+libmv (2.11.2-41) trusty; urgency=medium
+
+  * porting to upstream version 2.11.2 
+
+ -- Jerome Maye <jerome.maye@mavt.ethz.ch>  Thu, 30 Oct 2014 12:23:19 +0100
+
 libmv (2.11-40) precise; urgency=low
 
   * version bug

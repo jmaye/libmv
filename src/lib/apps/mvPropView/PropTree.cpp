@@ -50,12 +50,12 @@ wxString PropTree::BuildFullFeatureName( Component comp ) const
 }
 
 //------------------------------------------------------------------------------
-wxPGId PropTree::CreateGridProperty( HOBJ hObj, wxPGId parentProp, int index /* = -1 */, bool* boModified /* = 0 */, const char* pTitle /* = 0 */ ) const
+wxPGId PropTree::CreateGridProperty( HOBJ hObj, wxPGId parentProp, int index /* = -1 */, bool* pboModified /* = 0 */, const char* pTitle /* = 0 */ ) const
 //------------------------------------------------------------------------------
 {
-    if( boModified )
+    if( pboModified )
     {
-        *boModified = false;
+        *pboModified = false;
     }
 
     // check if item is already present
@@ -112,10 +112,10 @@ wxPGId PropTree::CreateGridProperty( HOBJ hObj, wxPGId parentProp, int index /* 
         pPropData = pPropVec->GetVectorItem( index );
     }
     wxASSERT( pPropData != 0 );
-    pPropData->EnsureValidGridItem( this, parentProp, m_flags, boModified );
+    pPropData->EnsureValidGridItem( this, parentProp, m_flags, pboModified );
     //if( !m_pPropGrid->IsPropertySelected( pPropData->GetGridItem() ) )
     //{
-    pPropData->UpdateGridItem( this, m_flags, boModified );
+    pPropData->UpdateGridItem( this, m_flags, pboModified );
     //}
     return pPropData->GetGridItem();
 }

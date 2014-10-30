@@ -24,6 +24,7 @@ class DeviceHandlerBlueDevice : public DeviceHandler
     wxString firmwareUpdateFileName_;
     wxString firmwareUpdateFolder_;
     wxString firmwareUpdateFolderDevelopment_;
+    wxString GenICamFile_;
     wxString temporaryFolder_;
     int numberOfUserSets_;
     int CheckForIncompatibleFirmwareVersions_BlueCOUGAR_X( bool boSilentMode, const wxString& serial, const FileEntryContainer& fileEntries, const wxString& selection, const Version& currentFirmwareVersion );
@@ -35,6 +36,7 @@ class DeviceHandlerBlueDevice : public DeviceHandler
     bool IsBlueCOUGAR_X( mvIMPACT::acquire::Device* pDev );
     bool IsBlueFOX3( mvIMPACT::acquire::Device* pDev );
     static TUpdateResult ParseUpdatePackageCOUGAR_XAndFOX3Device( PackageDescriptionFileParser& fileParser, const wxString& firmwareFileAndPath, DeviceConfigureFrame* pParent, auto_array_ptr<char>& pBuffer );
+    void SelectCustomGenICamFile( const wxString& descriptionFile = wxEmptyString );
     int UpdateCOUGAR_SDevice( bool boSilentMode );
     int UpdateCOUGAR_XAndFOX3Device( bool boSilentMode, bool boPersistentUserSets );
     int UpdateLYNX_M7AndCOUGAR_PDevice( const wxString& updateFileName, const wxString& fileExtension, bool boSilentMode );
@@ -52,6 +54,7 @@ public:
     virtual bool SupportsFirmwareUpdate( void ) const;
     virtual int UpdateFirmware( bool boSilentMode, bool boPersistentUserSets );
     virtual void SetCustomFirmwarePath( const wxString& customFirmwarePath );
+    virtual void SetCustomGenICamFile( const wxString& customGenICamFile );
 };
 
 int        CompareFileVersion( const wxString& first, const wxString& second );

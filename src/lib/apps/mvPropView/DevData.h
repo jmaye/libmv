@@ -25,6 +25,7 @@ enum TWizardIDs
 {
     wNone,
     wFileAccessControl,
+    wLensControl,
     wLUTControl,
     wColorCorrection
 };

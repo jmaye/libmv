@@ -46,7 +46,7 @@ public:
     WXDLLIMPEXP_PG static void                  AppendComponentInfo( const mvIMPACT::acquire::Component comp, wxString& info, unsigned int actChangedCount, unsigned int actAttrChangedCount );
     WXDLLIMPEXP_PG void                         AppendComponentInfo( wxString& info, unsigned int actChangedCount, unsigned int actAttrChangedCount ) const;
     WXDLLIMPEXP_PG static void                  AppendSelectorInfo( std::ostringstream& oss, const std::vector<mvIMPACT::acquire::Component>& v );
-    WXDLLIMPEXP_PG virtual void                 EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentGridComponent, EDisplayFlags flags, bool* boModified = 0  ) = 0;
+    WXDLLIMPEXP_PG virtual void                 EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentGridComponent, EDisplayFlags flags, bool* pboModified = 0  ) = 0;
     WXDLLIMPEXP_PG mvIMPACT::acquire::Component GetComponent( void ) const
     {
         return m_Component;
@@ -82,7 +82,7 @@ public:
         m_FeatureFullName = featureFullName;
     }
     WXDLLIMPEXP_PG virtual void                 Update( const PropTree* pPropTree, EDisplayFlags flags, unsigned int actChangedCount, unsigned int actAttrChangedCount ) const = 0;
-    WXDLLIMPEXP_PG void                         UpdateGridItem( const PropTree* pPropTree, EDisplayFlags flags, bool* boModified );
+    WXDLLIMPEXP_PG void                         UpdateGridItem( const PropTree* pPropTree, EDisplayFlags flags, bool* pboModified );
     WXDLLIMPEXP_PG virtual void                 UpdatePropData( void ) {}
 protected:
     void                                        UpdateLabelAndHelpString( EDisplayFlags flags, wxString& label ) const;
@@ -108,7 +108,7 @@ public:
     WXDLLIMPEXP_PG explicit                     MethodObject( mvIMPACT::acquire::HOBJ hObj );
     WXDLLIMPEXP_PG static wxString              BuildFriendlyName( mvIMPACT::acquire::HOBJ hObj );
     WXDLLIMPEXP_PG wxString                     Call( int& callResult ) const;
-    WXDLLIMPEXP_PG void                         EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* boModified = 0  );
+    WXDLLIMPEXP_PG void                         EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* pboModified = 0  );
     WXDLLIMPEXP_PG const wxString&              FriendlyName( void ) const
     {
         return m_FriendlyName;
@@ -120,6 +120,8 @@ public:
     WXDLLIMPEXP_PG void                         UpdatePropData( void );
     WXDLLIMPEXP_PG void                         Update( const PropTree* pPropTree, EDisplayFlags flags, unsigned int actChangedCount, unsigned int actAttrChangedCount ) const;
 private:
+    WXDLLIMPEXP_PG wxString                     GetNameToUse( EDisplayFlags flags ) const;
+
     wxString                                    m_Params;
     wxString                                    m_FriendlyName;
 };
@@ -135,7 +137,7 @@ public:
         return m_boExpanded;
     }
     WXDLLIMPEXP_PG void                         OnExpand( void );
-    WXDLLIMPEXP_PG void                         EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* boModified = 0  );
+    WXDLLIMPEXP_PG void                         EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* pboModified = 0  );
     WXDLLIMPEXP_PG void                         Update( const PropTree* pPropTree, EDisplayFlags flags, unsigned int actChangedCount, unsigned int actAttrChangedCount ) const;
 private:
     bool                                        m_boExpanded;
@@ -149,7 +151,7 @@ class PropertyObject : public PropData
 public:
     WXDLLIMPEXP_PG explicit                     PropertyObject( mvIMPACT::acquire::HOBJ hObj, int index = 0 );
     WXDLLIMPEXP_PG void                         UpdatePropData( void );
-    WXDLLIMPEXP_PG void                         EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* boModified = 0  );
+    WXDLLIMPEXP_PG void                         EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* pboModified = 0 );
     WXDLLIMPEXP_PG int                          GetIndex( void ) const
     {
         return m_Index;
@@ -181,7 +183,7 @@ public:
     }
     WXDLLIMPEXP_PG void                         OnExpand( void );
     WXDLLIMPEXP_PG PropertyObject*              GetVectorItem( int index );
-    WXDLLIMPEXP_PG void                         EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* boModified = 0 );
+    WXDLLIMPEXP_PG void                         EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* pboModified = 0 );
     WXDLLIMPEXP_PG void                         RemoveValue( unsigned int index );
     WXDLLIMPEXP_PG void                         Resize( void );
     WXDLLIMPEXP_PG void                         Update( const PropTree* pPropTree, EDisplayFlags flags, unsigned int actChangedCount, unsigned int actAttrChangedCount ) const;

@@ -549,7 +549,7 @@ void PropGridFrameBase::OnPropertyRightClicked( wxPropertyGridEvent& e )
             wxMenu* pSubMenu = new wxMenu( wxT( "" ) );
             pSubMenu->Append( miPopUpPropSetMultiple_FixedValue, wxT( "&To A Constant Value" ) )->Enable( boMultiToConstPossible );
             pSubMenu->Append( miPopUpPropSetMultiple_FromToRange, wxT( "Via A User Defined &Value Range" ) )->Enable( boMultiToRangePossible );
-            menu.Append( wxID_ANY, wxT( "Set Multiple Elements..." ), pSubMenu );
+            menu.Append( wxID_ANY, wxT( "Set Multiple Elements" ), pSubMenu );
             PopupMenu( &menu );
         }
         /// \todo disable read-only methods later?

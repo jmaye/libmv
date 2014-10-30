@@ -37,7 +37,7 @@ public:
         SetBackgroundColour( *wxWHITE );
         wxPanel* pPanel = new wxPanel( this, wxID_ANY );
 
-        pCBKeepUserSetSettings_ = new wxCheckBox( pPanel, wxID_ANY, wxT( " Keep UserSet Settings(Takes longer but preserves UserSet settings stored on the device)" ) );
+        pCBKeepUserSetSettings_ = new wxCheckBox( pPanel, wxID_ANY, wxT( "Keep UserSet Settings(Takes longer but preserves UserSet settings stored on the device)" ) );
         wxButton* pBtnOk = new wxButton( pPanel, wxID_OK, wxT( "OK" ) );
         wxButton* pBtnCancel = new wxButton( pPanel, wxID_CANCEL, wxT( "Cancel" ) );
 
@@ -271,7 +271,9 @@ int64_type MACAddressFromString( const std::string& MAC )
 //=================== implementation DeviceHandlerBlueDevice ==================
 //=============================================================================
 //-----------------------------------------------------------------------------
-DeviceHandlerBlueDevice::DeviceHandlerBlueDevice( mvIMPACT::acquire::Device* pDev ) : DeviceHandler( pDev, true ), product_( pgUnknown )
+DeviceHandlerBlueDevice::DeviceHandlerBlueDevice( mvIMPACT::acquire::Device* pDev ) : DeviceHandler( pDev, true ), product_( pgUnknown ),
+    productStringForFirmwareUpdateCheck_(), firmwareUpdateFileName_(), firmwareUpdateFolder_(), firmwareUpdateFolderDevelopment_(),
+    GenICamFile_(), temporaryFolder_()
 //-----------------------------------------------------------------------------
 {
     ConvertedString product( pDev_->product.read() );
@@ -453,6 +455,7 @@ DeviceHandler::TUpdateResult DeviceHandlerBlueDevice::DoFirmwareUpdate_BlueCOUGA
             }
             DeviceManager devMgr;
             devMgr.updateDeviceList(); // this is needed in order to invalidate cached data that might no longer be valid(e.g. the URLs for the description files)
+            SelectCustomGenICamFile();
             pDev_->open();
         }
         catch( const ImpactAcquireException& e )
@@ -936,10 +939,35 @@ void DeviceHandlerBlueDevice::SetCustomFirmwarePath( const wxString& customFirmw
 }
 
 //-----------------------------------------------------------------------------
+void DeviceHandlerBlueDevice::SetCustomGenICamFile( const wxString& customGenICamFile )
+//-----------------------------------------------------------------------------
+{
+    GenICamFile_ = customGenICamFile;
+}
+
+//-----------------------------------------------------------------------------
 bool DeviceHandlerBlueDevice::SupportsFirmwareUpdate( void ) const
 //-----------------------------------------------------------------------------
 {
     return !firmwareUpdateFileName_.IsEmpty();
+}
+
+//-----------------------------------------------------------------------------
+void DeviceHandlerBlueDevice::SelectCustomGenICamFile( const wxString& descriptionFile/* = wxEmptyString */ )
+//-----------------------------------------------------------------------------
+{
+    ComponentLocator locatorDevice( pDev_->hDev() );
+    PropertyI descriptionToUse( locatorDevice.findComponent( "DescriptionToUse" ) );
+    PropertyS customDescriptionFilename( locatorDevice.findComponent( "CustomDescriptionFileName" ) );
+    if( descriptionFile.IsEmpty() == true )
+    {
+        descriptionToUse.writeS( "XMLLocation0" );
+    }
+    else
+    {
+        descriptionToUse.writeS( "CustomFile" );
+        customDescriptionFilename.write( std::string( wxConvCurrent->cWX2MB( descriptionFile.c_str() ) ) );
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -1237,6 +1265,7 @@ int DeviceHandlerBlueDevice::UpdateCOUGAR_XAndFOX3Device( bool boSilentMode, boo
             UserSetBackup();
         }
 
+        SelectCustomGenICamFile( GenICamFile_ );
         switch( product_ )
         {
         case pgBlueCOUGAR_X:
@@ -1529,11 +1558,7 @@ int DeviceHandlerBlueDevice::UploadFile( const wxString& fullPath, const wxStrin
     ConvertedString serial( pDev_->serial.read() );
     try
     {
-        ComponentLocator locatorDevice( pDev_->hDev() );
-        PropertyI descriptionToUse( locatorDevice.findComponent( "DescriptionToUse" ) );
-        descriptionToUse.writeS( "CustomFile" );
-        PropertyS customDescriptionFilename( locatorDevice.findComponent( "CustomDescriptionFileName" ) );
-        customDescriptionFilename.write( std::string( wxConvCurrent->cWX2MB( descriptionFile.c_str() ) ) );
+        SelectCustomGenICamFile( descriptionFile );
         pDev_->open();
     }
     catch( const ImpactAcquireException& e )
@@ -1596,6 +1621,7 @@ void DeviceHandlerBlueDevice::UserSetBackup( void )
         pDev_->close();
     }
     pDev_->interfaceLayout.write( dilGenICam );
+    SelectCustomGenICamFile( GenICamFile_ );
     pDev_->open();
     FunctionInterface fi( pDev_ );
     mvIMPACT::acquire::GenICam::UserSetControl usc( pDev_ );
@@ -1647,6 +1673,7 @@ void DeviceHandlerBlueDevice::UserSetRestore( void )
         pDev_->close();
     }
     pDev_->interfaceLayout.write( dilGenICam );
+    SelectCustomGenICamFile();
     pDev_->open();
     FunctionInterface fi( pDev_ );
     mvIMPACT::acquire::GenICam::UserSetControl usc( pDev_ );

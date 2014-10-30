@@ -97,6 +97,7 @@ private:
     LogConfigurationVector              m_debugData;
     DeviceHandlerFactory                m_deviceHandlerFactory;
     wxString                            m_customFirmwarePath;
+    wxString                            m_customGenICamFile;
     std::string                         m_IPv4Mask;
     //-----------------------------------------------------------------------------
     struct DeviceConfigurationData

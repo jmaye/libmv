@@ -111,7 +111,18 @@ void CaptureThread::CollectBufferInfo( ComponentIterator it, std::vector<wxStrin
             if( it.isProp() )
             {
                 Property prop( it );
-                infoStrings.push_back( wxString::Format( wxT( "%s%s: %s" ), path.c_str(), ConvertedString( it.name() ).c_str(), ConvertedString( prop.readS() ).c_str() ) );
+                const unsigned int valCount = prop.valCount();
+                if( valCount > 1 )
+                {
+                    for( int i = 0; i < static_cast<int>( valCount ); i++ )
+                    {
+                        infoStrings.push_back( wxString::Format( wxT( "%s%s[%d]: %s" ), path.c_str(), ConvertedString( it.name() ).c_str(), i, ConvertedString( prop.readS( i ) ).c_str() ) );
+                    }
+                }
+                else
+                {
+                    infoStrings.push_back( wxString::Format( wxT( "%s%s: %s" ), path.c_str(), ConvertedString( it.name() ).c_str(), ConvertedString( prop.readS() ).c_str() ) );
+                }
             }
             else if( it.isList() )
             {

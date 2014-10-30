@@ -1872,7 +1872,7 @@ enum TDeviceInterfaceLayout
      *  \deprecated
      *  This interface layout has been declared deprecated for GenICam compliant devices(mvBlueCOUGAR-P, mvBlueCOUGAR-S,
      *  mvBlueCOUGAR-X, mvBlueCOUGAR-XD and mvBlueLYNX-M7). For these products please use <b>mvIMPACT::acquire::dilGenICam</b>
-     *  instead \ref ImageAcquisition_section_genicam.
+     *  instead \ref InterfaceLayouts_Differences.
      */
     dilDeviceSpecific = 1,
     /// \brief A GenICam&trade; like interface layout shall be used.
@@ -1888,7 +1888,7 @@ enum TDeviceInterfaceLayout
      *
      *  \note This interface layout will allow to access third party devices as well.
      *
-     *  \sa \ref ImageAcquisition_section_genicam
+     *  \sa \ref AccessingAndWorkingWithPropertiesMethodsAndLists
      */
     dilGenICam = 2
 };
@@ -2257,8 +2257,9 @@ enum TDMR_ERROR // no_property_type
     DMR_INIT_FAILED = -2101,
     /// \brief The device is already in use.
     /**
-     *  This error will occur if this or another process has initialized this
-     *  device already and an application tries to open the device once more.
+     *  This error e.g. will occur if this or another process has initialized this
+     *  device already and an application tries to open the device once more or if a
+     *  certain resource is available only once but shall be used twice.
      */
     DMR_DRV_ALREADY_IN_USE = -2102,
     /// \brief The specified device couldn't be initialised.
@@ -2266,7 +2267,7 @@ enum TDMR_ERROR // no_property_type
     /// \brief The device manager or another module hasn't been initialised properly.
     /**
      *  This error occurs if the user tries e.g. to close the device manager without
-     *  having initialised it before or if a library used internally has not been initialised properly.
+     *  having initialised it before or if a library used internally or a module or device associated with that library has has not been initialised properly or if
      */
     DMR_NOT_INITIALIZED = -2104,
     /// \brief A device could not be initialised.
@@ -2384,10 +2385,11 @@ enum TDMR_ERROR // no_property_type
     DEV_INTERNAL_ERROR = -2124,
     /// \brief One or more needed libraries are not installed on the system.
     DMR_LIBRARY_NOT_FOUND = -2125,
-    /// \brief The called function is not available for this device.
+    /// \brief A called function or accessed feature is not available for this device.
     DMR_FUNCTION_NOT_IMPLEMENTED = -2126,
-    /// \brief The feature in question is not available for this device or driver.
+    /// \brief The feature in question is (currently) not available for this device or driver.
     /**
+     *  This might be because another feature currently blocks the one in question from being accessible.
      *  More information can be found in the *.log-file or the debug output.
      */
     DMR_FEATURE_NOT_AVAILABLE = -2127,
@@ -2432,6 +2434,8 @@ enum TDMR_ERROR // no_property_type
     /**
      *  This is the typical result of functions that wait for some condition to be met with a timeout
      *  among their parameters.
+     *
+     *  More information can be found in the *.log-file or the debug output.
      */
     DMR_TIMEOUT = -2134,
     /// \brief A wait operation has been aborted.
@@ -2441,7 +2445,7 @@ enum TDMR_ERROR // no_property_type
      *  terminated in an unusual wait, <b>mvIMPACT::acquire::DMR_WAIT_ABANDONED</b> will be returned then.
      */
     DMR_WAIT_ABANDONED = -2135,
-    /// \brief The execution of a method object failed.
+    /// \brief The execution of a method object or reading/writing to a feature failed.
     /**
      *  More information can be found in the log-file.
      */

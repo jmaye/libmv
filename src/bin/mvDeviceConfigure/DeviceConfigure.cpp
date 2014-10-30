@@ -153,7 +153,7 @@ int DeviceConfigureFrame::m_updateResult = 0;
 DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint& pos, const wxSize& size, int argc, wxChar** argv )
     : wxFrame( ( wxFrame* )NULL, wxID_ANY, title, pos, size ),
       m_pDevListCtrl( 0 ), m_pLogWindow( 0 ), m_logFileName(), m_lastDevMgrChangedCount( numeric_limits<unsigned int>::max() ),
-      m_customFirmwarePath(), m_IPv4Mask(), m_boPendingQuit( false )
+      m_customFirmwarePath(), m_customGenICamFile(), m_IPv4Mask(), m_boPendingQuit( false )
 #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
       , m_boChangeProcessorIdleStates( false ), m_boEnableIdleStates( false )
 #endif // #ifdef BUILD_WITH_PROCESSOR_POWER_STATE_CONFIGURATION_SUPPORT
@@ -286,6 +286,10 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
             {
                 GetConfigurationEntriesFromFile( value );
             }
+            else if( ( key == wxT( "custom_genicam_file" ) ) || ( key == wxT( "cgf" ) ) )
+            {
+                m_customGenICamFile = value;
+            }
             else if( key == wxT( "fw_path" ) )
             {
                 m_customFirmwarePath = value;
@@ -373,6 +377,7 @@ DeviceConfigureFrame::DeviceConfigureFrame( const wxString& title, const wxPoint
     WriteLogMessage( wxT( "'set_userset_persistence'   or 'sup'  to set the persistency of UserSet settings during firmware updates (syntax: 'sup=1' or 'sup=0').\n" ) );
     WriteLogMessage( wxT( "'update_fw'                 or 'ufw'  to update the firmware of one or many devices.\n" ) );
     WriteLogMessage( wxT( "'update_fw_file'            or 'ufwf' to update the firmware of one or many devices. Pass a full path to a text file that contains a serial number or a product type per line.\n" ) );
+    WriteLogMessage( wxT( "'custom_genicam_file'       or 'cgf'  to specify a custom GenICam file to be used to open devices for firmware updates. This can be useful when the actual XML on the device is damaged/invalid.\n" ) );
     WriteLogMessage( wxT( "'update_kd'                 or 'ukd'  to update the kernel driver of one or many devices.\n" ) );
     WriteLogMessage( wxT( "'ipv4_mask'                           to specify an IPv4 address mask to use as a filter for the selected update operations.\n" ) );
     WriteLogMessage( wxT( "'fw_path'                             to specify a custom path for the firmware files.\n" ) );
@@ -983,6 +988,7 @@ int DeviceConfigureFrame::UpdateFirmware( Device* pDev, bool boSilentMode, bool 
         wxBusyCursor busyCursorScope;
         pHandler->AttachParent( this );
         pHandler->SetCustomFirmwarePath( m_customFirmwarePath );
+        pHandler->SetCustomGenICamFile( m_customGenICamFile );
         result = pHandler->UpdateFirmware( boSilentMode, boPersistentUserSets );
         UpdateDeviceList();
     }

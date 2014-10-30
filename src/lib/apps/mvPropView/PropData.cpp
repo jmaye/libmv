@@ -181,7 +181,7 @@ bool PropData::IsVisible( void ) const
 }
 
 //------------------------------------------------------------------------------
-void PropData::UpdateGridItem( const PropTree* pPropTree, EDisplayFlags flags, bool* boModified )
+void PropData::UpdateGridItem( const PropTree* pPropTree, EDisplayFlags flags, bool* pboModified )
 //------------------------------------------------------------------------------
 {
     const unsigned int actChangedCount = m_Component.changedCounter();
@@ -192,14 +192,14 @@ void PropData::UpdateGridItem( const PropTree* pPropTree, EDisplayFlags flags, b
         Update( pPropTree, flags, actChangedCount, actAttrChangedCount );
         m_lastChangedCounter = m_Component.changedCounter();
         m_lastChangedCounterAttr = m_Component.changedCounterAttr();
-        if( boModified )
+        if( pboModified )
         {
-            *boModified = true;
+            *pboModified = true;
         }
     }
-    else if( boModified )
+    else if( pboModified )
     {
-        *boModified = false;
+        *pboModified = false;
     }
 
     if( flags & dfDisplayInvisibleComponents )
@@ -257,20 +257,16 @@ wxString MethodObject::BuildFriendlyName( HOBJ hObj )
         Method m( hObj );
         string::size_type end = 0;
         string name( m.name() );
-
         if( ( end = name.find_first_of( "@" ) ) != string::npos )
         {
             name = name.substr( 0, end );
         }
-
         const string para_type_str = m.paramList();
-
         string::const_iterator it = para_type_str.begin();
         friendlyName = ConvertedString( charToType( *it++ ) );
         friendlyName += wxT( " " );
         friendlyName += ConvertedString( name );
         friendlyName += wxT( "( " );
-
         const string::const_iterator itEND = para_type_str.end();
         while( it != itEND )
         {
@@ -308,7 +304,7 @@ wxString MethodObject::Call( int& callResult ) const
         {
             executionTime_ms = stopWatch.Time();
             callResult = e.getErrorCode();
-            wxString errorString( wxString::Format( wxT( "An error occurred while executing function '%s'. %s(numerical error representation: %d (%s))." ), m_FriendlyName.c_str(), ConvertedString( e.getErrorString() ).c_str(), e.getErrorCode(), ConvertedString( e.getErrorCodeAsString() ).c_str() ) );
+            wxString errorString( wxString::Format( wxT( "An error occurred while executing function '%s'(actual driver feature name: '%s'). %s(numerical error representation: %d (%s))." ), m_FriendlyName.c_str(), ConvertedString( GetComponent().name() ).c_str(), ConvertedString( e.getErrorString() ).c_str(), e.getErrorCode(), ConvertedString( e.getErrorCodeAsString() ).c_str() ) );
             if( e.getErrorCode() == PROPHANDLING_WRONG_PARAM_COUNT )
             {
                 errorString.Append( wxString::Format( wxT( "\n\nWhen executing methods please make sure you have specified the correct amount of parameters.\nThe following parameter types are available:\n  'void': This function either doesn't expect parameters or does not return a value\n  'void*': An arbitratry pointer\n  'int': A 32-bit integer value\n  'int64': A 64-bit integer value\n  'float': A double precision floating type value\n  'char*': A C-type string\nTherefore a function 'int foobar(float, char*) will expect one floating point value and one C-type string(in this order) and will return an integer value. Before executing a method the desired parameters must be confirmed by pressing [ENTER] in the edit box.\n\n" ) ) );
@@ -337,6 +333,13 @@ wxString MethodObject::Call( int& callResult ) const
 }
 
 //------------------------------------------------------------------------------
+wxString MethodObject::GetNameToUse( EDisplayFlags flags ) const
+//------------------------------------------------------------------------------
+{
+    return ( flags & dfDontUseFriendlyNamesForMethods ) ? ConvertedString( GetComponent().name() ) : m_FriendlyName;
+}
+
+//------------------------------------------------------------------------------
 void MethodObject::UpdatePropData( void )
 //------------------------------------------------------------------------------
 {
@@ -350,7 +353,7 @@ void MethodObject::UpdatePropData( void )
 void MethodObject::Update( const PropTree* /*pPropTree*/, EDisplayFlags flags, unsigned int actChangedCount, unsigned int actAttrChangedCount ) const
 //------------------------------------------------------------------------------
 {
-    ConvertedString label( m_FriendlyName );
+    wxString label( GetNameToUse( flags ) );
     if( flags & dfDisplayDebugInfo )
     {
         AppendComponentInfo( label, actChangedCount, actAttrChangedCount );
@@ -363,20 +366,19 @@ void MethodObject::Update( const PropTree* /*pPropTree*/, EDisplayFlags flags, u
 }
 
 //------------------------------------------------------------------------------
-void MethodObject::EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags /*flags*/, bool* boModified /* = 0 */ )
+void MethodObject::EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* pboModified /* = 0 */ )
 //------------------------------------------------------------------------------
 {
     if( !wxPGIdIsOk( m_GridItemId ) )
     {
         m_pParentGrid = pPropTree->GetPropGrid();
-        m_GridItemId = m_pParentGrid->AppendIn( parentItem, NOW_NEW wxStringProperty( ConvertedString( m_FriendlyName ), wxPG_LABEL, wxT( "" ) ) );
+        m_GridItemId = m_pParentGrid->AppendIn( parentItem, NOW_NEW wxStringProperty( GetNameToUse( flags ), wxPG_LABEL, wxT( "" ) ) );
         m_pParentGrid->SetPropertyEditor( m_GridItemId, wxPG_EDITOR( TextCtrlAndButton ) );
         m_pParentGrid->SetPropertyClientData( m_GridItemId, this );
         m_Type = _ctrlEdit;
-
-        if( boModified )
+        if( pboModified )
         {
-            *boModified = true;
+            *pboModified = true;
         }
     }
 }
@@ -404,7 +406,7 @@ void ListObject::OnExpand()
 }
 
 //------------------------------------------------------------------------------
-void ListObject::EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* boModified/* = 0 */ )
+void ListObject::EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* pboModified/* = 0 */ )
 //------------------------------------------------------------------------------
 {
     if( !wxPGIdIsOk( m_GridItemId ) )
@@ -437,9 +439,9 @@ void ListObject::EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentIt
         m_pParentGrid->SetPropertyColour( m_GridItemId, GlobalDataStorage::Instance()->GetPropGridColour( GlobalDataStorage::pgcListBackground ) );
 #endif
         m_pParentGrid->DisableProperty( m_GridItemId );
-        if( boModified )
+        if( pboModified )
         {
-            *boModified = true;
+            *pboModified = true;
         }
     }
 }
@@ -742,7 +744,7 @@ void PropertyObject::GetTransformedDict( wxPGChoices& soc, wxString* pEmptyStrin
 }
 
 //------------------------------------------------------------------------------
-void PropertyObject::EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* boModified /* = 0 */ )
+void PropertyObject::EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* pboModified /* = 0 */ )
 //------------------------------------------------------------------------------
 {
     m_pParentGrid = pPropTree->GetPropGrid();
@@ -887,9 +889,9 @@ void PropertyObject::EnsureValidGridItem( const PropTree* pPropTree, wxPGId pare
         }
 
         m_pParentGrid->SetPropertyClientData( m_GridItemId, this );
-        if( boModified )
+        if( pboModified )
         {
-            *boModified = true;
+            *pboModified = true;
         }
 
         if( ( flags & dfSelectorGrouping ) && boIsSelector )
@@ -1052,7 +1054,7 @@ PropertyObject* VectorPropertyObject::GetVectorItem( int index )
 }
 
 //------------------------------------------------------------------------------
-void VectorPropertyObject::EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* boModified /* = 0 */ )
+void VectorPropertyObject::EnsureValidGridItem( const PropTree* pPropTree, wxPGId parentItem, EDisplayFlags flags, bool* pboModified /* = 0 */ )
 //------------------------------------------------------------------------------
 {
     if( !wxPGIdIsOk( m_GridItemId ) )
@@ -1072,9 +1074,9 @@ void VectorPropertyObject::EnsureValidGridItem( const PropTree* pPropTree, wxPGI
         m_Type = _ctrlStatic;
         m_pParentGrid->SetPropertyClientData( m_GridItemId, this );
         m_pParentGrid->DisableProperty( m_GridItemId );
-        if( boModified )
+        if( pboModified )
         {
-            *boModified = true;
+            *pboModified = true;
         }
     }
 

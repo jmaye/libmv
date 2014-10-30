@@ -4,7 +4,7 @@ include(ReMake)
 
 remake_project(
   libmv
-  VERSION 2.11
+  VERSION 2.11.2
   RELEASE beta
   SUMMARY "Matrix Vision camera driver"
   AUTHOR "Jerome Maye"

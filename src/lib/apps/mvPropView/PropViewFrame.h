@@ -18,6 +18,7 @@
 
 class DevicePropertyHandler;
 class MonitorDisplay;
+class WizardLensControl;
 class WizardLUTControl;
 class WizardColorCorrection;
 
@@ -315,6 +316,10 @@ protected:
     {
         Wizard_FileAccessControl( false );
     }
+    void OnWizards_LensControl( wxCommandEvent& )
+    {
+        Wizard_LensControl();
+    }
     void OnWizards_LUTControl( wxCommandEvent& )
     {
         Wizard_LUTControl();
@@ -434,8 +439,8 @@ private:
         miSettings_PropGrid_UseDisplayNameIfAvailable,
         miSettings_PropGrid_UseSelectorGrouping,
         miSettings_PropGrid_ShowMethodExecutionErrors,
-        miSettings_PropGrid_StandardView,
-        miSettings_PropGrid_DevelopersView,
+        miSettings_PropGrid_ViewMode_StandardView,
+        miSettings_PropGrid_ViewMode_DevelopersView,
         miSettings_Display_Active,
         miSettings_Display_ShowMonitorImage,
         miSettings_Display_ShowIncompleteFrames,
@@ -449,6 +454,7 @@ private:
         miWizard_Open,
         miWizards_FileAccessControl_UploadFile,
         miWizards_FileAccessControl_DownloadFile,
+        miWizards_LensControl,
         miWizards_LUTControl,
         miWizards_ColorCorrection,
         miHelp_About,
@@ -576,6 +582,7 @@ private:
     MonitorDisplay*                     m_pMonitorImage;
     WizardLUTControl*                   m_pLUTControlDlg;
     WizardColorCorrection*              m_pColorCorrectionDlg;
+    WizardLensControl*                  m_pLensControlDlg;
     wxSplitterWindow*                   m_pHorizontalSplitter;
     PlotCanvasInfo*                     m_pInfoPlotArea;
     wxComboBox*                         m_pInfoPlotSelectionCombo;
@@ -628,8 +635,8 @@ private:
     wxMenuItem*                         m_pMISettings_PropGrid_UseSelectorGrouping;
     wxMenuItem*                         m_pMISettings_PropGrid_CreateEditorsWithSlider;
     wxMenuItem*                         m_pMISettings_PropGrid_ShowMethodExecutionErrors;
-    wxMenuItem*                         m_pMISettings_PropGrid_StandardView;
-    wxMenuItem*                         m_pMISettings_PropGrid_DevelopersView;
+    wxMenuItem*                         m_pMISettings_PropGrid_ViewMode_StandardView;
+    wxMenuItem*                         m_pMISettings_PropGrid_ViewMode_DevelopersView;
     wxMenuItem*                         m_pMISettings_AllowFastSingleFrameAcquisition;
     wxMenuItem*                         m_pMISettings_ShowLeftToolBar;
     wxMenuItem*                         m_pMISettings_ShowUpperToolBar;
@@ -637,9 +644,11 @@ private:
     wxMenuItem*                         m_pMISettings_WarnOnOutdatedFirmware;
     wxMenuItem*                         m_pMISettings_WarnOnReducedDriverPerformance;
     wxMenuItem*                         m_pMISettings_WarnOnUnreachableDevices;
+    wxMenuItem*                         m_pMISettings_WarnOnPotentialFirewallIssues;
     wxMenuItem*                         m_pMISettings_ToggleFullScreenMode;
     wxMenuItem*                         m_pMIWizards_FileAccessControl_UploadFile;
     wxMenuItem*                         m_pMIWizards_FileAccessControl_DownloadFile;
+    wxMenuItem*                         m_pMIWizards_LensControl;
     wxMenuItem*                         m_pMIWizards_LUTControl;
     wxMenuItem*                         m_pMIWizards_ColorCorrection;
     wxSplitterWindow*                   m_pNotebook_ToolTipSplitter;
@@ -672,6 +681,7 @@ private:
     template<typename _Ty, typename _Tx>
     size_t                              BuildStringArrayFromPropertyDict( wxArrayString& choices, _Tx prop ) const;
     void                                CheckForDriverPerformanceIssues( Device* pDev );
+    void                                CheckForPotentialFirewallIssues( void );
     void                                CheckUnreachableDevices( void );
     void                                ClearDisplayInProgressStates( void );
     void                                CloneAllRequests( void );
@@ -702,10 +712,13 @@ private:
         return ( windowID >> 8 ) - 1;
     }
     int                                 GetDesiredDeviceIndex( wxString& serial ) const;
+    mvIMPACT::acquire::ComponentIterator GetDriversIterator( void ) const;
+    unsigned int                        GetGenTLDeviceCount( void ) const;
     wxString                            GetSelectedDeviceSerial( void ) const
     {
         return m_pDevCombo->GetValue().BeforeFirst( wxT( ' ' ) );
     }
+    bool                                IsGenTLDriverInstalled( void ) const;
     int                                 LoadDeviceSetting( FunctionInterface* pFI, const std::string& name, const TStorageFlag flags, const TScope scope );
     mvIMPACT::acquire::TImageBufferPixelFormat PixelFormatFromString( const wxString& value );
     void                                ReEnableSingleCapture( void );
@@ -742,6 +755,7 @@ private:
     void                                UpdateUserExperience( const wxString& userExperience );
     void                                ToggleCurrentDevice( void );
     void                                Wizard_FileAccessControl( bool boUpload );
+    void                                Wizard_LensControl( void );
     void                                Wizard_LUTControl( void );
     void                                Wizard_ColorCorrection( void );
 };

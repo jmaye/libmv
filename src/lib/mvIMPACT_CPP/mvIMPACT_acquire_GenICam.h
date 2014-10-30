@@ -4432,6 +4432,98 @@ public:
 };
 
 //-----------------------------------------------------------------------------
+/// \brief Contains features to control motorized lenses
+/**
+ *  Contains features to control motorized lenses.
+ */
+class mvLensControl : public mvIMPACT::acquire::ComponentCollection
+//-----------------------------------------------------------------------------
+{
+public:
+    /// \brief Constructs a new <b>mvIMPACT::acquire::GenICam::mvLensControl</b> object.
+    explicit mvLensControl(
+        /// [in] A pointer to a <b>mvIMPACT::acquire::Device</b> object obtained from a <b>mvIMPACT::acquire::DeviceManager</b> object.
+        mvIMPACT::acquire::Device* pDev,
+        /// [in] The name of the driver internal setting to access with this instance.
+        /// A list of valid setting names can be obtained by a call to
+        /// <b>mvIMPACT::acquire::FunctionInterface::getAvailableSettings</b>, new
+        /// settings can be created with the function
+        /// <b>mvIMPACT::acquire::FunctionInterface::createSetting</b>
+        const std::string& settingName = "Base" ) :
+        mvIMPACT::acquire::ComponentCollection( pDev ),
+        mvIrisType(),
+        mvIrisMode(),
+        mvIrisSignalLevelMin(),
+        mvIrisSignalLevelMax(),
+        mvDriveSelector(),
+        mvDriveForward(),
+        mvDriveBackward(),
+        mvDriveDuration(),
+        mvDriveLevel()
+    {
+        mvIMPACT::acquire::DeviceComponentLocator locator( pDev, mvIMPACT::acquire::dltSetting, settingName );
+        locator.bindSearchBase( locator.searchbase_id(), "Camera/GenICam/mvLensControl" );
+        m_hRoot = locator.searchbase_id();
+        locator.bindComponent( mvIrisType, "mvIrisType" );
+        locator.bindComponent( mvIrisMode, "mvIrisMode" );
+        locator.bindComponent( mvIrisSignalLevelMin, "mvIrisSignalLevelMin" );
+        locator.bindComponent( mvIrisSignalLevelMax, "mvIrisSignalLevelMax" );
+        locator.bindComponent( mvDriveSelector, "mvDriveSelector" );
+        locator.bindComponent( mvDriveForward, "mvDriveForward@i" );
+        locator.bindComponent( mvDriveBackward, "mvDriveBackward@i" );
+        locator.bindComponent( mvDriveDuration, "mvDriveDuration" );
+        locator.bindComponent( mvDriveLevel, "mvDriveLevel" );
+    }
+    PYTHON_ONLY( %immutable; )
+    /// \brief Sets the iris type.
+    /**
+     *  Sets the iris type.
+     */
+    PropertyI64 mvIrisType;
+    /// \brief Sets the iris operating mode.
+    /**
+     *  Sets the iris operating mode.
+     */
+    PropertyI64 mvIrisMode;
+    /// \brief Sets the the minimum iris signal level in mV.
+    /**
+     *  Sets the the minimum iris signal level in mV.
+     */
+    PropertyI64 mvIrisSignalLevelMin;
+    /// \brief Sets the the maximum iris signal level in mV.
+    /**
+     *  Sets the the maximum iris signal level in mV.
+     */
+    PropertyI64 mvIrisSignalLevelMax;
+    /// \brief Selects the lens drive that should be adjusted.
+    /**
+     *  Selects the lens drive that should be adjusted.
+     */
+    PropertyI64 mvDriveSelector;
+    /// \brief Generates a pulse defined by 'mvDriveDuration' and 'mvDriveLevel' to move the selected motor in forward direction.
+    /**
+     *  Generates a pulse defined by 'mvDriveDuration' and 'mvDriveLevel' to move the selected motor in forward direction.
+     */
+    Method mvDriveForward;
+    /// \brief Generates a pulse defined by 'mvDriveDuration' and 'mvDriveLevel' to move the selected motor in backward direction.
+    /**
+     *  Generates a pulse defined by 'mvDriveDuration' and 'mvDriveLevel' to move the selected motor in backward direction.
+     */
+    Method mvDriveBackward;
+    /// \brief Sets the duration of the drive command in us.
+    /**
+     *  Sets the duration of the drive command in us.
+     */
+    PropertyI64 mvDriveDuration;
+    /// \brief Sets the voltage level of the drive command in mV.
+    /**
+     *  Sets the voltage level of the drive command in mV.
+     */
+    PropertyI64 mvDriveLevel;
+    PYTHON_ONLY( %mutable; )
+};
+
+//-----------------------------------------------------------------------------
 /// \brief Category that contains features to control the devices Flat Field Correction parameters.
 /**
  *  A category that contains features to control the devices Flat Field Correction parameters.

@@ -17,6 +17,7 @@
 #include "apps/mvPropView/PropViewFrame.h"
 #include "apps/mvPropView/SpinEditorDouble.h"
 #include "apps/mvPropView/VectorScopeCanvas.h"
+#include "apps/mvPropView/WizardLensControl.h"
 #include "apps/mvPropView/WizardLUTControl.h"
 #include "apps/mvPropView/WizardSaturation.h"
 #include <wx/choicdlg.h>
@@ -273,11 +274,12 @@ BEGIN_EVENT_TABLE( PropViewFrame, PropGridFrameBase )
     EVT_MENU( miSettings_PropGrid_DisplayPropIndicesAsHex, PropViewFrame::OnSettings_PropGrid_UpdateViewMode )
     EVT_MENU( miSettings_PropGrid_UseDisplayNameIfAvailable, PropViewFrame::OnSettings_PropGrid_UpdateViewMode )
     EVT_MENU( miSettings_PropGrid_UseSelectorGrouping, PropViewFrame::OnSettings_PropGrid_UseSelectorGrouping )
-    EVT_MENU( miSettings_PropGrid_StandardView, PropViewFrame::OnSettings_PropGrid_ViewModeChanged )
-    EVT_MENU( miSettings_PropGrid_DevelopersView, PropViewFrame::OnSettings_PropGrid_ViewModeChanged )
+    EVT_MENU( miSettings_PropGrid_ViewMode_StandardView, PropViewFrame::OnSettings_PropGrid_ViewModeChanged )
+    EVT_MENU( miSettings_PropGrid_ViewMode_DevelopersView, PropViewFrame::OnSettings_PropGrid_ViewModeChanged )
     EVT_MENU( miWizard_Open, PropViewFrame::OnWizard_Open )
     EVT_MENU( miWizards_FileAccessControl_UploadFile, PropViewFrame::OnWizards_FileAccessControl_UploadFile )
     EVT_MENU( miWizards_FileAccessControl_DownloadFile, PropViewFrame::OnWizards_FileAccessControl_DownloadFile )
+    EVT_MENU( miWizards_LensControl, PropViewFrame::OnWizards_LensControl )
     EVT_MENU( miWizards_LUTControl, PropViewFrame::OnWizards_LUTControl )
     EVT_MENU( miWizards_ColorCorrection, PropViewFrame::OnWizards_ColorCorrection )
     EVT_MENU( miHelp_About, PropViewFrame::OnHelp_About )
@@ -475,7 +477,7 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
       m_DeviceCount( 0 ), m_ProductFirmwareTable(), m_NoteBook_ToolTipSplitterPos( -1 ), m_NoDevStr( wxT( "No Device" ) ), m_SingleFrameStr( wxT( "SingleFrame" ) ), m_MultiFrameStr( wxT( "MultiFrame" ) ),
       m_ContinuousStr( wxT( "Continuous" ) ), m_pDevPropHandler( 0 ), m_pLastMouseHooverDisplay( 0 ), m_pCurrentAnalysisDisplay( 0 ),
       m_CurrentRequestDataIndex( 0 ), m_pUserExperienceCombo( 0 ), m_pMonitorImage( 0 ), m_pLUTControlDlg( 0 ),
-      m_pColorCorrectionDlg( 0 ), m_pLogWindow( 0 ), m_pWindowDisabler( 0 ),
+      m_pColorCorrectionDlg( 0 ), m_pLensControlDlg( 0 ), m_pLogWindow( 0 ), m_pWindowDisabler( 0 ),
       m_pPropViewCallback( new PropViewCallback() ), m_currentWizard( wNone ),
       m_defaultDeviceInterfaceLayout( wxT( "GenICam" ) ), m_HardDiscRecordingParameters()
 //-----------------------------------------------------------------------------
@@ -526,7 +528,7 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
     pMenuAction->AppendSeparator();
     m_pMIAction_LoadImage = pMenuAction->Append( miAction_LoadImage, wxT( "Load Image..." ) );
     m_pMIAction_SaveImage = pMenuAction->Append( miAction_SaveImage, wxT( "Save Image..." ) );
-    pMenuAction->Append( wxID_ANY, wxT( "Save All Recorded Images..." ), pMenuAction_SaveAllRecordedImages );
+    pMenuAction->Append( wxID_ANY, wxT( "Save All Recorded Images" ), pMenuAction_SaveAllRecordedImages );
     pMenuAction->AppendSeparator();
     pMenuAction->Append( miAction_Exit, wxT( "E&xit\tALT+X" ) );
 
@@ -564,18 +566,21 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
     m_pMICapture_SetupCaptureQueueDepth = pMenuCapture->Append( miCapture_SetupCaptureQueueDepth, wxT( "Setup Capture Queue Depth\tCTRL+Q" ), wxT( "Sets the number of buffers that will be used to prefill the capture queue" ) );
     m_pMICapture_DetailedRequestInformation = pMenuCapture->Append( miCapture_DetailedRequestInformation, wxT( "Detailed Request Information..." ), wxT( "Opens a dialog that displays detailed information about each capture buffer" ) );
 
+    // sub menu 'Settings -> Property Grid -> View Mode'
+    wxMenu* pMenuSettingPropertyGridViewMode = new wxMenu;
+    m_pMISettings_PropGrid_ViewMode_StandardView = pMenuSettingPropertyGridViewMode->Append( miSettings_PropGrid_ViewMode_StandardView, wxT( "Standard View\tF6" ), wxT( "" ), wxITEM_RADIO );
+    m_pMISettings_PropGrid_ViewMode_DevelopersView = pMenuSettingPropertyGridViewMode->Append( miSettings_PropGrid_ViewMode_DevelopersView, wxT( "Developers View\tF7" ), wxT( "" ), wxITEM_RADIO );
+
     // sub menu 'Settings -> Property Grid'
     wxMenu* pMenuSettingsPropertyGrid = new wxMenu;
     m_pMISettings_PropGrid_Show = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_Show, wxT( "Show &Property Grid\tALT+CTRL+P" ), wxT( "" ), wxITEM_CHECK );
+    pMenuSettingsPropertyGrid->Append( wxID_ANY, wxT( "View Mode" ), pMenuSettingPropertyGridViewMode );
     pMenuSettingsPropertyGrid->AppendSeparator();
     m_pMISettings_PropGrid_DisplayPropIndicesAsHex = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_DisplayPropIndicesAsHex, wxT( "Display Property Indices As &Hex\tALT+CTRL+H" ), wxT( "" ), wxITEM_CHECK );
     m_pMISettings_PropGrid_UseDisplayNameIfAvailable = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_UseDisplayNameIfAvailable, wxT( "Use Dis&play Names In Favour Of Feature Names\tCTRL+P" ), wxT( "" ), wxITEM_CHECK );
     m_pMISettings_PropGrid_UseSelectorGrouping = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_UseSelectorGrouping, wxT( "Use Selector Grouping\tCTRL+G" ), wxT( "" ), wxITEM_CHECK );
     m_pMISettings_PropGrid_CreateEditorsWithSlider = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_CreateEditorsWithSlider, wxT( "Create Editors With Slider\tALT+CTRL+R" ), wxT( "" ), wxITEM_CHECK );
     m_pMISettings_PropGrid_ShowMethodExecutionErrors = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_ShowMethodExecutionErrors, wxT( "Show Method Execution Errors\tALT+CTRL+E" ), wxT( "" ), wxITEM_CHECK );
-    pMenuSettingsPropertyGrid->AppendSeparator();
-    m_pMISettings_PropGrid_StandardView = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_StandardView, wxT( "Standard View\tF6" ), wxT( "" ), wxITEM_RADIO );
-    m_pMISettings_PropGrid_DevelopersView = pMenuSettingsPropertyGrid->Append( miSettings_PropGrid_DevelopersView, wxT( "Developers View\tF7" ), wxT( "" ), wxITEM_RADIO );
 
     // sub menu 'Settings -> Display'
     wxMenu* pMenuSettingsDisplay = new wxMenu;
@@ -605,6 +610,7 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
     m_pMISettings_WarnOnOutdatedFirmware = pMenuSettings->Append( wxID_ANY, wxT( "Warn On Outdated Firmware" ), wxT( "" ), wxITEM_CHECK );
     m_pMISettings_WarnOnReducedDriverPerformance = pMenuSettings->Append( wxID_ANY, wxT( "Warn On Reduced Driver Performance" ), wxT( "" ), wxITEM_CHECK );
     m_pMISettings_WarnOnUnreachableDevices = pMenuSettings->Append( wxID_ANY, wxT( "Warn On Unreachable Devices" ), wxT( "" ), wxITEM_CHECK );
+    m_pMISettings_WarnOnPotentialFirewallIssues = pMenuSettings->Append( wxID_ANY, wxT( "Warn On Potential Firewall Issues" ), wxT( "" ), wxITEM_CHECK );
     pMenuSettings->AppendSeparator();
     m_pMISettings_ToggleFullScreenMode = pMenuSettings->Append( miSettings_ToggleFullScreenMode, wxT( "Full Screen Mode\tF11" ), wxT( "" ), wxITEM_CHECK );
 
@@ -616,6 +622,7 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
     // menu 'Wizards'
     wxMenu* pMenuWizards = new wxMenu;
     pMenuWizards->Append( wxID_ANY, wxT( "File Access Control" ), pMenuWizards_FileAccessControl );
+    m_pMIWizards_LensControl = pMenuWizards->Append( miWizards_LensControl, wxT( "Lens Control..." ) );
     m_pMIWizards_LUTControl = pMenuWizards->Append( miWizards_LUTControl, wxT( "LUT Control..." ) );
     m_pMIWizards_ColorCorrection = pMenuWizards->Append( miWizards_ColorCorrection, wxT( "Color Correction..." ) );
 
@@ -631,8 +638,8 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
     wxMenuBar* pMenuBar = new wxMenuBar;
     pMenuBar->Append( pMenuAction, wxT( "&Action" ) );
     pMenuBar->Append( pMenuCapture, wxT( "&Capture" ) );
-    pMenuBar->Append( pMenuSettings, wxT( "&Settings" ) );
     pMenuBar->Append( pMenuWizards, wxT( "&Wizards" ) );
+    pMenuBar->Append( pMenuSettings, wxT( "&Settings" ) );
     pMenuBar->Append( pMenuHelp, wxT( "&Help" ) );
     // ... and attach this menu bar to the frame
     SetMenuBar( pMenuBar );
@@ -940,10 +947,10 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
     switch( m_ViewMode )
     {
     case DevicePropertyHandler::vmDeveloper:
-        m_pMISettings_PropGrid_DevelopersView->Check();
+        m_pMISettings_PropGrid_ViewMode_DevelopersView->Check();
         break;
     default:
-        m_pMISettings_PropGrid_StandardView->Check();
+        m_pMISettings_PropGrid_ViewMode_StandardView->Check();
         break;
     }
     UpdatePropGridViewMode();
@@ -1045,6 +1052,7 @@ PropViewFrame::PropViewFrame( const wxString& title, const wxPoint& pos, const w
 
     m_pPropViewCallback->attachApplication( this );
     CheckUnreachableDevices();
+    CheckForPotentialFirewallIssues();
 }
 
 //-----------------------------------------------------------------------------
@@ -1099,6 +1107,7 @@ PropViewFrame::~PropViewFrame()
         pConfig->Write( wxT( "/MainFrame/Settings/warnOnOutdatedFirmware" ), m_pMISettings_WarnOnOutdatedFirmware->IsChecked() );
         pConfig->Write( wxT( "/MainFrame/Settings/warnOnReducedDriverPerformance" ), m_pMISettings_WarnOnReducedDriverPerformance->IsChecked() );
         pConfig->Write( wxT( "/MainFrame/Settings/warnOnUnreachableDevices" ), m_pMISettings_WarnOnUnreachableDevices->IsChecked() );
+        pConfig->Write( wxT( "/MainFrame/Settings/warnOnPotentialFirewallIssues" ), m_pMISettings_WarnOnPotentialFirewallIssues->IsChecked() );
         pConfig->Write( wxT( "/MainFrame/Settings/propgrid_showMethodExecutionErrors" ), m_pMISettings_PropGrid_ShowMethodExecutionErrors->IsChecked() );
         pConfig->Write( wxT( "/MainFrame/Settings/automaticallyReconnectToUnusedDevices" ), m_pMIAction_AutomaticallyReconnectToUnusedDevices->IsChecked() );
         pConfig->Write( wxT( "/MainFrame/Settings/displayPropsWithHexIndices" ), m_pMISettings_PropGrid_DisplayPropIndicesAsHex->IsChecked() );
@@ -1153,6 +1162,7 @@ void PropViewFrame::DestroyAdditionalDialogs( void )
 {
     DestroyDialog( &m_pLUTControlDlg );
     DestroyDialog( &m_pColorCorrectionDlg );
+    DestroyDialog( &m_pLensControlDlg );
 }
 
 //-----------------------------------------------------------------------------
@@ -1420,6 +1430,26 @@ void PropViewFrame::CheckForDriverPerformanceIssues( Device* pDev )
             }
         }
 #endif // #if wxCHECK_VERSION(2, 7, 1)
+    }
+}
+
+//-----------------------------------------------------------------------------
+void PropViewFrame::CheckForPotentialFirewallIssues( void )
+//-----------------------------------------------------------------------------
+{
+    if( m_pMISettings_WarnOnPotentialFirewallIssues->IsChecked() &&
+        IsGenTLDriverInstalled() &&
+        ( GetGenTLDeviceCount() == 0 ) )
+    {
+        switch( wxMessageBox( wxT( "Even though the GenICam/GenTL capture driver is installed no compatible device could be detected. If you where expecting to see one or more GEV(GigE Vision) compliant device(s) please check your systems firewall and IP configuration as well as the network configuration on the devices you want to access (run 'mvIPConfigure' to do this).\n\nPress 'Yes' to continue anyway.\n\nPress 'No' to end this application and resolve the issue.\n\nPress 'Cancel' to continue anyway and never see this message again. You can later re-enable this message box under 'Settings -> Warn On Potential Firewall Issues'." ), wxT( "No GenICam/GenTL Devices Detected" ), wxYES_NO | wxCANCEL | wxICON_EXCLAMATION, this ) )
+        {
+        case wxNO:
+            Close( true );
+            break;
+        case wxCANCEL:
+            m_pMISettings_WarnOnPotentialFirewallIssues->Check( false );
+            break;
+        }
     }
 }
 
@@ -1952,7 +1982,7 @@ void PropViewFrame::DisplaySettingLoadSaveErrorMessage( const wxString& msgPrefi
     }
     if( originalErrorCode == PROPHANDLING_INCOMPATIBLE_COMPONENTS )
     {
-        msg.append( wxString::Format( wxT( "\nPossible reason %d:\nThe selected setting is not compatible with the selected device. It might have been created using a different device family.\n" ), reasonIndex++ ) );
+        msg.append( wxString::Format( wxT( "\nPossible reason %d:\nThe selected setting is not compatible with the selected device. It might have been created using a different device family or product. For devices operated in 'GenICam' or 'Generic' interface layout a setting must have been created with a device of the same product type while in 'DeviceSpecific' interface layout also the same family would be sufficient.\n" ), reasonIndex++ ) );
         msg.append( wxString::Format( wxT( "\nPossible reason %d:\nThe selected setting is not compatible with the current driver version. It might have been created using a newer driver version that uses a different setting format.\n" ), reasonIndex++ ) );
     }
     if( originalErrorCode == DMR_EXECUTION_PROHIBITED )
@@ -2036,6 +2066,48 @@ int PropViewFrame::GetDesiredDeviceIndex( wxString& serial ) const
         }
     }
     return wxNOT_FOUND;
+}
+
+//-----------------------------------------------------------------------------
+ComponentIterator PropViewFrame::GetDriversIterator( void ) const
+//-----------------------------------------------------------------------------
+{
+    const DeviceManager& devMgr = m_pDevPropHandler->GetDevMgr();
+    ComponentIterator itDrivers( devMgr.getInternalHandle() );
+    ComponentLocator locator( itDrivers.parent() );
+    return ComponentIterator( locator.findComponent( "Drivers" ) );
+}
+
+//-----------------------------------------------------------------------------
+unsigned int PropViewFrame::GetGenTLDeviceCount( void ) const
+//-----------------------------------------------------------------------------
+{
+    if( IsGenTLDriverInstalled() == false )
+    {
+        return 0;
+    }
+
+    ComponentLocator locator( GetDriversIterator() );
+    locator.bindSearchBase( locator.findComponent( "mvGenTLConsumer" ) );
+    if( locator.findComponent( "Devices" ) == INVALID_ID )
+    {
+        return 0;
+    }
+    return ComponentList( locator.findComponent( "Devices" ) ).size();
+}
+
+//-----------------------------------------------------------------------------
+bool PropViewFrame::IsGenTLDriverInstalled( void ) const
+//-----------------------------------------------------------------------------
+{
+    ComponentLocator locator( GetDriversIterator() );
+    if( locator.findComponent( "mvGenTLConsumer" ) == INVALID_ID )
+    {
+        return false;
+    }
+
+    locator.bindSearchBase( locator.findComponent( "mvGenTLConsumer" ) );
+    return locator.findComponent( "FullPath" ) != INVALID_ID;
 }
 
 //-----------------------------------------------------------------------------
@@ -2697,11 +2769,7 @@ void PropViewFrame::OnHelp_DriverInformation( wxCommandEvent& )
 {
     try
     {
-        const DeviceManager& devMgr = m_pDevPropHandler->GetDevMgr();
-        ComponentIterator itDrivers( devMgr.getInternalHandle() );
-        ComponentLocator locator( itDrivers.parent() );
-        itDrivers = ComponentIterator( locator.findComponent( "Drivers" ) );
-        DriverInformationDlg dlg( this, wxString( wxT( "Current Driver Information" ) ), itDrivers, m_pDevPropHandler->GetDevMgr() );
+        DriverInformationDlg dlg( this, wxString( wxT( "Current Driver Information" ) ), GetDriversIterator(), m_pDevPropHandler->GetDevMgr() );
         dlg.ShowModal();
     }
     catch( const ImpactAcquireException& e )
@@ -3507,10 +3575,10 @@ void PropViewFrame::OnSettings_PropGrid_ViewModeChanged( wxCommandEvent& e )
 {
     switch( e.GetId() )
     {
-    case miSettings_PropGrid_StandardView:
+    case miSettings_PropGrid_ViewMode_StandardView:
         m_ViewMode = DevicePropertyHandler::vmStandard;
         break;
-    case miSettings_PropGrid_DevelopersView:
+    case miSettings_PropGrid_ViewMode_DevelopersView:
         m_ViewMode = DevicePropertyHandler::vmDeveloper;
         break;
     }
@@ -3730,6 +3798,9 @@ void PropViewFrame::OnWizard_Open( wxCommandEvent& )
             }
         }
         break;
+    case wLensControl:
+        Wizard_LensControl();
+        break;
     case wLUTControl:
         Wizard_LUTControl();
         break;
@@ -3914,6 +3985,8 @@ wxRect PropViewFrame::RestoreConfiguration( const unsigned int displayCount, dou
     m_pMISettings_WarnOnReducedDriverPerformance->Check( boActive );
     boActive = pConfig->Read( wxT( "/MainFrame/Settings/warnOnUnreachableDevices" ), 1l ) != 0;
     m_pMISettings_WarnOnUnreachableDevices->Check( boActive );
+    boActive = pConfig->Read( wxT( "/MainFrame/Settings/warnOnPotentialFirewallIssues" ), 1l ) != 0;
+    m_pMISettings_WarnOnPotentialFirewallIssues->Check( boActive );
     boActive = pConfig->Read( wxT( "/MainFrame/Settings/propgrid_showMethodExecutionErrors" ), 1l ) != 0;
     m_pMISettings_PropGrid_ShowMethodExecutionErrors->Check( boActive );
     boActive = pConfig->Read( wxT( "/MainFrame/Settings/automaticallyReconnectToUnusedDevices" ), 1l ) != 0;
@@ -4262,6 +4335,7 @@ void PropViewFrame::SetupDlgControls( void )
     bool boSequenceBegin = true;
     bool boSequenceEnd = true;
     bool boDevRecord = false;
+    bool boAllowDefaultLoadSave = true;
     RequestContainer::size_type recordedSequenceLength = 0;
     if( pDev )
     {
@@ -4279,6 +4353,7 @@ void PropViewFrame::SetupDlgControls( void )
                 boSequenceEnd = pThread->GetCurrentSequenceIndex() == recordedSequenceLength - 1;
             }
         }
+        boAllowDefaultLoadSave = ( pDev->interfaceLayout.isValid() == false ) || ( pDev->interfaceLayout.read() == dilDeviceSpecific );
     }
 
     const DeviceManager& devMgr = m_pDevPropHandler->GetDevMgr();
@@ -4298,11 +4373,11 @@ void PropViewFrame::SetupDlgControls( void )
     m_pMIAction_Use->Check( boDevOpen );
     m_pMICapture_Record->Check( boDevRecord );
 
-    m_pMIAction_CaptureSettings_Save_ToDefault->Enable( boDevOpen );
+    m_pMIAction_CaptureSettings_Save_ToDefault->Enable( boDevOpen && boAllowDefaultLoadSave );
     m_pMIAction_CaptureSettings_Save_CurrentProduct->Enable( boDevOpen );
     m_pMIAction_CaptureSettings_Save_ActiveDevice->Enable( boDevOpen );
     m_pMIAction_CaptureSettings_Save_ExportActiveDevice->Enable( boDevOpen );
-    m_pMIAction_CaptureSettings_Load_FromDefault->Enable( boDevOpen );
+    m_pMIAction_CaptureSettings_Load_FromDefault->Enable( boDevOpen && boAllowDefaultLoadSave );
     m_pMIAction_CaptureSettings_Load_CurrentProduct->Enable( boDevOpen );
     m_pMIAction_CaptureSettings_Load_ActiveDevice->Enable( boDevOpen );
     m_pMIAction_CaptureSettings_Load_ActiveDeviceFromFile->Enable( boDevOpen );
@@ -4380,6 +4455,7 @@ void PropViewFrame::SetupDlgControls( void )
     const bool boFileAccessControlWizardsAvailable = ( s.find( wFileAccessControl ) != itEND );
     m_pMIWizards_FileAccessControl_UploadFile->Enable( boFileAccessControlWizardsAvailable );
     m_pMIWizards_FileAccessControl_DownloadFile->Enable( boFileAccessControlWizardsAvailable );
+    m_pMIWizards_LensControl->Enable( s.find( wLensControl ) != itEND );
     m_pMIWizards_LUTControl->Enable( s.find( wLUTControl ) != itEND );
     m_pMIWizards_ColorCorrection->Enable( s.find( wColorCorrection ) != itEND );
 }
@@ -4961,6 +5037,7 @@ void PropViewFrame::UpdateDeviceList( void )
     m_pDevPropHandler->GetDevMgr().updateDeviceList();
     WriteLogMessage( wxString::Format( wxT( "Updating device list took %ld ms.\n" ), stopWatch.Time() ) );
     CheckUnreachableDevices();
+    CheckForPotentialFirewallIssues();
 }
 
 //-----------------------------------------------------------------------------
@@ -5379,6 +5456,28 @@ void PropViewFrame::Wizard_FileAccessControl( bool boUpload )
 }
 
 //-----------------------------------------------------------------------------
+void PropViewFrame::Wizard_LensControl( void )
+//-----------------------------------------------------------------------------
+{
+    Device* pDev = m_pDevPropHandler->GetActiveDevice();
+    if( pDev && !m_pLensControlDlg )
+    {
+        try
+        {
+            m_pLensControlDlg = new WizardLensControl( this, wxString::Format( wxT( "Lens Control For Device %s" ), ConvertedString( pDev->serial.readS() ).c_str() ), pDev );
+        }
+        catch( const ImpactAcquireException& e )
+        {
+            WriteErrorMessage( wxString::Format( wxT( "%s(%d): Internal error: %s(%s) while trying to create a lens control wizard for device '%s'.\n" ), ConvertedString( __FUNCTION__ ).c_str(), __LINE__, ConvertedString( e.getErrorString() ).c_str(), ConvertedString( e.getErrorCodeAsString() ).c_str(), ConvertedString( pDev->serial.read() ).c_str() ) );
+        }
+    }
+    if( m_pLensControlDlg )
+    {
+        m_pLensControlDlg->Show();
+    }
+}
+
+//-----------------------------------------------------------------------------
 void PropViewFrame::Wizard_LUTControl( void )
 //-----------------------------------------------------------------------------
 {
@@ -5397,7 +5496,7 @@ void PropViewFrame::Wizard_LUTControl( void )
             {
                 choices.Add( wxT( "LUT-0" ) );
             }
-            m_pLUTControlDlg = new WizardLUTControl( this, wxT( "LUT Control" ), lc, choices );
+            m_pLUTControlDlg = new WizardLUTControl( this, wxString::Format ( wxT( "LUT Control For Device %s" ), ConvertedString( pDev->serial.readS() ).c_str() ), lc, choices );
         }
         catch( const ImpactAcquireException& e )
         {
@@ -5419,7 +5518,7 @@ void PropViewFrame::Wizard_ColorCorrection( void )
     {
         try
         {
-            m_pColorCorrectionDlg = new WizardColorCorrection( this, wxT( "Color Correction" ), pDev );
+            m_pColorCorrectionDlg = new WizardColorCorrection( this, wxString::Format( wxT( "Color Correction For Device %s" ), ConvertedString( pDev->serial.readS() ).c_str() ), pDev );
         }
         catch( const ImpactAcquireException& e )
         {
